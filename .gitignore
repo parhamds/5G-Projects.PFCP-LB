@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2019 Intel Corporation
+.idea/
+.coverage/
+*.pyc
+*.swp
+output
+dpdk-devbind.py
+dpdk-hugepages.py
+dictionary.dic
+.github/
