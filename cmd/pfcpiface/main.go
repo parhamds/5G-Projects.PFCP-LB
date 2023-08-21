@@ -40,12 +40,12 @@ func main() {
 
 	log.Infof("%+v", conf)
 
-	//upaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Up)
+	upaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Up)
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
 	// blocking
-	//fmt.Println("parham log: calling upaPfcpi.Run for up")
-	//go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
+	fmt.Println("parham log: calling upaPfcpi.Run for up")
+	go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
 	fmt.Println("parham log: calling upaPfcpi.Run for down")
 	dpaPfcpi.Run(u2d, d2u, pfcpiface.Up)
 	time.Sleep(5 * time.Minute)
