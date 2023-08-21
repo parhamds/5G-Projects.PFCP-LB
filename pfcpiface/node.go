@@ -129,7 +129,8 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 		fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
 		if pos == Up {
 			fmt.Println("parham log : sending recieved msg to down pfcp")
-			u2d <- buf[:n]
+			bufTemp := buf[:2]
+			u2d <- bufTemp
 			//	fmt.Println("parham log : show recieved msg from down pfcp")
 			//	fmt.Println(<-d2u)
 		} else {
