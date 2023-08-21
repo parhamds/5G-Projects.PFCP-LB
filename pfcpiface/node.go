@@ -54,10 +54,10 @@ func NewPFCPNode(pos Position,
 		log.Fatalln("ListenUDP failed", err)
 	}
 
-	//metrics, err := metrics.NewPrometheusService()
-	//if err != nil {
-	//	log.Fatalln("prom metrics service init failed", err)
-	//}
+	metrics, err := metrics.NewPrometheusService()
+	if err != nil {
+		log.Fatalln("prom metrics service init failed", err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &PFCPNode{
@@ -67,7 +67,7 @@ func NewPFCPNode(pos Position,
 		done:       make(chan struct{}),
 		pConnDone:  make(chan string, 100),
 		upf:        &upf{},
-		//metrics:    metrics,
+		metrics:    metrics,
 	}
 }
 
@@ -105,6 +105,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
 	//}
 	//node.tryConnectToN4Peers(lAddrStr)
+
 	fmt.Println("parham log : before loop for ", pos)
 	for {
 		buf := make([]byte, 1024)
@@ -128,17 +129,17 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 			continue
 		}
 		fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
-		if pos == Up {
-			fmt.Println("parham log : sending recieved msg to down pfcp")
-			u2d <- buf[:n]
-			fmt.Println("parham log : show recieved msg from down pfcp")
-			fmt.Println(<-d2u)
-		} else {
-			fmt.Println("parham log : sending recieved msg to up pfcp")
-			d2u <- buf[:n]
-			fmt.Println("parham log : show recieved msg from up pfcp")
-			fmt.Println(<-u2d)
-		}
+		//if pos == Up {
+		//	fmt.Println("parham log : sending recieved msg to down pfcp")
+		//	u2d <- []byte("hi")
+		//	fmt.Println("parham log : show recieved msg from down pfcp")
+		//	fmt.Println(<-d2u)
+		//} else {
+		//	fmt.Println("parham log : sending recieved msg to up pfcp")
+		//	d2u <- []byte("ih")
+		//	fmt.Println("parham log : show recieved msg from up pfcp")
+		//	fmt.Println(<-u2d)
+		//}
 		if pos == Up {
 			fmt.Println("parham log: calling NewPFCPConn for up")
 		} else {
