@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
 	log "github.com/sirupsen/logrus"
@@ -137,6 +138,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 			fmt.Println("parham log : show recieved msg from up pfcp")
 			fmt.Println(<-u2d)
 		}
+		time.Sleep(1 * time.Minute)
 		if pos == Up {
 			fmt.Println("parham log: calling NewPFCPConn for up")
 		} else {
