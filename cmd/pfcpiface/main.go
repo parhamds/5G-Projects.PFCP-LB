@@ -6,6 +6,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"time"
 
 	"github.com/omec-project/upf-epc/pfcpiface"
@@ -43,7 +44,9 @@ func main() {
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
 	// blocking
+	fmt.Println("parham log: calling upaPfcpi.Run for up")
 	go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
+	fmt.Println("parham log: calling upaPfcpi.Run for down")
 	dpaPfcpi.Run(u2d, d2u, pfcpiface.Down)
 	time.Sleep(5 * time.Minute)
 }

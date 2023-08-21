@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -106,7 +107,11 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	//		return
 	//	}
 	//}
-
+	if pos == Up {
+		fmt.Println("parham log: calling mustInit for up")
+	} else {
+		fmt.Println("parham log: calling mustInit for down")
+	}
 	p.mustInit(u2d, d2u, pos)
 
 	//go func() {

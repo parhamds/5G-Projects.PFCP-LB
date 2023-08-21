@@ -42,9 +42,13 @@ func NewPFCPNode(pos Position,
 	var conn net.PacketConn
 	var err error
 	if pos == Up {
+		fmt.Println("parham log: calling ListenPacket for up")
 		conn, err = reuse.ListenPacket("udp", ":"+UpPFCPPort)
+		fmt.Println("parham log: done ListenPacket for up")
 	} else {
+		fmt.Println("parham log: calling ListenPacket for down")
 		conn, err = reuse.ListenPacket("udp", ":"+DownPFCPPort)
+		fmt.Println("parham log: done ListenPacket for down")
 	}
 	if err != nil {
 		log.Fatalln("ListenUDP failed", err)
@@ -54,7 +58,6 @@ func NewPFCPNode(pos Position,
 	//if err != nil {
 	//	log.Fatalln("prom metrics service init failed", err)
 	//}
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &PFCPNode{
@@ -125,12 +128,22 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 		if pos == Up {
 			u2d <- buf[:n]
 		}
+		if pos == Up {
+			fmt.Println("parham log: calling NewPFCPConn for up")
+		} else {
+			fmt.Println("parham log: calling NewPFCPConn for down")
+		}
 		node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n])
 	}
 }
 
 // Serve listens for the first packet from a new PFCP peer and creates PFCPConn.
 func (node *PFCPNode) Serve(u2d, d2u chan []byte, pos Position) {
+	if pos == Up {
+		fmt.Println("parham log: calling handleNewPeers for up")
+	} else {
+		fmt.Println("parham log: calling handleNewPeers for down")
+	}
 	go node.handleNewPeers(u2d, d2u, pos)
 
 	shutdown := false
