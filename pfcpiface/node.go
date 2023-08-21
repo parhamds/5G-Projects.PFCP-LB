@@ -98,12 +98,13 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
-	log.Infoln("listening for new PFCP connections on", lAddrStr)
+	log.Infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
 	if pos == Down {
 		fmt.Println("parham log : test coonection btw 2 pfcp agents, send recieved msg to down pfcp")
 		fmt.Println(<-u2d)
+		fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
 	}
-	node.tryConnectToN4Peers(lAddrStr)
+	//node.tryConnectToN4Peers(lAddrStr)
 
 	for {
 		buf := make([]byte, 1024)
