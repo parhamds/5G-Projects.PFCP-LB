@@ -54,11 +54,11 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 		conf: conf,
 	}
 
-	if conf.EnableP4rt {
-		pfcpIface.fp = &UP4{}
-	} else {
-		pfcpIface.fp = &bess{}
-	}
+	//if conf.EnableP4rt {
+	//	pfcpIface.fp = &UP4{}
+	//} else {
+	//	pfcpIface.fp = &bess{}
+	//}
 	var httpPort string
 	if pos == Up {
 		httpPort = "8080"
@@ -72,7 +72,7 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 
 	pfcpIface.httpEndpoint = ":" + httpPort
 
-	pfcpIface.upf = NewUPF(&conf, pfcpIface.fp)
+	//pfcpIface.upf = NewUPF(&conf, pfcpIface.fp)
 
 	return pfcpIface
 }
