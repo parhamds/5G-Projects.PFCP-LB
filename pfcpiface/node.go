@@ -40,7 +40,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 	var err error
 	if pos == Up {
 		fmt.Println("parham log: calling ListenPacket for up")
-		conn, err = reuse.ListenPacket("udp", ":"+UpPFCPPort)
+		conn, err = reuse.ListenPacket("udp", ":"+PFCPPort)
 		fmt.Println("parham log: done ListenPacket for up")
 	} else {
 		fmt.Println("parham log: calling ListenPacket for down")
@@ -71,7 +71,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 	fmt.Println("parham log : start tryConnectToN4Peers func")
 	for _, peer := range node.upf.peers {
-		conn, err := net.Dial("udp", peer+":"+UpPFCPPort)
+		conn, err := net.Dial("udp", peer+":"+PFCPPort)
 		if err != nil {
 			log.Warnln("Failed to establish PFCP connection to peer ", peer)
 			continue
@@ -85,7 +85,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
 		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func")
-		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+UpPFCPPort, nil)
+		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+PFCPPort, nil)
 		if pfcpConn != nil {
 			go pfcpConn.sendAssociationRequest()
 		}
