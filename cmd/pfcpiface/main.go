@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	configPath = flag.String("config", "upf.json", "path to upf config")
+	UPAconfigPath = flag.String("config", "upf.json", "path to upf config")
+	UPDconfigPath = flag.String("config", "upf.json", "path to upf config")
 )
 
 func init() {
@@ -27,20 +28,26 @@ func init() {
 func main() {
 	// cmdline args
 	flag.Parse()
-
+	u2d := make(chan []byte, 100)
+	d2u := make(chan []byte, 100)
 	// Read and parse json startup file.
-	conf, err := pfcpiface.LoadConfigFile(*configPath)
+	upaConf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
+	dpaConf, err := pfcpiface.LoadConfigFile(*UPDconfigPath)
 	if err != nil {
 		log.Fatalln("Error reading conf file:", err)
 	}
 
-	log.SetLevel(conf.LogLevel)
+	log.SetLevel(upaConf.LogLevel)
+	log.SetLevel(dpaConf.LogLevel)
 
-	log.Infof("%+v", conf)
+	log.Infof("%+v", upaConf)
+	log.Infof("%+v", dpaConf)
 
-	pfcpi := pfcpiface.NewPFCPIface(conf)
+	upaPfcpi := pfcpiface.NewPFCPIface(upaConf)
+	dpaPfcpi := pfcpiface.NewPFCPIface(dpaConf)
 
 	// blocking
-	go pfcpi.Run()
+	go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
+	dpaPfcpi.Run(u2d, d2u, pfcpiface.Down)
 	time.Sleep(5 * time.Minute)
 }

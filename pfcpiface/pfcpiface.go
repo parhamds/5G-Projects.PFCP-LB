@@ -18,6 +18,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Position int
+
+const (
+	Up Position = iota
+	Down
+)
+
 var (
 	simulate = simModeDisable
 )
@@ -65,10 +72,18 @@ func NewPFCPIface(conf Conf) *PFCPIface {
 	return pfcpIface
 }
 
-func (p *PFCPIface) mustInit() {
+func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	if pos == Up {
+		u2d <- []byte("hi")
+	}
+	if pos == Down {
+		fmt.Println(<-u2d)
+	}
+
+	time.Sleep(2 * time.Minute)
 	p.node = NewPFCPNode(p.upf)
 	httpMux := http.NewServeMux()
 
@@ -88,7 +103,7 @@ func (p *PFCPIface) mustInit() {
 	p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
 }
 
-func (p *PFCPIface) Run() {
+func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	if simulate.enable() {
 		p.upf.sim(simulate, &p.conf.SimInfo)
 
@@ -99,7 +114,7 @@ func (p *PFCPIface) Run() {
 		}
 	}
 
-	p.mustInit()
+	p.mustInit(u2d, d2u, pos)
 
 	go func() {
 		if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
