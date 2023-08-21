@@ -101,7 +101,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//	fmt.Println(<-u2d)
 	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
 	//}
-	node.tryConnectToN4Peers(lAddrStr)
+	//node.tryConnectToN4Peers(lAddrStr)
 
 	fmt.Println("parham log : before loop for ", pos)
 	for {
@@ -159,13 +159,13 @@ func (node *PFCPNode) Serve(u2d, d2u chan []byte, pos Position) {
 
 	for !shutdown {
 		select {
-		case fseid := <-node.upf.reportNotifyChan:
-			// TODO: Logic to distinguish PFCPConn based on SEID
-			node.pConns.Range(func(key, value interface{}) bool {
-				pConn := value.(*PFCPConn)
-				pConn.handleDigestReport(fseid)
-				return false
-			})
+		//case fseid := <-node.upf.reportNotifyChan:
+		//	// TODO: Logic to distinguish PFCPConn based on SEID
+		//	node.pConns.Range(func(key, value interface{}) bool {
+		//		pConn := value.(*PFCPConn)
+		//		pConn.handleDigestReport(fseid)
+		//		return false
+		//	})
 		case rAddr := <-node.pConnDone:
 			node.pConns.Delete(rAddr)
 			log.Infoln("Removed connection to", rAddr)
