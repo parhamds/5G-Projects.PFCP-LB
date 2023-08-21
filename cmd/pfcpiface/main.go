@@ -14,7 +14,6 @@ import (
 
 var (
 	UPAconfigPath = flag.String("config", "upf.json", "path to upf config")
-	UPDconfigPath = flag.String("config", "upf.json", "path to upf config")
 )
 
 func init() {
@@ -32,16 +31,14 @@ func main() {
 	d2u := make(chan []byte, 100)
 	// Read and parse json startup file.
 	upaConf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
-	dpaConf, err := pfcpiface.LoadConfigFile(*UPDconfigPath)
+	dpaConf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
 	if err != nil {
 		log.Fatalln("Error reading conf file:", err)
 	}
 
 	log.SetLevel(upaConf.LogLevel)
-	log.SetLevel(dpaConf.LogLevel)
 
 	log.Infof("%+v", upaConf)
-	log.Infof("%+v", dpaConf)
 
 	upaPfcpi := pfcpiface.NewPFCPIface(upaConf)
 	dpaPfcpi := pfcpiface.NewPFCPIface(dpaConf)
