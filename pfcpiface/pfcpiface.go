@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -120,13 +121,13 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	}
 	p.mustInit(u2d, d2u, pos)
 
-	//go func() {
-	//	if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-	//		log.Fatalln("http server failed", err)
-	//	}
+	go func() {
+		if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalln("http server failed", err)
+		}
 
-	//	log.Infoln("http server closed")
-	//}()
+		log.Infoln("http server closed")
+	}()
 
 	//sig := make(chan os.Signal, 1)
 	//signal.Notify(sig, os.Interrupt)
