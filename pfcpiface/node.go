@@ -101,7 +101,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//	fmt.Println(<-u2d)
 	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
 	//}
-	//node.tryConnectToN4Peers(lAddrStr)
+	node.tryConnectToN4Peers(lAddrStr)
 
 	fmt.Println("parham log : before loop for ", pos)
 	for {
