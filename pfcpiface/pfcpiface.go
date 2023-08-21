@@ -5,14 +5,10 @@ package pfcpiface
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -124,23 +120,22 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	}
 	p.mustInit(u2d, d2u, pos)
 
-	go func() {
-		if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalln("http server failed", err)
-		}
+	//go func() {
+	//	if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	//		log.Fatalln("http server failed", err)
+	//	}
+	//	log.Infoln("http server closed")
+	//}()
 
-		log.Infoln("http server closed")
-	}()
+	//sig := make(chan os.Signal, 1)
+	//signal.Notify(sig, os.Interrupt)
+	//signal.Notify(sig, syscall.SIGTERM)
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
-	signal.Notify(sig, syscall.SIGTERM)
-
-	go func() {
-		oscall := <-sig
-		log.Infof("System call received: %+v", oscall)
-		p.Stop()
-	}()
+	//go func() {
+	//	oscall := <-sig
+	//	log.Infof("System call received: %+v", oscall)
+	//	p.Stop()
+	//}()
 
 	// blocking
 	if pos == Up {
