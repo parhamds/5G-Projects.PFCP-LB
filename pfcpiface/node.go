@@ -105,12 +105,14 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
 	//}
 	//node.tryConnectToN4Peers(lAddrStr)
-
+	fmt.Println("parham log : before loop for ", pos)
 	for {
 		buf := make([]byte, 1024)
-
+		fmt.Println("parham log : buf created")
 		n, rAddr, err := node.ReadFrom(buf)
+		fmt.Println("parham log : buf read")
 		if err != nil {
+			log.Errorln("Error while reading from conn to buf ", err)
 			if errors.Is(err, net.ErrClosed) {
 				return
 			}
@@ -119,7 +121,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 		}
 
 		rAddrStr := rAddr.String()
-
+		fmt.Println("parham log : rAddr read")
 		_, ok := node.pConns.Load(rAddrStr)
 		if ok {
 			log.Warnln("Drop packet for existing PFCPconn received from", rAddrStr)
