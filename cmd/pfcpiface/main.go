@@ -47,6 +47,6 @@ func main() {
 	//fmt.Println("parham log: calling upaPfcpi.Run for up")
 	//go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
 	fmt.Println("parham log: calling upaPfcpi.Run for down")
-	dpaPfcpi.Run(u2d, d2u, pfcpiface.Down)
+	dpaPfcpi.Run(u2d, d2u, pfcpiface.Up)
 	time.Sleep(5 * time.Minute)
 }
