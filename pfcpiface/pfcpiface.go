@@ -89,13 +89,13 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 
 	p.node = NewPFCPNode(pos, p.upf) //p.upf,
 
-	httpMux := http.NewServeMux()
+	//httpMux := http.NewServeMux()
 
-	setupConfigHandler(httpMux, p.upf)
+	//setupConfigHandler(httpMux, p.upf)
 
 	var err error
 
-	p.uc, p.nc, err = setupProm(httpMux, p.upf, p.node)
+	//p.uc, p.nc, err = setupProm(httpMux, p.upf, p.node)
 
 	if err != nil {
 		log.Fatalln("setupProm failed", err)
@@ -104,7 +104,7 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 	// Note: due to error with golangci-lint ("Error: G112: Potential Slowloris Attack
 	// because ReadHeaderTimeout is not configured in the http.Server (gosec)"),
 	// the ReadHeaderTimeout is set to the same value as in nginx (client_header_timeout)
-	p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
+	//p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
 }
 
 func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
