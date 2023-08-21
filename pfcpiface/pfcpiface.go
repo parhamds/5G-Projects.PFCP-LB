@@ -5,14 +5,9 @@ package pfcpiface
 
 import (
 	"context"
-	"errors"
 	"flag"
-	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -49,25 +44,30 @@ type PFCPIface struct {
 	mu sync.Mutex
 }
 
-func NewPFCPIface(conf Conf) *PFCPIface {
+func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 	pfcpIface := &PFCPIface{
 		conf: conf,
 	}
 
-	if conf.EnableP4rt {
-		pfcpIface.fp = &UP4{}
+	//if conf.EnableP4rt {
+	//	pfcpIface.fp = &UP4{}
+	//} else {
+	//	pfcpIface.fp = &bess{}
+	//}
+	var httpPort string
+	if pos == Up {
+		httpPort = "8080"
 	} else {
-		pfcpIface.fp = &bess{}
+		httpPort = "8081"
 	}
 
-	httpPort := "8080"
 	if conf.CPIface.HTTPPort != "" {
 		httpPort = conf.CPIface.HTTPPort
 	}
 
 	pfcpIface.httpEndpoint = ":" + httpPort
 
-	pfcpIface.upf = NewUPF(&conf, pfcpIface.fp)
+	//pfcpIface.upf = NewUPF(&conf, pfcpIface.fp)
 
 	return pfcpIface
 }
@@ -76,22 +76,15 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if pos == Up {
-		u2d <- []byte("hi")
-	}
-	if pos == Down {
-		fmt.Println(<-u2d)
-	}
+	p.node = NewPFCPNode(pos) //p.upf,
 
-	time.Sleep(2 * time.Minute)
-	p.node = NewPFCPNode(p.upf)
 	httpMux := http.NewServeMux()
 
-	setupConfigHandler(httpMux, p.upf)
+	//setupConfigHandler(httpMux, p.upf)
 
 	var err error
 
-	p.uc, p.nc, err = setupProm(httpMux, p.upf, p.node)
+	//p.uc, p.nc, err = setupProm(httpMux, p.upf, p.node)
 
 	if err != nil {
 		log.Fatalln("setupProm failed", err)
@@ -104,38 +97,38 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 }
 
 func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
-	if simulate.enable() {
-		p.upf.sim(simulate, &p.conf.SimInfo)
-
-		fmt.Println("parham log : simulate.enable() is true")
-
-		if !simulate.keepGoing() {
-			return
-		}
-	}
+	//if simulate.enable() {
+	//	p.upf.sim(simulate, &p.conf.SimInfo)
+	//
+	//	fmt.Println("parham log : simulate.enable() is true")
+	//
+	//	if !simulate.keepGoing() {
+	//		return
+	//	}
+	//}
 
 	p.mustInit(u2d, d2u, pos)
 
-	go func() {
-		if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalln("http server failed", err)
-		}
+	//go func() {
+	//	if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	//		log.Fatalln("http server failed", err)
+	//	}
 
-		log.Infoln("http server closed")
-	}()
+	//	log.Infoln("http server closed")
+	//}()
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
-	signal.Notify(sig, syscall.SIGTERM)
+	//sig := make(chan os.Signal, 1)
+	//signal.Notify(sig, os.Interrupt)
+	//signal.Notify(sig, syscall.SIGTERM)
 
-	go func() {
-		oscall := <-sig
-		log.Infof("System call received: %+v", oscall)
-		p.Stop()
-	}()
+	//go func() {
+	//	oscall := <-sig
+	//	log.Infof("System call received: %+v", oscall)
+	//	p.Stop()
+	//}()
 
 	// blocking
-	p.node.Serve()
+	p.node.Serve(u2d, d2u, pos)
 }
 
 // Stop sends cancellation signal to main Go routine and waits for shutdown to complete.

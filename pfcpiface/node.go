@@ -35,8 +35,17 @@ type PFCPNode struct {
 }
 
 // NewPFCPNode create a new PFCPNode listening on local address.
-func NewPFCPNode(upf *upf) *PFCPNode {
-	conn, err := reuse.ListenPacket("udp", ":"+PFCPPort)
+func NewPFCPNode(pos Position,
+
+// upf *upf,
+) *PFCPNode {
+	var conn net.PacketConn
+	var err error
+	if pos == Up {
+		conn, err = reuse.ListenPacket("udp", ":"+UpPFCPPort)
+	} else {
+		conn, err = reuse.ListenPacket("udp", ":"+DownPFCPPort)
+	}
 	if err != nil {
 		log.Fatalln("ListenUDP failed", err)
 	}
@@ -54,7 +63,7 @@ func NewPFCPNode(upf *upf) *PFCPNode {
 		PacketConn: conn,
 		done:       make(chan struct{}),
 		pConnDone:  make(chan string, 100),
-		upf:        upf,
+		upf:        &upf{},
 		metrics:    metrics,
 	}
 }
@@ -62,7 +71,7 @@ func NewPFCPNode(upf *upf) *PFCPNode {
 func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 	fmt.Println("parham log : start tryConnectToN4Peers func")
 	for _, peer := range node.upf.peers {
-		conn, err := net.Dial("udp", peer+":"+PFCPPort)
+		conn, err := net.Dial("udp", peer+":"+UpPFCPPort)
 		if err != nil {
 			log.Warnln("Failed to establish PFCP connection to peer ", peer)
 			continue
@@ -76,18 +85,21 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
 		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func")
-		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+PFCPPort, nil)
+		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+UpPFCPPort, nil)
 		if pfcpConn != nil {
 			go pfcpConn.sendAssociationRequest()
 		}
 	}
 }
 
-func (node *PFCPNode) handleNewPeers() {
-	fmt.Println("parham log : start handleNewPeers func")
+func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
+	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
 	log.Infoln("listening for new PFCP connections on", lAddrStr)
-
+	if pos == Down {
+		fmt.Println("parham log : test coonection btw 2 pfcp agents, send recieved msg to down pfcp")
+		fmt.Println(<-u2d)
+	}
 	node.tryConnectToN4Peers(lAddrStr)
 
 	for {
@@ -110,13 +122,16 @@ func (node *PFCPNode) handleNewPeers() {
 			continue
 		}
 		fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
+		if pos == Up {
+			u2d <- buf[:n]
+		}
 		node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n])
 	}
 }
 
 // Serve listens for the first packet from a new PFCP peer and creates PFCPConn.
-func (node *PFCPNode) Serve() {
-	go node.handleNewPeers()
+func (node *PFCPNode) Serve(u2d, d2u chan []byte, pos Position) {
+	go node.handleNewPeers(u2d, d2u, pos)
 
 	shutdown := false
 

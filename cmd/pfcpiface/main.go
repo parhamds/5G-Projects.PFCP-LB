@@ -30,18 +30,17 @@ func main() {
 	u2d := make(chan []byte, 100)
 	d2u := make(chan []byte, 100)
 	// Read and parse json startup file.
-	upaConf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
-	dpaConf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
+	conf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
 	if err != nil {
 		log.Fatalln("Error reading conf file:", err)
 	}
 
-	log.SetLevel(upaConf.LogLevel)
+	log.SetLevel(conf.LogLevel)
 
-	log.Infof("%+v", upaConf)
+	log.Infof("%+v", conf)
 
-	upaPfcpi := pfcpiface.NewPFCPIface(upaConf)
-	dpaPfcpi := pfcpiface.NewPFCPIface(dpaConf)
+	upaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Up)
+	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
 	// blocking
 	go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
