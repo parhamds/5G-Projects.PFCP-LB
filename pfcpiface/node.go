@@ -99,11 +99,11 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
 	log.Infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
-	if pos == Down {
-		fmt.Println("parham log : test coonection btw 2 pfcp agents, send recieved msg to down pfcp")
-		fmt.Println(<-u2d)
-		fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
-	}
+	//if pos == Down {
+	//	fmt.Println("parham log : test coonection btw 2 pfcp agents, send recieved msg to down pfcp")
+	//	fmt.Println(<-u2d)
+	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
+	//}
 	//node.tryConnectToN4Peers(lAddrStr)
 
 	for {
@@ -127,7 +127,15 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 		}
 		fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
 		if pos == Up {
+			fmt.Println("parham log : sending recieved msg to down pfcp")
 			u2d <- buf[:n]
+			fmt.Println("parham log : show recieved msg from down pfcp")
+			fmt.Println(<-d2u)
+		} else {
+			fmt.Println("parham log : sending recieved msg to up pfcp")
+			d2u <- buf[:n]
+			fmt.Println("parham log : show recieved msg from up pfcp")
+			fmt.Println(<-u2d)
 		}
 		if pos == Up {
 			fmt.Println("parham log: calling NewPFCPConn for up")
