@@ -35,10 +35,7 @@ type PFCPNode struct {
 }
 
 // NewPFCPNode create a new PFCPNode listening on local address.
-func NewPFCPNode(pos Position,
-
-// upf *upf,
-) *PFCPNode {
+func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 	var conn net.PacketConn
 	var err error
 	if pos == Up {
@@ -66,7 +63,7 @@ func NewPFCPNode(pos Position,
 		PacketConn: conn,
 		done:       make(chan struct{}),
 		pConnDone:  make(chan string, 100),
-		upf:        &upf{},
+		upf:        upf,
 		metrics:    metrics,
 	}
 }

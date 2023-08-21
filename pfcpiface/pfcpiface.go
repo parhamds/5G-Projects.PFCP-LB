@@ -87,7 +87,7 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 		fmt.Println("parham log: calling NewPFCPNode for down")
 	}
 
-	p.node = NewPFCPNode(pos) //p.upf,
+	p.node = NewPFCPNode(pos, p.upf) //p.upf,
 
 	httpMux := http.NewServeMux()
 
