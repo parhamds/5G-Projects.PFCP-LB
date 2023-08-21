@@ -50,10 +50,10 @@ func NewPFCPNode(pos Position,
 		log.Fatalln("ListenUDP failed", err)
 	}
 
-	metrics, err := metrics.NewPrometheusService()
-	if err != nil {
-		log.Fatalln("prom metrics service init failed", err)
-	}
+	//metrics, err := metrics.NewPrometheusService()
+	//if err != nil {
+	//	log.Fatalln("prom metrics service init failed", err)
+	//}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -64,7 +64,7 @@ func NewPFCPNode(pos Position,
 		done:       make(chan struct{}),
 		pConnDone:  make(chan string, 100),
 		upf:        &upf{},
-		metrics:    metrics,
+		//metrics:    metrics,
 	}
 }
 
