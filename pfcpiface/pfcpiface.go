@@ -144,7 +144,7 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 			p.Stop()
 		}()
 	}
-	time.Sleep(1 * time.Minute)
+	//time.Sleep(1 * time.Minute)
 	// blocking
 
 	if pos == Up {
