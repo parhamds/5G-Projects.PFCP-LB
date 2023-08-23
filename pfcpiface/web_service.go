@@ -19,6 +19,10 @@ type NetworkSlice struct {
 	UeResInfo []UeResInfo `json:"ueResourceInfo"`
 }
 
+type PfcpInfo struct {
+	Ip string `json:"ip"`
+}
+
 // SliceQos ... Slice level QOS rates.
 type SliceQos struct {
 	UplinkMbr    uint64 `json:"uplinkMbr"`
@@ -40,11 +44,12 @@ type ConfigHandler struct {
 
 func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	cfgHandler := ConfigHandler{upf: upf}
-	mux.Handle("/v1/config/network-slices", &cfgHandler)
+	//mux.Handle("/v1/config/network-slices", &cfgHandler)
+	mux.Handle("/v1/register/pfcp", &cfgHandler)
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("handle http request for /v1/config/network-slices")
+	log.Infoln("handle http request for /v1/register/pcfp")
 
 	switch r.Method {
 	case "PUT":
@@ -58,15 +63,17 @@ func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		log.Traceln(string(body))
 
-		var nwSlice NetworkSlice
+		//var nwSlice NetworkSlice
+		var pfcpInfo PfcpInfo
 
-		err = json.Unmarshal(body, &nwSlice)
+		err = json.Unmarshal(body, &pfcpInfo)
 		if err != nil {
 			log.Errorln("Json unmarshal failed for http request")
 			sendHTTPResp(http.StatusBadRequest, w)
 		}
 
-		handleSliceConfig(&nwSlice, c.upf)
+		//handleSliceConfig(&nwSlice, c.upf)
+		handlePFCPConfig(&pfcpInfo, c.upf)
 		sendHTTPResp(http.StatusCreated, w)
 	default:
 		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")
@@ -149,6 +156,15 @@ func handleSliceConfig(nwSlice *NetworkSlice, upf *upf) {
 	}
 
 	err := upf.addSliceInfo(&sliceInfo)
+
+	if err != nil {
+		log.Errorln("adding slice info to datapath failed : ", err)
+	}
+}
+
+func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *upf) {
+	log.Infoln("handle register pfcp agent : ", pfcpInfo.Ip)
+	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {
 		log.Errorln("adding slice info to datapath failed : ", err)
 	}

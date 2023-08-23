@@ -64,7 +64,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 		PacketConn: conn,
 		done:       make(chan struct{}),
 		pConnDone:  make(chan string, 100),
-		//upf:        upf,
+		upf:        upf,
 		//metrics: metrics,
 	}
 }
@@ -72,7 +72,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 	fmt.Println("parham log : start tryConnectToN4Peers func")
 	for _, peer := range node.upf.peers {
-		conn, err := net.Dial("udp", peer+":"+UpPFCPPort)
+		conn, err := net.Dial("udp", peer+":"+DownPFCPPort)
 		if err != nil {
 			log.Warnln("Failed to establish PFCP connection to peer ", peer)
 			continue
@@ -86,7 +86,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
 		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func")
-		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+UpPFCPPort, nil)
+		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil)
 		if pfcpConn != nil {
 			go pfcpConn.sendAssociationRequest()
 		}
@@ -225,10 +225,10 @@ func (node *PFCPNode) Serve(u2d, d2u chan []byte, pos Position) {
 func (node *PFCPNode) Stop() {
 	node.cancel()
 
-	if err := node.metrics.Stop(); err != nil {
-		// TODO: propagate error upwards
-		log.Errorln(err)
-	}
+	//if err := node.metrics.Stop(); err != nil {
+	//	// TODO: propagate error upwards
+	//	log.Errorln(err)
+	//}
 }
 
 // Done waits for Shutdown() to complete

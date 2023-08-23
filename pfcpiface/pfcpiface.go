@@ -5,10 +5,14 @@ package pfcpiface
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -68,7 +72,7 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 
 	pfcpIface.httpEndpoint = ":" + httpPort
 
-	//pfcpIface.upf = NewUPF(&conf, pfcpIface.fp)
+	pfcpIface.upf = NewUPF(&conf) //pfcpIface.fp
 
 	return pfcpIface
 }
@@ -85,22 +89,22 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 
 	p.node = NewPFCPNode(pos, p.upf) //p.upf,
 
-	//httpMux := http.NewServeMux()
-
-	//setupConfigHandler(httpMux, p.upf)
-
-	var err error
+	//var err error
 
 	//p.uc, p.nc, err = setupProm(httpMux, p.upf, p.node)
 
-	if err != nil {
-		log.Fatalln("setupProm failed", err)
-	}
+	//if err != nil {
+	//	log.Fatalln("setupProm failed", err)
+	//}
 
-	// Note: due to error with golangci-lint ("Error: G112: Potential Slowloris Attack
-	// because ReadHeaderTimeout is not configured in the http.Server (gosec)"),
-	// the ReadHeaderTimeout is set to the same value as in nginx (client_header_timeout)
-	//p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
+	if pos == Down {
+		httpMux := http.NewServeMux()
+		setupConfigHandler(httpMux, p.upf)
+		// Note: due to error with golangci-lint ("Error: G112: Potential Slowloris Attack
+		// because ReadHeaderTimeout is not configured in the http.Server (gosec)"),
+		// the ReadHeaderTimeout is set to the same value as in nginx (client_header_timeout)
+		p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
+	}
 }
 
 func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
@@ -120,23 +124,24 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	}
 	p.mustInit(u2d, d2u, pos)
 
-	//go func() {
-	//	if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-	//		log.Fatalln("http server failed", err)
-	//	}
-	//	log.Infoln("http server closed")
-	//}()
+	if pos == Down {
+		go func() {
+			if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Fatalln("http server failed", err)
+			}
+			log.Infoln("http server closed")
+		}()
 
-	//sig := make(chan os.Signal, 1)
-	//signal.Notify(sig, os.Interrupt)
-	//signal.Notify(sig, syscall.SIGTERM)
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt)
+		signal.Notify(sig, syscall.SIGTERM)
 
-	//go func() {
-	//	oscall := <-sig
-	//	log.Infof("System call received: %+v", oscall)
-	//	p.Stop()
-	//}()
-
+		go func() {
+			oscall := <-sig
+			log.Infof("System call received: %+v", oscall)
+			p.Stop()
+		}()
+	}
 	// blocking
 	if pos == Up {
 		fmt.Println("parham log: calling Serve for up")
