@@ -105,6 +105,8 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 		// the ReadHeaderTimeout is set to the same value as in nginx (client_header_timeout)
 		p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
 	}
+
+	time.Sleep(1 * time.Minute)
 }
 
 func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
