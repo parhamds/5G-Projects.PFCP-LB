@@ -49,7 +49,7 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("handle http request for /v1/register/pcfp")
+	log.Infoln("parham log : handle http request for /v1/register/pcfp")
 
 	switch r.Method {
 	case "PUT":

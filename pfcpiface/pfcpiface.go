@@ -126,6 +126,7 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 
 	if pos == Down {
 		go func() {
+			fmt.Println("parham log : http server is serving")
 			if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				log.Fatalln("http server failed", err)
 			}
