@@ -50,14 +50,16 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 }
 
 func simpleHandler(w http.ResponseWriter, r *http.Request) {
-	body := make([]byte, r.ContentLength)
-	_, err := r.Body.Read(body)
+	fmt.Println("parham log : an http req recieved")
+	//_, err := r.Body.Read(body)
+	body, err := io.ReadAll(r.Body)
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error reading request body: %v", err)
 		return
 	}
-	fmt.Println("recieved body = ")
+	fmt.Println("recieved body = ", string(body))
 	w.WriteHeader(http.StatusOK)
 	fmt.Println("Registration successful!")
 }
