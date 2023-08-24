@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -46,6 +47,19 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	cfgHandler := ConfigHandler{upf: upf}
 	//mux.Handle("/v1/config/network-slices", &cfgHandler)
 	mux.Handle("/", &cfgHandler)
+}
+
+func simpleHandler(w http.ResponseWriter, r *http.Request) {
+	body := make([]byte, r.ContentLength)
+	_, err := r.Body.Read(body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error reading request body: %v", err)
+		return
+	}
+	fmt.Println("recieved body = ")
+	w.WriteHeader(http.StatusOK)
+	fmt.Println("Registration successful!")
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

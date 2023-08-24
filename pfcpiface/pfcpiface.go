@@ -5,7 +5,6 @@ package pfcpiface
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -97,14 +96,11 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 	//	log.Fatalln("setupProm failed", err)
 	//}
 
-	if pos == Down {
-		httpMux := http.NewServeMux()
-		setupConfigHandler(httpMux, p.upf)
-		// Note: due to error with golangci-lint ("Error: G112: Potential Slowloris Attack
-		// because ReadHeaderTimeout is not configured in the http.Server (gosec)"),
-		// the ReadHeaderTimeout is set to the same value as in nginx (client_header_timeout)
-		p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
-	}
+	//if pos == Down {
+	//	httpMux := http.NewServeMux()
+	//	setupConfigHandler(httpMux, p.upf)
+	//	p.httpSrv = &http.Server{Addr: p.httpEndpoint, Handler: httpMux, ReadHeaderTimeout: 60 * time.Second}
+	//}
 
 }
 
@@ -127,22 +123,25 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 
 	if pos == Down {
 		go func() {
-			fmt.Println("parham log : http server is serving")
-			if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Fatalln("http server failed", err)
-			}
-			log.Infoln("http server closed")
+			//fmt.Println("parham log : http server is serving")
+			//if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			//	log.Fatalln("http server failed", err)
+			//}
+			//log.Infoln("http server closed")
+			http.HandleFunc("/", simpleHandler)
+			fmt.Println("Server started on :8080")
+			http.ListenAndServe(":8080", nil)
 		}()
 
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, os.Interrupt)
 		signal.Notify(sig, syscall.SIGTERM)
 
-		go func() {
-			oscall := <-sig
-			log.Infof("System call received: %+v", oscall)
-			p.Stop()
-		}()
+		//go func() {
+		//	oscall := <-sig
+		//	log.Infof("System call received: %+v", oscall)
+		//	p.Stop()
+		//}()
 	}
 	//time.Sleep(1 * time.Minute)
 	// blocking
