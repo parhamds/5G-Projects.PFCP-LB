@@ -49,8 +49,8 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	mux.Handle("/", &cfgHandler)
 }
 
-func simpleHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("parham log : an http req recieved")
+func simpleHandler(w http.ResponseWriter, r *http.Request, a string) {
+	fmt.Println("parham log : an http req recieved, ", a)
 	//_, err := r.Body.Read(body)
 	body, err := io.ReadAll(r.Body)
 

@@ -128,7 +128,9 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 			//	log.Fatalln("http server failed", err)
 			//}
 			//log.Infoln("http server closed")
-			http.HandleFunc("/", simpleHandler)
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				simpleHandler(w, r, "Custom Parameter Value")
+			})
 			fmt.Println("Server started on :8080")
 			http.ListenAndServe(":8080", nil)
 		}()
