@@ -60,9 +60,9 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 	//}
 	var httpPort string
 	if pos == Up {
-		httpPort = "8081"
-	} else {
 		httpPort = "8080"
+	} else {
+		httpPort = "8081"
 	}
 
 	if conf.CPIface.HTTPPort != "" {
@@ -131,8 +131,8 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 				simpleHandler(w, r, p.upf)
 			})
-			fmt.Println("Server started on :8080")
-			http.ListenAndServe(":8080", nil)
+			fmt.Println("Server started on :8081")
+			http.ListenAndServe(":8081", nil)
 		}()
 
 		sig := make(chan os.Signal, 1)
