@@ -49,19 +49,47 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	mux.Handle("/", &cfgHandler)
 }
 
-func simpleHandler(w http.ResponseWriter, r *http.Request, a string) {
-	fmt.Println("parham log : an http req recieved, ", a)
+func simpleHandler(w http.ResponseWriter, r *http.Request, upf *upf) {
+	fmt.Println("parham log : an http req recieved, ")
 	//_, err := r.Body.Read(body)
-	body, err := io.ReadAll(r.Body)
+	//body, err := io.ReadAll(r.Body)
+	//if err != nil {
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	fmt.Fprintf(w, "Error reading request body: %v", err)
+	//	return
+	//}
+	//fmt.Println("recieved body = ", string(body))
+	//w.WriteHeader(http.StatusOK)
+	//fmt.Println("Registration successful!")
 
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error reading request body: %v", err)
-		return
+	switch r.Method {
+	case "PUT":
+		fallthrough
+	case "POST":
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Errorln("http req read body failed.")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		log.Traceln(string(body))
+
+		//var nwSlice NetworkSlice
+		var pfcpInfo PfcpInfo
+
+		err = json.Unmarshal(body, &pfcpInfo)
+		if err != nil {
+			log.Errorln("Json unmarshal failed for http request")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		//handleSliceConfig(&nwSlice, c.upf)
+		handlePFCPConfig(&pfcpInfo, upf)
+		sendHTTPResp(http.StatusCreated, w)
+	default:
+		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")
+		sendHTTPResp(http.StatusMethodNotAllowed, w)
 	}
-	fmt.Println("recieved body = ", string(body))
-	w.WriteHeader(http.StatusOK)
-	fmt.Println("Registration successful!")
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +210,6 @@ func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *upf) {
 	log.Infoln("handle register pfcp agent : ", pfcpInfo.Ip)
 	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {
-		log.Errorln("adding slice info to datapath failed : ", err)
+		log.Errorln("adding pfcp info to pfcplb failed : ", err)
 	}
 }
