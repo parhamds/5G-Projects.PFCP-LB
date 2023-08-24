@@ -61,9 +61,9 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 	//}
 	var httpPort string
 	if pos == Up {
-		httpPort = "8080"
-	} else {
 		httpPort = "8081"
+	} else {
+		httpPort = "8080"
 	}
 
 	if conf.CPIface.HTTPPort != "" {
