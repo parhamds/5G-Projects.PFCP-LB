@@ -45,11 +45,11 @@ type ConfigHandler struct {
 func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	cfgHandler := ConfigHandler{upf: upf}
 	//mux.Handle("/v1/config/network-slices", &cfgHandler)
-	mux.Handle("/v1/register/pfcp", &cfgHandler)
+	mux.Handle("/", &cfgHandler)
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("parham log : handle http request for /v1/register/pcfp")
+	log.Infoln("parham log : handle http request for /")
 
 	switch r.Method {
 	case "PUT":
