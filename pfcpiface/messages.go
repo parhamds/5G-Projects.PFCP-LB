@@ -138,29 +138,29 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
 
 func (pConn *PFCPConn) SendPFCPMsg(msg message.Message) {
 	addr := pConn.RemoteAddr().String()
-	nodeID := pConn.nodeID.remote
+	//nodeID := pConn.nodeID.remote
 	msgType := msg.MessageTypeName()
 
-	m := metrics.NewMessage(msgType, "Outgoing")
-	defer pConn.SaveMessages(m)
+	//m := metrics.NewMessage(msgType, "Outgoing")
+	//defer pConn.SaveMessages(m)
 
 	out := make([]byte, msg.MarshalLen())
 
 	if err := msg.MarshalTo(out); err != nil {
-		m.Finish(nodeID, "Failure")
+		//m.Finish(nodeID, "Failure")
 		log.Errorln("Failed to marshal", msgType, "for", addr, err)
 
 		return
 	}
 
 	if _, err := pConn.Write(out); err != nil {
-		m.Finish(nodeID, "Failure")
+		//m.Finish(nodeID, "Failure")
 		log.Errorln("Failed to transmit", msgType, "to", addr, err)
 
 		return
 	}
 
-	m.Finish(nodeID, "Success")
+	//m.Finish(nodeID, "Success")
 	log.Traceln("Sent", msgType, "to", addr)
 }
 
