@@ -84,7 +84,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 			"SPGWC/SMF host": peer,
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
-		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func")
+		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
 		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil)
 		if pfcpConn != nil {
 			go pfcpConn.sendAssociationRequest()

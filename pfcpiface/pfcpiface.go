@@ -123,7 +123,7 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 
 	if pos == Down {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			newPFCPHandler(w, r, p.upf)
+			newPFCPHandler(w, r, p)
 		})
 		server := http.Server{Addr: ":8081"}
 		go func() {
