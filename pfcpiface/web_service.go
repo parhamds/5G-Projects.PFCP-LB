@@ -85,10 +85,10 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, p *PFCPIface) {
 
 		//handleSliceConfig(&nwSlice, c.upf)
 		handlePFCPConfig(&pfcpInfo, p.node.upf)
-		sendHTTPResp(http.StatusCreated, w)
 		fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := p.node.LocalAddr().String()
-		p.node.tryConnectToN4Peers(lAddrStr)
+		go p.node.tryConnectToN4Peers(lAddrStr)
+		sendHTTPResp(http.StatusCreated, w)
 	default:
 		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")
 		sendHTTPResp(http.StatusMethodNotAllowed, w)
