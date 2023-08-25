@@ -136,9 +136,9 @@ func NewUPF(conf *Conf,
 		//dnn:               conf.CPIface.Dnn,
 		peers: make([]string, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
-		//maxReqRetries:     conf.MaxReqRetries,
-		//enableHBTimer:     conf.EnableHBTimer,
-		//readTimeout:       time.Second * time.Duration(conf.ReadTimeout),
+		maxReqRetries: conf.MaxReqRetries,
+		enableHBTimer: conf.EnableHBTimer,
+		readTimeout:   time.Second * time.Duration(conf.ReadTimeout),
 	}
 
 	//if len(conf.CPIface.Peers) > 0 {
