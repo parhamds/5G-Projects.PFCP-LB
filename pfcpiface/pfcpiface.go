@@ -8,10 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -140,15 +137,15 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 			server.ListenAndServe()
 		}()
 
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, os.Interrupt)
-		signal.Notify(sig, syscall.SIGTERM)
+		//sig := make(chan os.Signal, 1)
+		//signal.Notify(sig, os.Interrupt)
+		//signal.Notify(sig, syscall.SIGTERM)
 
-		go func() {
-			oscall := <-sig
-			log.Infof("System call received: %+v", oscall)
-			server.Shutdown(nil)
-		}()
+		//go func() {
+		//	oscall := <-sig
+		//	log.Infof("System call received: %+v", oscall)
+		//	server.Shutdown(nil)
+		//}()
 		//go func() {
 		//	oscall := <-sig
 		//	log.Infof("System call received: %+v", oscall)
