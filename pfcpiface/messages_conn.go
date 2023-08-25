@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"errors"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
@@ -28,6 +29,7 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 		err := pConn.handleAssociationSetupResponse(reply)
 		if err != nil {
 			log.Errorln("Handling of Assoc Setup Response Failed ", pConn.RemoteAddr())
+			fmt.Println("parham log : Shutdown called from sendAssociationRequest")
 			pConn.Shutdown()
 
 			return
@@ -37,6 +39,7 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 			go pConn.startHeartBeatMonitor()
 		}
 	} else if timeout {
+		fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
 		pConn.Shutdown()
 	}
 }

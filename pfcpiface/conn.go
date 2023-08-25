@@ -103,6 +103,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 
 			if _, timeout := pConn.sendPFCPRequestMessage(r); timeout {
 				heartBeatExpiryTimer.Stop()
+				fmt.Println("parham log : Shutdown called from startHeartBeatMonitor")
 				pConn.Shutdown()
 			}
 		}
@@ -226,9 +227,11 @@ func (pConn *PFCPConn) Serve() {
 	for {
 		select {
 		case <-connTimeout:
+			fmt.Println("parham log : Shutdown called from connTimeout channel")
 			pConn.Shutdown()
 			return
 		case <-pConn.ctx.Done():
+			fmt.Println("parham log : Shutdown called from ctx.Done channel")
 			pConn.Shutdown()
 			return
 
