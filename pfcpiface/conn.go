@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -144,7 +145,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte) *PFCPConn {
 
 	if buf != nil {
 		// TODO: Check if the first msg is Association Setup Request
-		//fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
+		fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
 		p.HandlePFCPMsg(buf)
 	}
 

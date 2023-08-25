@@ -49,7 +49,7 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	mux.Handle("/", &cfgHandler)
 }
 
-func simpleHandler(w http.ResponseWriter, r *http.Request, upf *upf) {
+func newPFCPHandler(w http.ResponseWriter, r *http.Request, upf *upf) {
 	fmt.Println("parham log : an http req recieved, ")
 	//_, err := r.Body.Read(body)
 	//body, err := io.ReadAll(r.Body)

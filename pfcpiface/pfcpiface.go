@@ -122,23 +122,33 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	p.mustInit(u2d, d2u, pos)
 
 	if pos == Down {
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			newPFCPHandler(w, r, p.upf)
+		})
+		server := http.Server{Addr: ":8081"}
 		go func() {
 			//fmt.Println("parham log : http server is serving")
 			//if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			//	log.Fatalln("http server failed", err)
 			//}
 			//log.Infoln("http server closed")
-			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-				simpleHandler(w, r, p.upf)
-			})
-			fmt.Println("Server started on :8081")
-			http.ListenAndServe(":8081", nil)
+			//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			//	newPFCPHandler(w, r, p.upf)
+			//})
+			//fmt.Println("Server started on :8081")
+			//http.ListenAndServe(":8081", nil)
+			server.ListenAndServe()
 		}()
 
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, os.Interrupt)
 		signal.Notify(sig, syscall.SIGTERM)
 
+		go func() {
+			oscall := <-sig
+			log.Infof("System call received: %+v", oscall)
+			server.Shutdown(nil)
+		}()
 		//go func() {
 		//	oscall := <-sig
 		//	log.Infof("System call received: %+v", oscall)

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"sync"
-	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
 	log "github.com/sirupsen/logrus"
@@ -97,59 +96,51 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
 	log.Infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
-	//if pos == Down {
-	//	fmt.Println("parham log : test coonection btw 2 pfcp agents, send recieved msg to down pfcp")
-	//	fmt.Println(<-u2d)
-	//	fmt.Println("parham log : down pfcp passed fmt.Println(<-u2d)")
-	//}
+
 	//node.tryConnectToN4Peers(lAddrStr)
 
-	fmt.Println("parham log : before loop for ", pos)
-	if pos == Down {
-		fmt.Println("parham log : show recieved msg from up pfcp")
-		fmt.Println(<-u2d)
-	}
-	for {
-		buf := make([]byte, 1024)
-		fmt.Println("parham log : buf created")
-		n, rAddr, err := node.ReadFrom(buf)
-		fmt.Println("parham log : buf read")
-		if err != nil {
-			log.Errorln("Error while reading from conn to buf ", err)
-			if errors.Is(err, net.ErrClosed) {
-				return
+	//fmt.Println("parham log : before loop for ", pos)
+
+	if pos == Up {
+		for {
+			buf := make([]byte, 1024)
+			fmt.Println("parham log : buf created")
+			n, rAddr, err := node.ReadFrom(buf)
+			fmt.Println("parham log : buf read")
+			if err != nil {
+				log.Errorln("Error while reading from conn to buf ", err)
+				if errors.Is(err, net.ErrClosed) {
+					return
+				}
+
+				continue
 			}
 
-			continue
-		}
-
-		rAddrStr := rAddr.String()
-		fmt.Println("parham log : rAddr read")
-		_, ok := node.pConns.Load(rAddrStr)
-		if ok {
-			log.Warnln("Drop packet for existing PFCPconn received from", rAddrStr)
-			continue
-		}
-		fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
-		if pos == Up {
+			rAddrStr := rAddr.String()
+			fmt.Println("parham log : rAddr read")
+			_, ok := node.pConns.Load(rAddrStr)
+			if ok {
+				log.Warnln("Drop packet for existing PFCPconn received from", rAddrStr)
+				continue
+			}
+			fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
+			//if pos == Up {
 			fmt.Println("parham log : sending recieved msg to down pfcp")
-			bufTemp := buf[:2]
-			u2d <- bufTemp
-			//	fmt.Println("parham log : show recieved msg from down pfcp")
-			//	fmt.Println(<-d2u)
-		} //else {
-		//	fmt.Println("parham log : sending recieved msg to up pfcp")
-		//	d2u <- []byte("ih")
-		//	fmt.Println("parham log : show recieved msg from up pfcp")
-		//	fmt.Println(<-u2d)
-		//}
-		time.Sleep(1 * time.Minute)
-		if pos == Up {
+			//bufTemp := buf
+			u2d <- buf[:n]
+			//}
+			//time.Sleep(1 * time.Minute)
+			//if pos == Up {
 			fmt.Println("parham log: calling NewPFCPConn for up")
-		} else {
-			fmt.Println("parham log: calling NewPFCPConn for down")
+			//} else {
+			//	fmt.Println("parham log: calling NewPFCPConn for down")
+			//}
+			node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n])
 		}
-		node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n])
+	}
+	if pos == Down {
+		//fmt.Println("parham log : show recieved msg from up pfcp")
+		fmt.Println(<-u2d)
 	}
 }
 
