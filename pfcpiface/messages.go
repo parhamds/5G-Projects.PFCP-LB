@@ -125,7 +125,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
 		log.Traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
 	}
 
-	pConn.SaveMessages(m)
+	//pConn.SaveMessages(m)
 
 	if reply != nil {
 		//replyType := reply.MessageTypeName()
@@ -172,7 +172,7 @@ func (pConn *PFCPConn) sendPFCPRequestMessage(r *Request) (message.Message, bool
 
 	for {
 		if reply, rc := r.GetResponse(pConn.shutdown, pConn.upf.respTimeout); rc {
-			log.Traceln("Request Timeout, retriesLeft:", retriesLeft)
+			log.Traceln("Request Timeout, retriesLeft:", retriesLeft, " , time : ", pConn.upf.readTimeout)
 
 			if retriesLeft > 0 {
 				pConn.SendPFCPMsg(r.msg)

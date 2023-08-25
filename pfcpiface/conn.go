@@ -187,6 +187,7 @@ func (pConn *PFCPConn) setLocalNodeID(id string) {
 
 // Serve serves forever a single PFCP peer.(exept first assosiation req msg)
 func (pConn *PFCPConn) Serve() {
+	fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
 	connTimeout := make(chan struct{}, 1)
 	go func(connTimeout chan struct{}) {
 		recvBuf := make([]byte, 65507) // Maximum UDP payload size
