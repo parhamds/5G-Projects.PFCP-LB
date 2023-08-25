@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // QosConfigVal : Qos configured value.
@@ -123,6 +125,12 @@ func NewUPF(conf *Conf,
 	//
 	//	nodeID = hosts[0]
 	//}
+	resptime, err := time.ParseDuration(conf.RespTimeout)
+	if err != nil {
+		log.Errorln("Error Parsing RespTimeout : ")
+		return nil
+	}
+	fmt.Println("parham log : parsed RespTimeout = ", resptime)
 
 	u := &upf{
 		//enableUeIPAlloc:   conf.CPIface.EnableUeIPAlloc,
@@ -138,8 +146,9 @@ func NewUPF(conf *Conf,
 		//reportNotifyChan:  make(chan uint64, 1024),
 		maxReqRetries: conf.MaxReqRetries,
 		enableHBTimer: conf.EnableHBTimer,
-		//readTimeout:   time.Second * time.Duration(conf.ReadTimeout),
-		readTimeout: 15 * time.Second,
+		readTimeout:   time.Second * time.Duration(conf.ReadTimeout),
+		respTimeout:   time.Second * resptime,
+		//readTimeout: 15 * time.Second,
 	}
 
 	//if len(conf.CPIface.Peers) > 0 {
