@@ -12,13 +12,14 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 type Position int
 
 type CommunicationChannel struct {
-	U2d chan []byte
-	D2u chan []byte
+	U2d chan message.Message
+	D2u chan message.Message
 }
 
 const (

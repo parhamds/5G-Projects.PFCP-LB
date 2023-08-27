@@ -11,6 +11,7 @@ import (
 
 	"github.com/omec-project/upf-epc/pfcpiface"
 	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 var (
@@ -30,8 +31,8 @@ func main() {
 	flag.Parse()
 
 	comCh := pfcpiface.CommunicationChannel{
-		U2d: make(chan []byte, 100),
-		D2u: make(chan []byte, 100),
+		U2d: make(chan message.Message, 100),
+		D2u: make(chan message.Message, 100),
 	}
 	// Read and parse json startup file.
 	conf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)

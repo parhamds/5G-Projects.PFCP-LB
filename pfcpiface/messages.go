@@ -54,6 +54,17 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 	}
 }
 
+func (pConn *PFCPConn) SimpleForwarder(buf []byte, comCh CommunicationChannel) {
+	msg, err := message.Parse(buf)
+	if err != nil {
+		log.Errorln("Ignoring undecodable message: ", buf, " error: ", err)
+		return
+	}
+	comCh.U2d <- msg
+	reply := <-comCh.D2u
+	pConn.SendPFCPMsg(reply)
+}
+
 // HandlePFCPMsg handles different types of PFCP messages.
 func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
 	var (
