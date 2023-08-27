@@ -188,6 +188,60 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message) (messa
 	return asres, nil
 }
 
+func (pConn *PFCPConn) handleLBAssociationSetupRequest(msg message.Message) (message.Message, error) {
+
+	fmt.Println("!!!!! parham log : start handleLBAssociationSetupRequest !!!!!")
+	addr := pConn.RemoteAddr().String()
+	fmt.Println("parham log : remote addr = ", addr)
+	//upf := pConn.upf
+
+	asreq, ok := msg.(*message.AssociationSetupRequest)
+
+	if !ok {
+		return nil, errUnmarshal(errMsgUnexpectedType)
+	}
+
+	nodeID, err := asreq.NodeID.NodeID()
+	fmt.Println("parham log : nodeID = ", nodeID)
+	if err != nil {
+		return nil, errUnmarshal(err)
+	}
+
+	ts, err := asreq.RecoveryTimeStamp.RecoveryTimeStamp()
+	fmt.Println("parham log : ts = ", ts)
+	if err != nil {
+		return nil, errUnmarshal(err)
+	}
+	fmt.Println("parham log : asreq.SequenceNumber = ", asreq.SequenceNumber)
+	// Build response message
+	asres := message.NewAssociationSetupResponse(asreq.SequenceNumber,
+		pConn.associationIEs()...)
+
+	//if !upf.isConnected() {
+	//	asres.Cause = ie.NewCause(ie.CauseRequestRejected)
+	//	return asres, errProcess(errDatapathDown)
+	//}
+
+	if pConn.ts.remote.IsZero() {
+		pConn.ts.remote = ts
+		log.Infoln("Association Setup Request from", addr,
+			"with recovery timestamp:", ts)
+	} else if ts.After(pConn.ts.remote) {
+		old := pConn.ts.remote
+		pConn.ts.remote = ts
+		log.Warnln("Association Setup Request from", addr,
+			"with newer recovery timestamp:", ts, "older:", old)
+	}
+
+	pConn.nodeID.remote = nodeID
+	asres.Cause = ie.NewCause(ie.CauseRequestAccepted)
+
+	log.Infoln("Association setup done between nodes",
+		"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
+
+	return asres, nil
+}
+
 func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message) error {
 	addr := pConn.RemoteAddr().String()
 

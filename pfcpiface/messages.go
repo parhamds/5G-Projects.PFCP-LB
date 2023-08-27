@@ -54,6 +54,10 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 	}
 }
 
+func (pConn *PFCPConn) SimpleForwarder(buf []byte) {
+
+}
+
 // HandlePFCPMsg handles different types of PFCP messages.
 func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
 	var (

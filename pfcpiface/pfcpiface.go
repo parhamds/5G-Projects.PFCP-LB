@@ -16,6 +16,11 @@ import (
 
 type Position int
 
+type CommunicationChannel struct {
+	U2d chan []byte
+	D2u chan []byte
+}
+
 const (
 	Up Position = iota
 	Down
@@ -73,7 +78,7 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 	return pfcpIface
 }
 
-func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
+func (p *PFCPIface) mustInit(comch CommunicationChannel, pos Position) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -101,7 +106,7 @@ func (p *PFCPIface) mustInit(u2d, d2u chan []byte, pos Position) {
 
 }
 
-func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
+func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 	if simulate.enable() {
 		p.upf.sim(simulate, &p.conf.SimInfo)
 
@@ -116,10 +121,10 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	} else {
 		fmt.Println("parham log: calling mustInit for down")
 	}
-	p.mustInit(u2d, d2u, pos)
+	p.mustInit(comch, pos)
 
 	if pos == Down {
-		time.Sleep(10 * time.Minute)
+		//time.Sleep(10 * time.Minute)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node)
 		})
@@ -161,7 +166,7 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	} else {
 		fmt.Println("parham log: calling Serve for down")
 	}
-	p.node.Serve(u2d, d2u, pos)
+	p.node.Serve(comch, pos)
 }
 
 // Stop sends cancellation signal to main Go routine and waits for shutdown to complete.

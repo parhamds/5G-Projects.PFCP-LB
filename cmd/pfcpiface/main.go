@@ -28,8 +28,11 @@ func init() {
 func main() {
 	// cmdline args
 	flag.Parse()
-	u2d := make(chan []byte, 100)
-	d2u := make(chan []byte, 100)
+
+	comCh := pfcpiface.CommunicationChannel{
+		U2d: make(chan []byte, 100),
+		D2u: make(chan []byte, 100),
+	}
 	// Read and parse json startup file.
 	conf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
 	if err != nil {
@@ -45,8 +48,8 @@ func main() {
 
 	// blocking
 	fmt.Println("parham log: calling upaPfcpi.Run for up")
-	go upaPfcpi.Run(u2d, d2u, pfcpiface.Up)
+	go upaPfcpi.Run(comCh, pfcpiface.Up)
 	fmt.Println("parham log: calling upaPfcpi.Run for down")
-	dpaPfcpi.Run(u2d, d2u, pfcpiface.Down)
+	dpaPfcpi.Run(comCh, pfcpiface.Down)
 	time.Sleep(5 * time.Minute)
 }

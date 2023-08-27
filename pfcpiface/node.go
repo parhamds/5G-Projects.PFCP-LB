@@ -92,7 +92,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 	}
 }
 
-func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
+func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
 	log.Infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
@@ -127,7 +127,7 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 			//if pos == Up {
 			fmt.Println("parham log : sending recieved msg to down pfcp")
 			//bufTemp := buf
-			u2d <- buf[:n]
+			comCh.U2d <- buf[:n]
 			//}
 			//time.Sleep(1 * time.Minute)
 			//if pos == Up {
@@ -140,18 +140,18 @@ func (node *PFCPNode) handleNewPeers(u2d, d2u chan []byte, pos Position) {
 	}
 	if pos == Down {
 		//fmt.Println("parham log : show recieved msg from up pfcp")
-		fmt.Println(<-u2d)
+		fmt.Println(<-comCh.U2d)
 	}
 }
 
 // Serve listens for the first packet from a new PFCP peer and creates PFCPConn.
-func (node *PFCPNode) Serve(u2d, d2u chan []byte, pos Position) {
+func (node *PFCPNode) Serve(comCh CommunicationChannel, pos Position) {
 	if pos == Up {
 		fmt.Println("parham log: calling handleNewPeers for up")
 	} else {
 		fmt.Println("parham log: calling handleNewPeers for down")
 	}
-	go node.handleNewPeers(u2d, d2u, pos)
+	go node.handleNewPeers(comCh, pos)
 
 	shutdown := false
 
