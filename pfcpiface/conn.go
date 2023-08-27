@@ -85,7 +85,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 		"interval": pConn.upf.hbInterval,
 	}).Infoln("Starting Heartbeat timer")
 
-	heartBeatExpiryTimer := time.NewTicker(pConn.upf.hbInterval)
+	heartBeatExpiryTimer := time.NewTicker(5 * time.Second)
 
 	for {
 		select {
