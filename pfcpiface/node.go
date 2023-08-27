@@ -68,7 +68,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 	}
 }
 
-func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
+func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationChannel) {
 	fmt.Println("parham log : start tryConnectToN4Peers func")
 	for _, peer := range node.upf.peers {
 		conn, err := net.Dial("udp", peer+":"+DownPFCPPort)
@@ -85,9 +85,10 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string) {
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
 		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
-		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil)
+		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh)
 		if pfcpConn != nil {
-			go pfcpConn.sendAssociationRequest()
+
+			//go pfcpConn.sendAssociationRequest()
 		}
 	}
 }
@@ -135,12 +136,12 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 			//} else {
 			//	fmt.Println("parham log: calling NewPFCPConn for down")
 			//}
-			node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n])
+			node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n], comCh)
 		}
 	}
 	if pos == Down {
 		//fmt.Println("parham log : show recieved msg from up pfcp")
-		fmt.Println(<-comCh.U2d)
+		//fmt.Println(<-comCh.U2d)
 	}
 }
 

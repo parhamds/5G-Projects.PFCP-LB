@@ -112,7 +112,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 
 // NewPFCPConn creates a connected UDP socket to the rAddr PFCP peer specified. (for the first association req msg)
 // buf is the first message received from the peer, nil if we are initiating.
-func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte) *PFCPConn {
+func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh CommunicationChannel) *PFCPConn {
 	conn, err := reuse.Dial("udp", lAddr, rAddr)
 	if err != nil {
 		log.Errorln("dial socket failed", err)
@@ -155,7 +155,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte) *PFCPConn {
 	// Update map of connections
 	node.pConns.Store(rAddr, p)
 
-	go p.Serve()
+	go p.Serve(comCh)
 
 	return p
 }
@@ -187,7 +187,7 @@ func (pConn *PFCPConn) setLocalNodeID(id string) {
 }
 
 // Serve serves forever a single PFCP peer.(exept first assosiation req msg)
-func (pConn *PFCPConn) Serve() {
+func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 	fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
 	connTimeout := make(chan struct{}, 1)
 	go func(connTimeout chan struct{}) {

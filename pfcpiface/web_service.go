@@ -49,7 +49,7 @@ func setupConfigHandler(mux *http.ServeMux, upf *upf) {
 	mux.Handle("/", &cfgHandler)
 }
 
-func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode) {
+func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel) {
 	fmt.Println("parham log : an http req recieved, ")
 	//_, err := r.Body.Read(body)
 	//body, err := io.ReadAll(r.Body)
@@ -87,7 +87,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode) {
 		handlePFCPConfig(&pfcpInfo, node.upf)
 		fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
-		go node.tryConnectToN4Peers(lAddrStr)
+		go node.tryConnectToN4Peers(lAddrStr, comCh)
 		sendHTTPResp(http.StatusCreated, w)
 	default:
 		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")

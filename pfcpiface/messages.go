@@ -54,8 +54,16 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 	}
 }
 
-func (pConn *PFCPConn) SimpleForwarder(buf []byte) {
+func (pConn *PFCPConn) SimpleForwarder(buf []byte, comCh CommunicationChannel) {
+	comCh.U2d <- buf
+	reply := <-comCh.D2u
 
+	if _, err := pConn.Write(reply); err != nil {
+		//m.Finish(nodeID, "Failure")
+		log.Errorln("parham log : Failed to transmit responce to smf")
+
+		return
+	}
 }
 
 // HandlePFCPMsg handles different types of PFCP messages.
