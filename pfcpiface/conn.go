@@ -147,7 +147,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 	if buf != nil {
 		// TODO: Check if the first msg is Association Setup Request
 		fmt.Println("parham log: pause 10 min calling HandlePFCPMsg from NewPFCPConn func for UP")
-		//time.Sleep(10 * time.Minute)
+		time.Sleep(10 * time.Minute)
 		fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
 		p.HandlePFCPMsg(buf)
 	}

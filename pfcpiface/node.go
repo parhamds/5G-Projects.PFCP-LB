@@ -141,7 +141,7 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	}
 	if pos == Down {
 		//fmt.Println("parham log : show recieved msg from up pfcp")
-		//fmt.Println(<-comCh.U2d)
+		fmt.Println(<-comCh.U2d)
 	}
 }
 
