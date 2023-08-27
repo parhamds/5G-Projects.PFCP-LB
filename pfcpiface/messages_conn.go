@@ -45,20 +45,20 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 	}
 }
 
-func (pConn *PFCPConn) ForwardAssociationRequest(msg message.Message, comCh CommunicationChannel) {
-
-	r := newRequest(msg)
-	fmt.Println("parham log : sending msg to real pfcp")
-	reply, timeout := pConn.sendPFCPRequestMessage(r)
-	fmt.Println("parham log : recievd msg from real pfcp")
-	if reply != nil {
-		fmt.Println("parham log : sending msg to up")
-		comCh.D2u <- reply
-	} else if timeout {
-		fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
-		pConn.Shutdown()
-	}
-}
+//func (pConn *PFCPConn) ForwardAssociationRequest(msg message.Message, comCh CommunicationChannel) {
+//
+//	r := newRequest(msg)
+//	fmt.Println("parham log : sending msg to real pfcp")
+//	reply, timeout := pConn.sendPFCPRequestMessage(r)
+//	fmt.Println("parham log : recievd msg from real pfcp")
+//	if reply != nil {
+//		fmt.Println("parham log : sending msg to up")
+//		comCh.D2u <- reply
+//	} else if timeout {
+//		fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
+//		pConn.Shutdown()
+//	}
+//}
 
 func (pConn *PFCPConn) getHeartBeatRequest() *Request {
 	seq := pConn.getSeqNum()

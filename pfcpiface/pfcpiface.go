@@ -12,14 +12,13 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/wmnsk/go-pfcp/message"
 )
 
 type Position int
 
 type CommunicationChannel struct {
-	U2d chan message.Message
-	D2u chan message.Message
+	U2d chan []byte
+	D2u chan []byte
 }
 
 const (
@@ -125,7 +124,7 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 	p.mustInit(comch, pos)
 
 	if pos == Down {
-		//time.Sleep(10 * time.Minute)
+		time.Sleep(10 * time.Minute)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch)
 		})

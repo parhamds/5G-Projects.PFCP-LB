@@ -87,13 +87,8 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
 		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh)
 		if pfcpConn != nil {
-			for {
-				fmt.Println("parham log : waiting for msg from up")
-				msg := <-comCh.U2d
-				fmt.Println("parham log : msg recieved from up")
-				go pfcpConn.ForwardAssociationRequest(msg, comCh)
-				//go pfcpConn.sendAssociationRequest()
-			}
+
+			go pfcpConn.sendAssociationRequest()
 		}
 	}
 }
@@ -133,7 +128,7 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 			//if pos == Up {
 			fmt.Println("parham log : sending recieved msg to down pfcp")
 			//bufTemp := buf
-			//comCh.U2d <- buf[:n]
+			comCh.U2d <- buf[:n]
 			//}
 			//time.Sleep(1 * time.Minute)
 			//if pos == Up {
@@ -146,7 +141,7 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	}
 	if pos == Down {
 		//fmt.Println("parham log : show recieved msg from up pfcp")
-		//fmt.Println(<-comCh.U2d)
+		fmt.Println(<-comCh.U2d)
 	}
 }
 

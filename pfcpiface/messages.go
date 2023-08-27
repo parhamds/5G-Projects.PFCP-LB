@@ -5,7 +5,6 @@ package pfcpiface
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -55,20 +54,20 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 	}
 }
 
-func (pConn *PFCPConn) SimpleForwarder(buf []byte, comCh CommunicationChannel) {
-	fmt.Println("parham log : Simple Forwader is called")
-	msg, err := message.Parse(buf)
-	if err != nil {
-		log.Errorln("Ignoring undecodable message: ", buf, " error: ", err)
-		return
-	}
-	fmt.Println("parham log : sending message to down")
-	comCh.U2d <- msg
-	reply := <-comCh.D2u
-	fmt.Println("parham log : recieved resp from down")
-	fmt.Println("parham log : send resp to smf")
-	pConn.SendPFCPMsg(reply)
-}
+//func (pConn *PFCPConn) SimpleForwarder(buf []byte, comCh CommunicationChannel) {
+//	fmt.Println("parham log : Simple Forwader is called")
+//	msg, err := message.Parse(buf)
+//	if err != nil {
+//		log.Errorln("Ignoring undecodable message: ", buf, " error: ", err)
+//		return
+//	}
+//	fmt.Println("parham log : sending message to down")
+//	comCh.U2d <- msg
+//	reply := <-comCh.D2u
+//	fmt.Println("parham log : recieved resp from down")
+//	fmt.Println("parham log : send resp to smf")
+//	pConn.SendPFCPMsg(reply)
+//}
 
 // HandlePFCPMsg handles different types of PFCP messages.
 func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
