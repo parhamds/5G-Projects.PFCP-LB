@@ -139,7 +139,7 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message) (messa
 	fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
 	addr := pConn.RemoteAddr().String()
 	fmt.Println("parham log : remote addr = ", addr)
-	upf := pConn.upf
+	//upf := pConn.upf
 
 	asreq, ok := msg.(*message.AssociationSetupRequest)
 
@@ -163,10 +163,10 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message) (messa
 	asres := message.NewAssociationSetupResponse(asreq.SequenceNumber,
 		pConn.associationIEs()...)
 
-	if !upf.isConnected() {
-		asres.Cause = ie.NewCause(ie.CauseRequestRejected)
-		return asres, errProcess(errDatapathDown)
-	}
+	//if !upf.isConnected() {
+	//	asres.Cause = ie.NewCause(ie.CauseRequestRejected)
+	//	return asres, errProcess(errDatapathDown)
+	//}
 
 	if pConn.ts.remote.IsZero() {
 		pConn.ts.remote = ts
