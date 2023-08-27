@@ -124,7 +124,7 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 	p.mustInit(comch, pos)
 
 	if pos == Down {
-		time.Sleep(10 * time.Minute)
+		//time.Sleep(10 * time.Minute)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch)
 		})
