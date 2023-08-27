@@ -88,7 +88,9 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh)
 		if pfcpConn != nil {
 			for {
+				fmt.Println("parham log : waiting for msg from up")
 				msg := <-comCh.U2d
+				fmt.Println("parham log : msg recieved from up")
 				go pfcpConn.ForwardAssociationRequest(msg, comCh)
 				//go pfcpConn.sendAssociationRequest()
 			}
