@@ -68,7 +68,7 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 
 	pfcpIface.httpEndpoint = ":" + httpPort
 
-	pfcpIface.upf = NewUPF(&conf) //pfcpIface.fp
+	pfcpIface.upf = NewUPF(&conf, pos) //pfcpIface.fp
 
 	return pfcpIface
 }

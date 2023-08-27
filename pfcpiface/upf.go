@@ -99,7 +99,7 @@ func (u *upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	return nil
 }
 
-func NewUPF(conf *Conf,
+func NewUPF(conf *Conf, pos Position,
 
 // fp datapath
 ) *upf {
@@ -149,6 +149,11 @@ func NewUPF(conf *Conf,
 		readTimeout:   time.Second * time.Duration(conf.ReadTimeout),
 		respTimeout:   time.Second * resptime,
 		//readTimeout: 15 * time.Second,
+	}
+
+	if pos == Down {
+		u.enableHBTimer = true
+		u.hbInterval = 5 * time.Second
 	}
 
 	//if len(conf.CPIface.Peers) > 0 {
