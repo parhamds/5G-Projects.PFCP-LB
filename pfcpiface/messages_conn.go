@@ -34,8 +34,9 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 
 			return
 		}
-
-		if pConn.upf.enableHBTimer {
+		fmt.Println("parham log : pConn.upf.enableHBTimer = ", pConn.upf.enableHBTimer)
+		if pConn.upf.enableHBTimer || true {
+			fmt.Println("parham log : starting pConn.startHeartBeatMonitor()")
 			go pConn.startHeartBeatMonitor()
 		}
 	} else if timeout {
