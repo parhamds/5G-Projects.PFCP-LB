@@ -119,6 +119,7 @@ func (p *PFCPIface) Run(u2d, d2u chan []byte, pos Position) {
 	p.mustInit(u2d, d2u, pos)
 
 	if pos == Down {
+		time.Sleep(10 * time.Minute)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node)
 		})

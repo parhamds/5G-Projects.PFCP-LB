@@ -133,15 +133,15 @@ func NewUPF(conf *Conf, pos Position,
 	fmt.Println("parham log : parsed RespTimeout = ", resptime)
 
 	u := &upf{
-		//enableUeIPAlloc:   conf.CPIface.EnableUeIPAlloc,
-		//enableEndMarker:   conf.EnableEndMarker,
+		enableUeIPAlloc: conf.CPIface.EnableUeIPAlloc,
+		enableEndMarker: conf.EnableEndMarker,
 		//enableFlowMeasure: conf.EnableFlowMeasure,
 		//accessIface:       conf.AccessIface.IfName,
 		//coreIface:         conf.CoreIface.IfName,
 		//ippoolCidr:        conf.CPIface.UEIPPool,
 		//nodeID:            nodeID,
 		//datapath:          fp,
-		//dnn:               conf.CPIface.Dnn,
+		dnn:   conf.CPIface.Dnn,
 		peers: make([]string, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
 		maxReqRetries: conf.MaxReqRetries,
@@ -165,19 +165,19 @@ func NewUPF(conf *Conf, pos Position,
 	//	}
 	//}
 	//
-	//if !conf.EnableP4rt {
-	//	u.accessIP, err = GetUnicastAddressFromInterface(conf.AccessIface.IfName)
-	//	if err != nil {
-	//		log.Errorln(err)
-	//		return nil
-	//	}
-	//
-	//	u.coreIP, err = GetUnicastAddressFromInterface(conf.CoreIface.IfName)
-	//	if err != nil {
-	//		log.Errorln(err)
-	//		return nil
-	//	}
-	//}
+	if !conf.EnableP4rt {
+		u.accessIP, err = GetUnicastAddressFromInterface(conf.AccessIface.IfName)
+		if err != nil {
+			log.Errorln(err)
+			return nil
+		}
+
+		u.coreIP, err = GetUnicastAddressFromInterface(conf.CoreIface.IfName)
+		if err != nil {
+			log.Errorln(err)
+			return nil
+		}
+	}
 	//
 	//u.respTimeout, err = time.ParseDuration(conf.RespTimeout)
 	//if err != nil {

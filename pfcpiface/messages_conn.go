@@ -97,24 +97,31 @@ func (pConn *PFCPConn) handleIncomingResponse(msg message.Message) {
 func (pConn *PFCPConn) associationIEs() []*ie.IE {
 	upf := pConn.upf
 	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.dnn).Payload)
+	fmt.Println("parham log : networkInstance = ", networkInstance)
 	flags := uint8(0x41)
+	fmt.Println("parham log : flags = ", flags)
 
 	if len(upf.dnn) != 0 {
 		log.Infoln("Association Setup with DNN:", upf.dnn)
+		fmt.Println("parham log : upf.dnn = ", upf.dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
+		fmt.Println("parham log : flags = ", flags)
 	}
 
 	features := make([]uint8, 4)
 
 	if upf.enableUeIPAlloc {
 		setUeipFeature(features...)
+		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
 
 	if upf.enableEndMarker {
 		setEndMarkerFeature(features...)
+		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
-
+	fmt.Println("parham log : upf.accessIP = ", upf.accessIP)
+	fmt.Println("parham log : upf.coreIP = ", upf.coreIP)
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
 		pConn.nodeID.localIE,
@@ -129,7 +136,9 @@ func (pConn *PFCPConn) associationIEs() []*ie.IE {
 }
 
 func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message) (message.Message, error) {
+	fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
 	addr := pConn.RemoteAddr().String()
+	fmt.Println("parham log : remote addr = ", addr)
 	upf := pConn.upf
 
 	asreq, ok := msg.(*message.AssociationSetupRequest)
@@ -139,15 +148,17 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message) (messa
 	}
 
 	nodeID, err := asreq.NodeID.NodeID()
+	fmt.Println("parham log : nodeID = ", nodeID)
 	if err != nil {
 		return nil, errUnmarshal(err)
 	}
 
 	ts, err := asreq.RecoveryTimeStamp.RecoveryTimeStamp()
+	fmt.Println("parham log : ts = ", ts)
 	if err != nil {
 		return nil, errUnmarshal(err)
 	}
-
+	fmt.Println("parham log : asreq.SequenceNumber = ", asreq.SequenceNumber)
 	// Build response message
 	asres := message.NewAssociationSetupResponse(asreq.SequenceNumber,
 		pConn.associationIEs()...)
