@@ -410,7 +410,7 @@ func (up4 *UP4) SetUpfInfo(u *Upf, conf *Conf) {
 	up4.conf = conf.P4rtcIface
 
 	up4.accessIP = MustParseStrIP(conf.P4rtcIface.AccessIP)
-	u.accessIP = up4.accessIP.IP
+	u.AccessIP = up4.accessIP.IP
 
 	log.Infof("AccessIP: %v", up4.accessIP)
 
@@ -431,7 +431,7 @@ func (up4 *UP4) SetUpfInfo(u *Upf, conf *Conf) {
 		p4rtcPort = *p4RtcServerPort
 	}
 
-	u.coreIP = net.ParseIP(net.IPv4zero.String())
+	u.CoreIP = net.ParseIP(net.IPv4zero.String())
 
 	up4.host = p4rtcServer + ":" + p4rtcPort
 

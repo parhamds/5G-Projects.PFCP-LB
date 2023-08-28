@@ -132,9 +132,9 @@ func (f *far) parseFAR(farIE *ie.IE, fseid uint64, upf *Upf, op operation) error
 			}
 
 			if f.dstIntf == ie.DstInterfaceAccess {
-				f.tunnelIP4Src = ip2int(upf.accessIP)
+				f.tunnelIP4Src = ip2int(upf.AccessIP)
 			} else if f.dstIntf == ie.DstInterfaceCore {
-				f.tunnelIP4Src = ip2int(upf.coreIP)
+				f.tunnelIP4Src = ip2int(upf.CoreIP)
 			}
 		case ie.PFCPSMReqFlags:
 			fields = Set(fields, FwdIEPfcpSMReqFlags)

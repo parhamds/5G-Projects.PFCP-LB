@@ -113,7 +113,7 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 		pdrN9Down := pdr{
 			srcIface:     core,
 			tunnelTEID:   n9TEID + i,
-			tunnelIP4Dst: ip2int(u.coreIP),
+			tunnelIP4Dst: ip2int(u.CoreIP),
 
 			srcIfaceMask:     0xFF,
 			tunnelTEIDMask:   0xFFFFFFFF,
@@ -132,7 +132,7 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 		// create/delete uplink pdr
 		pdrN6Up := pdr{
 			srcIface:     access,
-			tunnelIP4Dst: ip2int(u.accessIP),
+			tunnelIP4Dst: ip2int(u.AccessIP),
 			tunnelTEID:   n3TEID + i,
 			appFilter: applicationFilter{
 				srcIP:     ip2int(ueip) + i,
@@ -155,7 +155,7 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 
 		pdrN9Up := pdr{
 			srcIface:     access,
-			tunnelIP4Dst: ip2int(u.accessIP),
+			tunnelIP4Dst: ip2int(u.AccessIP),
 			tunnelTEID:   n3TEID + i,
 			appFilter: applicationFilter{
 				dstIP:     ip2int(n9appip),
@@ -186,7 +186,7 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 			applyAction:  ActionForward,
 			dstIntf:      ie.DstInterfaceAccess,
 			tunnelType:   0x1,
-			tunnelIP4Src: ip2int(u.accessIP),
+			tunnelIP4Src: ip2int(u.AccessIP),
 			tunnelIP4Dst: ip2int(enbip) + enbIdx,
 			tunnelTEID:   n3TEID + i,
 			tunnelPort:   tunnelGTPUPort,
@@ -208,7 +208,7 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 			applyAction:  ActionForward,
 			dstIntf:      ie.DstInterfaceCore,
 			tunnelType:   0x1,
-			tunnelIP4Src: ip2int(u.coreIP),
+			tunnelIP4Src: ip2int(u.CoreIP),
 			tunnelIP4Dst: ip2int(aupfip),
 			tunnelTEID:   n9TEID + i,
 			tunnelPort:   tunnelGTPUPort,

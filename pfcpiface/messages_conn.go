@@ -111,14 +111,14 @@ func (pConn *PFCPConn) handleIncomingResponse(msg message.Message) {
 
 func (pConn *PFCPConn) associationIEs() []*ie.IE {
 	upf := pConn.upf
-	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.dnn).Payload)
+	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.Dnn).Payload)
 	fmt.Println("parham log : networkInstance = ", networkInstance)
 	flags := uint8(0x41)
 	fmt.Println("parham log : flags = ", flags)
 
-	if len(upf.dnn) != 0 {
-		log.Infoln("Association Setup with DNN:", upf.dnn)
-		fmt.Println("parham log : upf.dnn = ", upf.dnn)
+	if len(upf.Dnn) != 0 {
+		log.Infoln("Association Setup with DNN:", upf.Dnn)
+		fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
 		fmt.Println("parham log : flags = ", flags)
@@ -126,23 +126,23 @@ func (pConn *PFCPConn) associationIEs() []*ie.IE {
 
 	features := make([]uint8, 4)
 
-	if upf.enableUeIPAlloc {
+	if upf.EnableUeIPAlloc {
 		setUeipFeature(features...)
 		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
 
-	if upf.enableEndMarker {
+	if upf.EnableEndMarker {
 		setEndMarkerFeature(features...)
 		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
-	fmt.Println("parham log : upf.accessIP = ", upf.accessIP)
-	fmt.Println("parham log : upf.coreIP = ", upf.coreIP)
+	fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
+	fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
 		pConn.nodeID.localIE,
 		// 0x41 = Spare (0) | Assoc Src Inst (1) | Assoc Net Inst (0) | Tied Range (000) | IPV6 (0) | IPV4 (1)
 		//      = 01000001
-		ie.NewUserPlaneIPResourceInformation(flags, 0, upf.accessIP.String(), "", networkInstance, ie.SrcInterfaceAccess),
+		ie.NewUserPlaneIPResourceInformation(flags, 0, upf.AccessIP.String(), "", networkInstance, ie.SrcInterfaceAccess),
 		// ie.NewUserPlaneIPResourceInformation(0x41, 0, coreIP, "", "", ie.SrcInterfaceCore),
 		ie.NewUPFunctionFeatures(features...),
 	}
@@ -152,14 +152,14 @@ func (pConn *PFCPConn) associationIEs() []*ie.IE {
 
 func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 	//upf := pConn.upf
-	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.dnn).Payload)
+	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.Dnn).Payload)
 	fmt.Println("parham log : networkInstance = ", networkInstance)
 	flags := uint8(0x41)
 	fmt.Println("parham log : flags = ", flags)
 
-	if len(upf.dnn) != 0 {
-		log.Infoln("Association Setup with DNN:", upf.dnn)
-		fmt.Println("parham log : upf.dnn = ", upf.dnn)
+	if len(upf.Dnn) != 0 {
+		log.Infoln("Association Setup with DNN:", upf.Dnn)
+		fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
 		fmt.Println("parham log : flags = ", flags)
@@ -167,24 +167,24 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 
 	features := make([]uint8, 4)
 
-	if upf.enableUeIPAlloc {
+	if upf.EnableUeIPAlloc {
 		setUeipFeature(features...)
 		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
 
-	if upf.enableEndMarker {
+	if upf.EnableEndMarker {
 		setEndMarkerFeature(features...)
 		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
-	fmt.Println("parham log : upf.accessIP = ", upf.accessIP)
-	fmt.Println("parham log : upf.coreIP = ", upf.coreIP)
+	fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
+	fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
-		ie.NewNodeID(upf.nodeID, "", ""),
+		ie.NewNodeID(upf.NodeID, "", ""),
 		//pConn.nodeID.localIE,
 		// 0x41 = Spare (0) | Assoc Src Inst (1) | Assoc Net Inst (0) | Tied Range (000) | IPV6 (0) | IPV4 (1)
 		//      = 01000001
-		ie.NewUserPlaneIPResourceInformation(flags, 0, upf.accessIP.String(), "", networkInstance, ie.SrcInterfaceAccess),
+		ie.NewUserPlaneIPResourceInformation(flags, 0, upf.AccessIP.String(), "", networkInstance, ie.SrcInterfaceAccess),
 		// ie.NewUserPlaneIPResourceInformation(0x41, 0, coreIP, "", "", ie.SrcInterfaceCore),
 		ie.NewUPFunctionFeatures(features...),
 	}

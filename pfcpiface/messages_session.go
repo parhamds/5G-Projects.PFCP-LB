@@ -340,7 +340,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message) (me
 		return sendError(ErrWriteToDatapath)
 	}
 
-	if upf.enableEndMarker {
+	if upf.EnableEndMarker {
 		err := upf.SendEndMarkers(&endMarkerList)
 		if err != nil {
 			log.Errorln("Sending End Markers Failed : ", err)

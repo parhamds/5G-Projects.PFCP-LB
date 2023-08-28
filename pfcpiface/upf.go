@@ -36,19 +36,19 @@ type UeResource struct {
 }
 
 type Upf struct {
-	enableUeIPAlloc   bool
-	enableEndMarker   bool
+	EnableUeIPAlloc   bool `json:"enableueipalloc"`
+	EnableEndMarker   bool `json:"enableendmarker"`
 	enableFlowMeasure bool
 	accessIface       string
 	coreIface         string
 	ippoolCidr        string
-	accessIP          net.IP
-	coreIP            net.IP
-	nodeID            string
+	AccessIP          net.IP `json:"accessip"`
+	CoreIP            net.IP `json:"coreip"`
+	NodeID            string `json:"nodeid"`
 	ippool            *IPPool
 	peersIP           []string
 	peersUPF          []*Upf
-	dnn               string
+	Dnn               string `json:"dnn"`
 	reportNotifyChan  chan uint64
 	sliceInfo         *SliceInfo
 	readTimeout       time.Duration
@@ -77,7 +77,7 @@ const (
 )
 
 func (u *Upf) isConnected() bool {
-	return u.datapath.IsConnected(&u.accessIP)
+	return u.datapath.IsConnected(&u.AccessIP)
 }
 
 func (u *Upf) addSliceInfo(sliceInfo *SliceInfo) error {
@@ -96,10 +96,10 @@ func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	}
 	fmt.Println("parhamlog : recieved upf info :")
 	fmt.Println("upf info :")
-	fmt.Println("dnn = ", pfcpInfo.Upf.dnn)
-	fmt.Println("accessIP = ", pfcpInfo.Upf.accessIP)
-	fmt.Println("coreIP = ", pfcpInfo.Upf.coreIP)
-	fmt.Println("nodeID = ", pfcpInfo.Upf.nodeID)
+	fmt.Println("dnn = ", pfcpInfo.Upf.Dnn)
+	fmt.Println("accessIP = ", pfcpInfo.Upf.AccessIP)
+	fmt.Println("coreIP = ", pfcpInfo.Upf.CoreIP)
+	fmt.Println("nodeID = ", pfcpInfo.Upf.NodeID)
 	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
 	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
 	fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
@@ -140,15 +140,15 @@ func NewUPF(conf *Conf, pos Position,
 	fmt.Println("parham log : parsed RespTimeout = ", resptime)
 
 	u := &Upf{
-		enableUeIPAlloc: conf.CPIface.EnableUeIPAlloc,
-		enableEndMarker: conf.EnableEndMarker,
+		EnableUeIPAlloc: conf.CPIface.EnableUeIPAlloc,
+		EnableEndMarker: conf.EnableEndMarker,
 		//enableFlowMeasure: conf.EnableFlowMeasure,
 		//accessIface:       conf.AccessIface.IfName,
 		//coreIface:         conf.CoreIface.IfName,
 		//ippoolCidr:        conf.CPIface.UEIPPool,
 		//nodeID:            nodeID,
 		//datapath:          fp,
-		dnn:      conf.CPIface.Dnn,
+		Dnn:      conf.CPIface.Dnn,
 		peersIP:  make([]string, 0),
 		peersUPF: make([]*Upf, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
@@ -174,13 +174,13 @@ func NewUPF(conf *Conf, pos Position,
 	//}
 	//
 	if !conf.EnableP4rt {
-		u.accessIP, err = GetUnicastAddressFromInterface(conf.AccessIface.IfName)
+		u.AccessIP, err = GetUnicastAddressFromInterface(conf.AccessIface.IfName)
 		if err != nil {
 			log.Errorln(err)
 			return nil
 		}
 
-		u.coreIP, err = GetUnicastAddressFromInterface(conf.CoreIface.IfName)
+		u.CoreIP, err = GetUnicastAddressFromInterface(conf.CoreIface.IfName)
 		if err != nil {
 			log.Errorln(err)
 			return nil

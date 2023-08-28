@@ -142,7 +142,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 		hbCtxCancel:    nil,
 	}
 
-	p.setLocalNodeID(node.upf.nodeID)
+	p.setLocalNodeID(node.upf.NodeID)
 
 	if buf != nil {
 		// TODO: Check if the first msg is Association Setup Request

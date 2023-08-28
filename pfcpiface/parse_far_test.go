@@ -75,8 +75,8 @@ func TestParseFAR(t *testing.T) {
 		t.Run(scenario.description, func(t *testing.T) {
 			mockFar := &far{}
 			mockUpf := &Upf{
-				accessIP: net.ParseIP("192.168.0.1"),
-				coreIP:   coreIP,
+				AccessIP: net.ParseIP("192.168.0.1"),
+				CoreIP:   coreIP,
 			}
 
 			err := mockFar.parseFAR(scenario.input, FSEID, mockUpf, scenario.op)
@@ -142,8 +142,8 @@ func TestParseFARShouldError(t *testing.T) {
 		t.Run(scenario.description, func(t *testing.T) {
 			mockFar := &far{}
 			mockUpf := &Upf{
-				accessIP: net.ParseIP("192.168.0.1"),
-				coreIP:   net.ParseIP("10.0.0.1"),
+				AccessIP: net.ParseIP("192.168.0.1"),
+				CoreIP:   net.ParseIP("10.0.0.1"),
 			}
 
 			err := mockFar.parseFAR(scenario.input, 101, mockUpf, scenario.op)

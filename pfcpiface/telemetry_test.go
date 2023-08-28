@@ -31,7 +31,7 @@ func Test_setupProm(t *testing.T) {
 
 		// TODO: use actual mocks
 		upf := &Upf{}
-		node := NewPFCPNode(upf)
+		node := NewPFCPNode(Up, upf)
 
 		uc, nc, err := setupProm(http.NewServeMux(), upf, node)
 		require.NoError(t, err)
@@ -48,7 +48,7 @@ func Test_setupProm(t *testing.T) {
 
 		// TODO: use actual mocks
 		upf := &Upf{}
-		node := NewPFCPNode(upf)
+		node := NewPFCPNode(Up, upf)
 
 		_, _, err := setupProm(http.NewServeMux(), upf, node)
 		require.NoError(t, err)
