@@ -29,13 +29,13 @@ type PFCPNode struct {
 	// map of existing connections
 	pConns sync.Map
 	// upf
-	upf *upf
+	upf *Upf
 	// metrics for PFCP messages and sessions
 	metrics metrics.InstrumentPFCP
 }
 
 // NewPFCPNode create a new PFCPNode listening on local address.
-func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
+func NewPFCPNode(pos Position, upf *Upf) *PFCPNode {
 	var conn net.PacketConn
 	var err error
 	if pos == Up {
@@ -70,7 +70,7 @@ func NewPFCPNode(pos Position, upf *upf) *PFCPNode {
 
 func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationChannel) {
 	fmt.Println("parham log : start tryConnectToN4Peers func")
-	for _, peer := range node.upf.peers {
+	for _, peer := range node.upf.peersIP {
 		conn, err := net.Dial("udp", peer+":"+DownPFCPPort)
 		if err != nil {
 			log.Warnln("Failed to establish PFCP connection to peer ", peer)

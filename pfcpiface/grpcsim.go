@@ -68,7 +68,7 @@ func (s simMode) enable() bool {
 	return s != simModeDisable
 }
 
-func (u *upf) sim(mode simMode, s *SimModeInfo) {
+func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 	log.Infoln(simulate.String(), "sessions:", s.MaxSessions)
 
 	start := time.Now()

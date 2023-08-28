@@ -21,7 +21,8 @@ type NetworkSlice struct {
 }
 
 type PfcpInfo struct {
-	Ip string `json:"ip"`
+	Ip  string `json:"ip"`
+	Upf *Upf   `json:"upf"`
 }
 
 // SliceQos ... Slice level QOS rates.
@@ -40,10 +41,10 @@ type UeResInfo struct {
 }
 
 type ConfigHandler struct {
-	upf *upf
+	upf *Upf
 }
 
-func setupConfigHandler(mux *http.ServeMux, upf *upf) {
+func setupConfigHandler(mux *http.ServeMux, upf *Upf) {
 	cfgHandler := ConfigHandler{upf: upf}
 	//mux.Handle("/v1/config/network-slices", &cfgHandler)
 	mux.Handle("/", &cfgHandler)
@@ -85,6 +86,11 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		//handleSliceConfig(&nwSlice, c.upf)
 		handlePFCPConfig(&pfcpInfo, node.upf)
+		i := len(node.upf.peersUPF)
+		if i > 0 {
+			fmt.Println("parham log : send real upf to up")
+			comCh.UpfD2u <- node.upf.peersUPF[i-1]
+		}
 		fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
 		go node.tryConnectToN4Peers(lAddrStr, comCh)
@@ -176,7 +182,7 @@ func calculateBitRates(mbr uint64, rate string) uint64 {
 	}
 }
 
-func handleSliceConfig(nwSlice *NetworkSlice, upf *upf) {
+func handleSliceConfig(nwSlice *NetworkSlice, upf *Upf) {
 	log.Infoln("handle slice config : ", nwSlice.SliceName)
 
 	ulMbr := calculateBitRates(nwSlice.SliceQos.UplinkMbr,
@@ -209,7 +215,7 @@ func handleSliceConfig(nwSlice *NetworkSlice, upf *upf) {
 	}
 }
 
-func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *upf) {
+func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *Upf) {
 	log.Infoln("handle register pfcp agent : ", pfcpInfo.Ip)
 	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {

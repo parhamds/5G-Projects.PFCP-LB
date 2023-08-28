@@ -34,10 +34,10 @@ type upfCollector struct {
 	latency *prometheus.Desc
 	jitter  *prometheus.Desc
 
-	upf *upf
+	upf *Upf
 }
 
-func newUpfCollector(upf *upf) *upfCollector {
+func newUpfCollector(upf *Upf) *upfCollector {
 	return &upfCollector{
 		packets: prometheus.NewDesc(prometheus.BuildFQName("upf", "packets", "count"),
 			"Shows the number of packets received by the UPF port",
@@ -143,7 +143,7 @@ func (col PfcpNodeCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func setupProm(mux *http.ServeMux, upf *upf, node *PFCPNode) (*upfCollector, *PfcpNodeCollector, error) {
+func setupProm(mux *http.ServeMux, upf *Upf, node *PFCPNode) (*upfCollector, *PfcpNodeCollector, error) {
 	uc := newUpfCollector(upf)
 	if err := prometheus.Register(uc); err != nil {
 		return nil, nil, err

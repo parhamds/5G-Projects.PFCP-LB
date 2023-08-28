@@ -35,7 +35,7 @@ type UeResource struct {
 	dnn  string
 }
 
-type upf struct {
+type Upf struct {
 	enableUeIPAlloc   bool
 	enableEndMarker   bool
 	enableFlowMeasure bool
@@ -46,7 +46,8 @@ type upf struct {
 	coreIP            net.IP
 	nodeID            string
 	ippool            *IPPool
-	peers             []string
+	peersIP           []string
+	peersUPF          []*Upf
 	dnn               string
 	reportNotifyChan  chan uint64
 	sliceInfo         *SliceInfo
@@ -75,11 +76,11 @@ const (
 	n9 = 0x2
 )
 
-func (u *upf) isConnected() bool {
+func (u *Upf) isConnected() bool {
 	return u.datapath.IsConnected(&u.accessIP)
 }
 
-func (u *upf) addSliceInfo(sliceInfo *SliceInfo) error {
+func (u *Upf) addSliceInfo(sliceInfo *SliceInfo) error {
 	if sliceInfo == nil {
 		return ErrInvalidArgument("sliceInfo", sliceInfo)
 	}
@@ -89,20 +90,20 @@ func (u *upf) addSliceInfo(sliceInfo *SliceInfo) error {
 	return u.datapath.AddSliceInfo(sliceInfo)
 }
 
-func (u *upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
+func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	if pfcpInfo == nil {
 		return errors.New("invalid PFCP peer IP")
 	}
-
-	u.peers = append(u.peers, pfcpInfo.Ip)
-	fmt.Println("peer added to Down PFCP. list of peers : ", u.peers)
+	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
+	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
+	fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
 	return nil
 }
 
 func NewUPF(conf *Conf, pos Position,
 
 // fp datapath
-) *upf {
+) *Upf {
 	//var (
 	//	err    error
 	//	nodeID string
@@ -132,7 +133,7 @@ func NewUPF(conf *Conf, pos Position,
 	}
 	fmt.Println("parham log : parsed RespTimeout = ", resptime)
 
-	u := &upf{
+	u := &Upf{
 		enableUeIPAlloc: conf.CPIface.EnableUeIPAlloc,
 		enableEndMarker: conf.EnableEndMarker,
 		//enableFlowMeasure: conf.EnableFlowMeasure,
@@ -141,8 +142,9 @@ func NewUPF(conf *Conf, pos Position,
 		//ippoolCidr:        conf.CPIface.UEIPPool,
 		//nodeID:            nodeID,
 		//datapath:          fp,
-		dnn:   conf.CPIface.Dnn,
-		peers: make([]string, 0),
+		dnn:      conf.CPIface.Dnn,
+		peersIP:  make([]string, 0),
+		peersUPF: make([]*Upf, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
 		maxReqRetries: conf.MaxReqRetries,
 		enableHBTimer: conf.EnableHBTimer,

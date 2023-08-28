@@ -7,6 +7,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -17,8 +18,9 @@ import (
 type Position int
 
 type CommunicationChannel struct {
-	U2d chan []byte
-	D2u chan []byte
+	U2d    chan []byte
+	D2u    chan []byte
+	UpfD2u chan *Upf
 }
 
 const (
@@ -39,7 +41,7 @@ type PFCPIface struct {
 
 	node *PFCPNode
 	fp   datapath
-	upf  *upf
+	upf  *Upf
 
 	httpSrv      *http.Server
 	httpEndpoint string
@@ -187,4 +189,21 @@ func (p *PFCPIface) Stop() {
 
 	// Wait for PFCP node shutdown
 	p.node.Done()
+}
+
+// GetLocalIP returns ip of first non loopback interface in string
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }

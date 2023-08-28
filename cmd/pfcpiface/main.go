@@ -28,10 +28,12 @@ func init() {
 func main() {
 	// cmdline args
 	flag.Parse()
-
+	ip_str := pfcpiface.GetLocalIP()
+	fmt.Println("parham log : local IP = ", ip_str)
 	comCh := pfcpiface.CommunicationChannel{
-		U2d: make(chan []byte, 100),
-		D2u: make(chan []byte, 100),
+		U2d:    make(chan []byte, 100),
+		D2u:    make(chan []byte, 100),
+		UpfD2u: make(chan *pfcpiface.Upf, 100),
 	}
 	// Read and parse json startup file.
 	conf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)

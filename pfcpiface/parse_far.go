@@ -65,7 +65,7 @@ func (f *far) Forwards() bool {
 	return f.applyAction&ActionForward != 0
 }
 
-func (f *far) parseFAR(farIE *ie.IE, fseid uint64, upf *upf, op operation) error {
+func (f *far) parseFAR(farIE *ie.IE, fseid uint64, upf *Upf, op operation) error {
 	f.fseID = (fseid)
 
 	farID, err := farIE.FARID()

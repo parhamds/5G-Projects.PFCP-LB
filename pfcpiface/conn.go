@@ -58,7 +58,7 @@ type PFCPConn struct {
 	store SessionsStore
 
 	nodeID nodeID
-	upf    *upf
+	upf    *Upf
 	// channel to signal PFCPNode on exit
 	done     chan<- string
 	shutdown chan struct{}
@@ -149,7 +149,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 		fmt.Println("parham log: pause 10 min calling HandlePFCPMsg from NewPFCPConn func for UP")
 		//time.Sleep(10 * time.Minute)
 		fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
-		p.HandlePFCPMsg(buf)
+		p.HandlePFCPMsg(buf, comCh)
 	}
 
 	// Update map of connections
@@ -218,7 +218,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 
 			buf := append([]byte{}, recvBuf[:n]...)
 			//fmt.Println("parham log: calling HandlePFCPMsg from Serve func")
-			pConn.HandlePFCPMsg(buf)
+			pConn.HandlePFCPMsg(buf, comCh)
 		}
 	}(connTimeout)
 

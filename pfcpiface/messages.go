@@ -70,7 +70,7 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 //}
 
 // HandlePFCPMsg handles different types of PFCP messages.
-func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
+func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 	var (
 		reply message.Message
 		err   error
@@ -97,7 +97,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte) {
 	case message.MsgTypePFDManagementRequest:
 		reply, err = pConn.handlePFDMgmtRequest(msg)
 	case message.MsgTypeAssociationSetupRequest:
-		reply, err = pConn.handleAssociationSetupRequest(msg)
+		reply, err = pConn.handleAssociationSetupRequest(msg, comCh)
 		if reply != nil && err == nil && pConn.upf.enableHBTimer {
 			go pConn.startHeartBeatMonitor()
 		}

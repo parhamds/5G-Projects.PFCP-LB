@@ -404,7 +404,7 @@ func (up4 *UP4) setConnectedStatus(status bool) {
 }
 
 // TODO: rename it to initUPF()
-func (up4 *UP4) SetUpfInfo(u *upf, conf *Conf) {
+func (up4 *UP4) SetUpfInfo(u *Upf, conf *Conf) {
 	log.Println("SetUpfInfo UP4")
 
 	up4.conf = conf.P4rtcIface

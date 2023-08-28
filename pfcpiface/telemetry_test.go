@@ -30,7 +30,7 @@ func Test_setupProm(t *testing.T) {
 		defer restoreReg()
 
 		// TODO: use actual mocks
-		upf := &upf{}
+		upf := &Upf{}
 		node := NewPFCPNode(upf)
 
 		uc, nc, err := setupProm(http.NewServeMux(), upf, node)
@@ -47,7 +47,7 @@ func Test_setupProm(t *testing.T) {
 		defer restoreReg()
 
 		// TODO: use actual mocks
-		upf := &upf{}
+		upf := &Upf{}
 		node := NewPFCPNode(upf)
 
 		_, _, err := setupProm(http.NewServeMux(), upf, node)
