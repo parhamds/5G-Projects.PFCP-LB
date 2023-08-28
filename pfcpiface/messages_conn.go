@@ -217,9 +217,10 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 	}
 	fmt.Println("parham log : asreq.SequenceNumber = ", asreq.SequenceNumber)
 	// Build response message
-	fmt.Println("waiting for recieving real upf from down")
-	realUPF := <-comCh.UpfD2u
-	fmt.Println("real upf received from down")
+	if len(pConn.upf.peersUPF) == 0 {
+		return nil, errors.New("there is no real upf there yet ...")
+	}
+	realUPF := pConn.upf.peersUPF[0]
 	asres := message.NewAssociationSetupResponse(asreq.SequenceNumber,
 		pConn.lbAssociationIEs(realUPF)...)
 

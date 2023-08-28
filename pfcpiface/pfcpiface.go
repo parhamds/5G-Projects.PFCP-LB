@@ -80,7 +80,22 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 	return pfcpIface
 }
 
-func (p *PFCPIface) mustInit(comch CommunicationChannel, pos Position) {
+func listenForUpf(comCh CommunicationChannel, upf *Upf) {
+	for {
+		exist := false
+		newRealUpf := <-comCh.UpfD2u
+		for _, u := range upf.peersUPF {
+			if u.NodeID == newRealUpf.NodeID {
+				exist = true
+			}
+		}
+		if !exist {
+			upf.peersUPF = append(upf.peersUPF, newRealUpf)
+		}
+	}
+}
+
+func (p *PFCPIface) mustInit(comCh CommunicationChannel, pos Position) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -91,6 +106,10 @@ func (p *PFCPIface) mustInit(comch CommunicationChannel, pos Position) {
 	}
 
 	p.node = NewPFCPNode(pos, p.upf) //p.upf,
+
+	if pos == Up {
+		go listenForUpf(comCh, p.node.upf)
+	}
 
 	//var err error
 
