@@ -94,6 +94,12 @@ func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	if pfcpInfo == nil {
 		return errors.New("invalid PFCP peer IP")
 	}
+	fmt.Println("parhamlog : recieved upf info :")
+	fmt.Println("upf info :")
+	fmt.Println("dnn = ", pfcpInfo.Upf.dnn)
+	fmt.Println("accessIP = ", pfcpInfo.Upf.accessIP)
+	fmt.Println("coreIP = ", pfcpInfo.Upf.coreIP)
+	fmt.Println("nodeID = ", pfcpInfo.Upf.nodeID)
 	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
 	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
 	fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)

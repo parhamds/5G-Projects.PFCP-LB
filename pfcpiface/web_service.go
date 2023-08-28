@@ -77,7 +77,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		//var nwSlice NetworkSlice
 		var pfcpInfo PfcpInfo
-
+		fmt.Println("parham log : http body = ", body)
 		err = json.Unmarshal(body, &pfcpInfo)
 		if err != nil {
 			log.Errorln("Json unmarshal failed for http request")
@@ -217,6 +217,7 @@ func handleSliceConfig(nwSlice *NetworkSlice, upf *Upf) {
 
 func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *Upf) {
 	log.Infoln("handle register pfcp agent : ", pfcpInfo.Ip)
+
 	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {
 		log.Errorln("adding pfcp info to pfcplb failed : ", err)
