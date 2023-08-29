@@ -83,7 +83,10 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		log.Errorln("Ignoring undecodable message: ", buf, " error: ", err)
 		return
 	}
-	fmt.Println("!!!!! parham log : a PFCP msg received with type = ", msg.MessageTypeName())
+	msgtype := msg.MessageType()
+	if msgtype != 1 && msgtype != 2 {
+		fmt.Println("!!!!! parham log : a PFCP msg received with type = ", msg.MessageTypeName())
+	}
 	addr := pConn.RemoteAddr().String()
 	msgType := msg.MessageTypeName()
 	//fmt.Println("parham log start request from : ", addr, ", msg type : ", msgType)
@@ -91,7 +94,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 	//fmt.Println("parham log end request")
 	m := metrics.NewMessage(msgType, "Incoming")
 
-	switch msg.MessageType() {
+	switch msgtype {
 	// Connection related messages
 	case message.MsgTypeHeartbeatRequest:
 		reply, err = pConn.handleHeartbeatRequest(msg)

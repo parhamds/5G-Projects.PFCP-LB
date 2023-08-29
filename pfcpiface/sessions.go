@@ -50,7 +50,7 @@ func (pConn *PFCPConn) NewPFCPSession(rseid uint64) (PFCPSession, bool) {
 		s.metrics = metrics.NewSession(pConn.nodeID.remote)
 
 		// Metrics update
-		pConn.SaveSessions(s.metrics)
+		//pConn.SaveSessions(s.metrics)
 
 		return s, true
 	}
