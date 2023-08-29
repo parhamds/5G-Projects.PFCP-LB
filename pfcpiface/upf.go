@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/Showmax/go-fqdn"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -110,28 +111,28 @@ func NewUPF(conf *Conf, pos Position,
 
 // fp datapath
 ) *Upf {
-	//var (
-	//	err    error
-	//	nodeID string
-	//)
-	//
-	//nodeID = conf.CPIface.NodeID
-	//if conf.CPIface.UseFQDN && nodeID == "" {
-	//	nodeID, err = fqdn.FqdnHostname()
-	//	if err != nil {
-	//		log.Fatalln("Unable to get hostname", err)
-	//	}
-	//}
+	var (
+		err    error
+		nodeID string
+	)
+
+	nodeID = conf.CPIface.NodeID
+	if conf.CPIface.UseFQDN && nodeID == "" {
+		nodeID, err = fqdn.FqdnHostname()
+		if err != nil {
+			log.Fatalln("Unable to get hostname", err)
+		}
+	}
 
 	// TODO: Delete this once CI config is fixed
-	//if nodeID != "" {
-	//	hosts, err := net.LookupHost(nodeID)
-	//	if err != nil {
-	//		log.Fatalln("Unable to resolve hostname", nodeID, err)
-	//	}
-	//
-	//	nodeID = hosts[0]
-	//}
+	if nodeID != "" {
+		hosts, err := net.LookupHost(nodeID)
+		if err != nil {
+			log.Fatalln("Unable to resolve hostname", nodeID, err)
+		}
+
+		nodeID = hosts[0]
+	}
 	resptime, err := time.ParseDuration(conf.RespTimeout)
 	if err != nil {
 		log.Errorln("Error Parsing RespTimeout : ")
@@ -146,7 +147,7 @@ func NewUPF(conf *Conf, pos Position,
 		//accessIface:       conf.AccessIface.IfName,
 		//coreIface:         conf.CoreIface.IfName,
 		//ippoolCidr:        conf.CPIface.UEIPPool,
-		//nodeID:            nodeID,
+		NodeID: nodeID,
 		//datapath:          fp,
 		Dnn:      conf.CPIface.Dnn,
 		peersIP:  make([]string, 0),
