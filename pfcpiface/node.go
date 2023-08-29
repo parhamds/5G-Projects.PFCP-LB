@@ -99,7 +99,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		if len(node.upf.peersIP) > 0 {
 			v, ok := node.pConns.Load(node.upf.peersIP[0])
 			if !ok {
-				log.Infoln("Can't find pConn to received peer IP")
+				log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[0])
 				continue
 			}
 			pConn := v.(*PFCPConn)
