@@ -6,7 +6,6 @@ package pfcpiface
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -103,7 +102,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 
 			if _, timeout := pConn.sendPFCPRequestMessage(r); timeout {
 				heartBeatExpiryTimer.Stop()
-				fmt.Println("parham log : Shutdown called from startHeartBeatMonitor")
+				//fmt.Println("parham log : Shutdown called from startHeartBeatMonitor")
 				pConn.Shutdown()
 			}
 		}
@@ -146,9 +145,9 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 
 	if buf != nil {
 		// TODO: Check if the first msg is Association Setup Request
-		fmt.Println("parham log: pause 10 min calling HandlePFCPMsg from NewPFCPConn func for UP")
+		//fmt.Println("parham log: pause 10 min calling HandlePFCPMsg from NewPFCPConn func for UP")
 		//time.Sleep(10 * time.Minute)
-		fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
+		//fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
 		p.HandlePFCPMsg(buf, comCh)
 	}
 
@@ -188,7 +187,7 @@ func (pConn *PFCPConn) setLocalNodeID(id string) {
 
 // Serve serves forever a single PFCP peer.(exept first assosiation req msg)
 func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
-	fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
+	//fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
 	connTimeout := make(chan struct{}, 1)
 	go func(connTimeout chan struct{}) {
 		recvBuf := make([]byte, 65507) // Maximum UDP payload size
@@ -227,11 +226,11 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 	for {
 		select {
 		case <-connTimeout:
-			fmt.Println("parham log : Shutdown called from connTimeout channel")
+			//fmt.Println("parham log : Shutdown called from connTimeout channel")
 			pConn.Shutdown()
 			return
 		case <-pConn.ctx.Done():
-			fmt.Println("parham log : Shutdown called from ctx.Done channel")
+			//fmt.Println("parham log : Shutdown called from ctx.Done channel")
 			pConn.Shutdown()
 			return
 

@@ -39,13 +39,13 @@ func NewPFCPNode(pos Position, upf *Upf) *PFCPNode {
 	var conn net.PacketConn
 	var err error
 	if pos == Up {
-		fmt.Println("parham log: calling ListenPacket for up")
+		//fmt.Println("parham log: calling ListenPacket for up")
 		conn, err = reuse.ListenPacket("udp", ":"+UpPFCPPort)
-		fmt.Println("parham log: done ListenPacket for up")
+		//fmt.Println("parham log: done ListenPacket for up")
 	} else {
-		fmt.Println("parham log: calling ListenPacket for down")
+		//fmt.Println("parham log: calling ListenPacket for down")
 		conn, err = reuse.ListenPacket("udp", ":"+DownPFCPPort)
-		fmt.Println("parham log: done ListenPacket for down")
+		//fmt.Println("parham log: done ListenPacket for down")
 	}
 	if err != nil {
 		log.Fatalln("ListenUDP failed", err)
@@ -69,7 +69,7 @@ func NewPFCPNode(pos Position, upf *Upf) *PFCPNode {
 }
 
 func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationChannel) {
-	fmt.Println("parham log : start tryConnectToN4Peers func")
+	//fmt.Println("parham log : start tryConnectToN4Peers func")
 	for _, peer := range node.upf.peersIP {
 		conn, err := net.Dial("udp", peer+":"+DownPFCPPort)
 		if err != nil {
@@ -84,7 +84,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 			"SPGWC/SMF host": peer,
 			"CP node":        n4DstIP.String(),
 		}).Info("Establishing PFCP Conn with CP node")
-		fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
+		//fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
 		pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh)
 		if pfcpConn != nil {
 
@@ -105,9 +105,9 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	if pos == Up {
 		for {
 			buf := make([]byte, 1024)
-			fmt.Println("parham log : buf created")
+			//fmt.Println("parham log : buf created")
 			n, rAddr, err := node.ReadFrom(buf)
-			fmt.Println("parham log : buf read")
+			//fmt.Println("parham log : buf read")
 			if err != nil {
 				log.Errorln("Error while reading from conn to buf ", err)
 				if errors.Is(err, net.ErrClosed) {
@@ -118,21 +118,21 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 			}
 
 			rAddrStr := rAddr.String()
-			fmt.Println("parham log : rAddr read")
+			//fmt.Println("parham log : rAddr read")
 			_, ok := node.pConns.Load(rAddrStr)
 			if ok {
 				log.Warnln("Drop packet for existing PFCPconn received from", rAddrStr)
 				continue
 			}
-			fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
+			//fmt.Println("parham log : call NewPFCPConn from handleNewPeers func")
 			//if pos == Up {
-			fmt.Println("parham log : sending recieved msg to down pfcp")
+			//fmt.Println("parham log : sending recieved msg to down pfcp")
 			//bufTemp := buf
 			comCh.U2d <- buf[:n]
 			//}
 			//time.Sleep(1 * time.Minute)
 			//if pos == Up {
-			fmt.Println("parham log: calling NewPFCPConn for up")
+			//fmt.Println("parham log: calling NewPFCPConn for up")
 			//} else {
 			//	fmt.Println("parham log: calling NewPFCPConn for down")
 			//}
@@ -148,9 +148,9 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 // Serve listens for the first packet from a new PFCP peer and creates PFCPConn.
 func (node *PFCPNode) Serve(comCh CommunicationChannel, pos Position) {
 	if pos == Up {
-		fmt.Println("parham log: calling handleNewPeers for up")
+		//fmt.Println("parham log: calling handleNewPeers for up")
 	} else {
-		fmt.Println("parham log: calling handleNewPeers for down")
+		//fmt.Println("parham log: calling handleNewPeers for down")
 	}
 	go node.handleNewPeers(comCh, pos)
 

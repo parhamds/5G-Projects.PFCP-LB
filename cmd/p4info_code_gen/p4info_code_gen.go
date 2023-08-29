@@ -7,11 +7,12 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ettle/strcase"
 	"github.com/golang/protobuf/proto"

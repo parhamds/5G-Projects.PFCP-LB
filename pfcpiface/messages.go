@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -82,7 +83,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		log.Errorln("Ignoring undecodable message: ", buf, " error: ", err)
 		return
 	}
-
+	fmt.Println("!!!!! parham log : a PFCP msg received with type = ", msg.MessageTypeName())
 	addr := pConn.RemoteAddr().String()
 	msgType := msg.MessageTypeName()
 	//fmt.Println("parham log start request from : ", addr, ", msg type : ", msgType)

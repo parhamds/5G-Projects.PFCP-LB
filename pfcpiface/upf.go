@@ -5,7 +5,6 @@ package pfcpiface
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"time"
 
@@ -95,15 +94,15 @@ func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	if pfcpInfo == nil {
 		return errors.New("invalid PFCP peer IP")
 	}
-	fmt.Println("parhamlog : recieved upf info :")
-	fmt.Println("upf info :")
-	fmt.Println("dnn = ", pfcpInfo.Upf.Dnn)
-	fmt.Println("accessIP = ", pfcpInfo.Upf.AccessIP)
-	fmt.Println("coreIP = ", pfcpInfo.Upf.CoreIP)
-	fmt.Println("nodeID = ", pfcpInfo.Upf.NodeID)
+	//fmt.Println("parhamlog : recieved upf info :")
+	//fmt.Println("upf info :")
+	//fmt.Println("dnn = ", pfcpInfo.Upf.Dnn)
+	//fmt.Println("accessIP = ", pfcpInfo.Upf.AccessIP)
+	//fmt.Println("coreIP = ", pfcpInfo.Upf.CoreIP)
+	//fmt.Println("nodeID = ", pfcpInfo.Upf.NodeID)
 	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
 	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
-	fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
+	//fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
 	return nil
 }
 
@@ -138,7 +137,7 @@ func NewUPF(conf *Conf, pos Position,
 		log.Errorln("Error Parsing RespTimeout : ")
 		return nil
 	}
-	fmt.Println("parham log : parsed RespTimeout = ", resptime)
+	//fmt.Println("parham log : parsed RespTimeout = ", resptime)
 
 	u := &Upf{
 		EnableUeIPAlloc: conf.CPIface.EnableUeIPAlloc,

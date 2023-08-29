@@ -5,7 +5,6 @@ package pfcpiface
 
 import (
 	"errors"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
@@ -29,18 +28,18 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 		err := pConn.handleAssociationSetupResponse(reply)
 		if err != nil {
 			log.Errorln("Handling of Assoc Setup Response Failed ", pConn.RemoteAddr())
-			fmt.Println("parham log : Shutdown called from sendAssociationRequest")
+			//fmt.Println("parham log : Shutdown called from sendAssociationRequest")
 			pConn.Shutdown()
 
 			return
 		}
-		fmt.Println("parham log : pConn.upf.enableHBTimer = ", pConn.upf.enableHBTimer)
+		//fmt.Println("parham log : pConn.upf.enableHBTimer = ", pConn.upf.enableHBTimer)
 		if pConn.upf.enableHBTimer || true {
-			fmt.Println("parham log : starting pConn.startHeartBeatMonitor()")
+			//fmt.Println("parham log : starting pConn.startHeartBeatMonitor()")
 			go pConn.startHeartBeatMonitor()
 		}
 	} else if timeout {
-		fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
+		//fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
 		pConn.Shutdown()
 	}
 }
@@ -48,14 +47,14 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 //func (pConn *PFCPConn) ForwardAssociationRequest(msg message.Message, comCh CommunicationChannel) {
 //
 //	r := newRequest(msg)
-//	fmt.Println("parham log : sending msg to real pfcp")
+//	//fmt.Println("parham log : sending msg to real pfcp")
 //	reply, timeout := pConn.sendPFCPRequestMessage(r)
-//	fmt.Println("parham log : recievd msg from real pfcp")
+//	//fmt.Println("parham log : recievd msg from real pfcp")
 //	if reply != nil {
-//		fmt.Println("parham log : sending msg to up")
+//		//fmt.Println("parham log : sending msg to up")
 //		comCh.D2u <- reply
 //	} else if timeout {
-//		fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
+//		//fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
 //		pConn.Shutdown()
 //	}
 //}
@@ -112,31 +111,31 @@ func (pConn *PFCPConn) handleIncomingResponse(msg message.Message) {
 func (pConn *PFCPConn) associationIEs() []*ie.IE {
 	upf := pConn.upf
 	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.Dnn).Payload)
-	fmt.Println("parham log : networkInstance = ", networkInstance)
+	//fmt.Println("parham log : networkInstance = ", networkInstance)
 	flags := uint8(0x41)
-	fmt.Println("parham log : flags = ", flags)
+	//fmt.Println("parham log : flags = ", flags)
 
 	if len(upf.Dnn) != 0 {
 		log.Infoln("Association Setup with DNN:", upf.Dnn)
-		fmt.Println("parham log : upf.dnn = ", upf.Dnn)
+		//fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
-		fmt.Println("parham log : flags = ", flags)
+		//fmt.Println("parham log : flags = ", flags)
 	}
 
 	features := make([]uint8, 4)
 
 	if upf.EnableUeIPAlloc {
 		setUeipFeature(features...)
-		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
+		//fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
 
 	if upf.EnableEndMarker {
 		setEndMarkerFeature(features...)
-		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
+		//fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
-	fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
-	fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
+	//fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
+	//fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
 		pConn.nodeID.localIE,
@@ -153,31 +152,31 @@ func (pConn *PFCPConn) associationIEs() []*ie.IE {
 func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 	//upf := pConn.upf
 	networkInstance := string(ie.NewNetworkInstanceFQDN(upf.Dnn).Payload)
-	fmt.Println("parham log : networkInstance = ", networkInstance)
+	//fmt.Println("parham log : networkInstance = ", networkInstance)
 	flags := uint8(0x41)
-	fmt.Println("parham log : flags = ", flags)
+	//fmt.Println("parham log : flags = ", flags)
 
 	if len(upf.Dnn) != 0 {
 		log.Infoln("Association Setup with DNN:", upf.Dnn)
-		fmt.Println("parham log : upf.dnn = ", upf.Dnn)
+		//fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
-		fmt.Println("parham log : flags = ", flags)
+		//fmt.Println("parham log : flags = ", flags)
 	}
 
 	features := make([]uint8, 4)
 
 	if upf.EnableUeIPAlloc {
 		setUeipFeature(features...)
-		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
+		//fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
 
 	if upf.EnableEndMarker {
 		setEndMarkerFeature(features...)
-		fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
+		//fmt.Println("parham log : upf.enableUeIPAlloc is enable and features = ", features)
 	}
-	fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
-	fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
+	//fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
+	//fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
 		//ie.NewNodeID(upf.NodeID, "", ""),
@@ -193,9 +192,9 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 }
 
 func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
-	fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
+	//fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
 	addr := pConn.RemoteAddr().String()
-	fmt.Println("parham log : remote addr = ", addr)
+	//fmt.Println("parham log : remote addr = ", addr)
 	//upf := pConn.upf
 
 	asreq, ok := msg.(*message.AssociationSetupRequest)
@@ -205,17 +204,17 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 	}
 
 	nodeID, err := asreq.NodeID.NodeID()
-	fmt.Println("parham log : nodeID = ", nodeID)
+	//fmt.Println("parham log : nodeID = ", nodeID)
 	if err != nil {
 		return nil, errUnmarshal(err)
 	}
 
 	ts, err := asreq.RecoveryTimeStamp.RecoveryTimeStamp()
-	fmt.Println("parham log : ts = ", ts)
+	//fmt.Println("parham log : ts = ", ts)
 	if err != nil {
 		return nil, errUnmarshal(err)
 	}
-	fmt.Println("parham log : asreq.SequenceNumber = ", asreq.SequenceNumber)
+	//fmt.Println("parham log : asreq.SequenceNumber = ", asreq.SequenceNumber)
 	// Build response message
 	if len(pConn.upf.peersUPF) == 0 {
 		return nil, errors.New("there is no real upf there yet ...")

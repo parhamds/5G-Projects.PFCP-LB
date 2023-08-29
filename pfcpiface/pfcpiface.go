@@ -6,7 +6,6 @@ package pfcpiface
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -100,9 +99,9 @@ func (p *PFCPIface) mustInit(comCh CommunicationChannel, pos Position) {
 	defer p.mu.Unlock()
 
 	if pos == Up {
-		fmt.Println("parham log: calling NewPFCPNode for up")
+		//fmt.Println("parham log: calling NewPFCPNode for up")
 	} else {
-		fmt.Println("parham log: calling NewPFCPNode for down")
+		//fmt.Println("parham log: calling NewPFCPNode for down")
 	}
 
 	p.node = NewPFCPNode(pos, p.upf) //p.upf,
@@ -131,16 +130,16 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 	if simulate.enable() {
 		p.upf.sim(simulate, &p.conf.SimInfo)
 
-		fmt.Println("parham log : simulate.enable() is true")
+		//fmt.Println("parham log : simulate.enable() is true")
 
 		if !simulate.keepGoing() {
 			return
 		}
 	}
 	if pos == Up {
-		fmt.Println("parham log: calling mustInit for up")
+		//fmt.Println("parham log: calling mustInit for up")
 	} else {
-		fmt.Println("parham log: calling mustInit for down")
+		//fmt.Println("parham log: calling mustInit for down")
 	}
 	p.mustInit(comch, pos)
 
@@ -183,9 +182,9 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 	// blocking
 
 	if pos == Up {
-		fmt.Println("parham log: calling Serve for up")
+		//fmt.Println("parham log: calling Serve for up")
 	} else {
-		fmt.Println("parham log: calling Serve for down")
+		//fmt.Println("parham log: calling Serve for down")
 	}
 	p.node.Serve(comch, pos)
 }

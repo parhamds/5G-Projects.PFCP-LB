@@ -49,9 +49,9 @@ func main() {
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
 	// blocking
-	fmt.Println("parham log: calling upaPfcpi.Run for up")
+	//fmt.Println("parham log: calling upaPfcpi.Run for up")
 	go upaPfcpi.Run(comCh, pfcpiface.Up)
-	fmt.Println("parham log: calling upaPfcpi.Run for down")
+	//fmt.Println("parham log: calling upaPfcpi.Run for down")
 	dpaPfcpi.Run(comCh, pfcpiface.Down)
 	time.Sleep(5 * time.Minute)
 }

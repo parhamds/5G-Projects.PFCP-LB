@@ -5,7 +5,6 @@ package pfcpiface
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -51,7 +50,7 @@ func setupConfigHandler(mux *http.ServeMux, upf *Upf) {
 }
 
 func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel) {
-	fmt.Println("parham log : an http req recieved, ")
+	//fmt.Println("parham log : an http req recieved, ")
 	//_, err := r.Body.Read(body)
 	//body, err := io.ReadAll(r.Body)
 	//if err != nil {
@@ -77,7 +76,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		//var nwSlice NetworkSlice
 		var pfcpInfo PfcpInfo
-		fmt.Println("parham log : http body = ", body)
+		//fmt.Println("parham log : http body = ", body)
 		err = json.Unmarshal(body, &pfcpInfo)
 		if err != nil {
 			log.Errorln("Json unmarshal failed for http request")
@@ -88,10 +87,10 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 		handlePFCPConfig(&pfcpInfo, node.upf)
 		i := len(node.upf.peersUPF)
 		if i > 0 {
-			fmt.Println("parham log : send real upf to up")
+			//fmt.Println("parham log : send real upf to up")
 			comCh.UpfD2u <- node.upf.peersUPF[i-1]
 		}
-		fmt.Println("parham log : try creating PFCPConn for new PFCP")
+		//fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
 		go node.tryConnectToN4Peers(lAddrStr, comCh)
 		sendHTTPResp(http.StatusCreated, w)
