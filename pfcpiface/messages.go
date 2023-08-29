@@ -116,7 +116,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		//tempmsg, err = message.ParseSessionEstablishmentRequest(buf)
 		//fmt.Println("parham log start ParseSessionEstablishmentRequest : ", &tempmsg)
 		//fmt.Println("parham log end ParseSessionEstablishmentRequest : ")
-		reply, err = pConn.handleSessionEstablishmentRequest(msg)
+		reply, err = pConn.handleSessionEstablishmentRequest(msg, comCh)
 	case message.MsgTypeSessionModificationRequest:
 		reply, err = pConn.handleSessionModificationRequest(msg)
 	case message.MsgTypeSessionDeletionRequest:

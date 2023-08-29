@@ -11,9 +11,9 @@ import (
 	"sync"
 
 	reuse "github.com/libp2p/go-reuseport"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/omec-project/upf-epc/pfcpiface/metrics"
+	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/ie"
 )
 
 // PFCPNode represents a PFCP endpoint of the UPF.
@@ -89,6 +89,43 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 		if pfcpConn != nil {
 
 			go pfcpConn.sendAssociationRequest()
+		}
+	}
+}
+
+func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
+	for {
+		sereq := <-comCh.SesEstU2d
+		if len(node.upf.peersIP) > 0 {
+			v, ok := node.pConns.Load(node.upf.peersIP[0])
+			if !ok {
+				log.Infoln("Can't find pConn to received peer IP")
+				continue
+			}
+			pConn := v.(*PFCPConn)
+			sereq.NodeID = pConn.nodeID.localIE
+			fseid, err := sereq.CPFSEID.FSEID()
+			remoteSEID := fseid.SEID
+			session, ok := pConn.NewPFCPSession(remoteSEID)
+			if !ok {
+				log.Errorf("can not create session in down: %v", err)
+				continue
+			}
+			err = pConn.store.PutSession(session)
+			if err != nil {
+				log.Errorf("Failed to put PFCP session to store: %v", err)
+			}
+			var localFSEID *ie.IE
+
+			localIP := pConn.LocalAddr().(*net.UDPAddr).IP
+			if localIP.To4() != nil {
+				localFSEID = ie.NewFSEID(session.localSEID, localIP, nil)
+			} else {
+				localFSEID = ie.NewFSEID(session.localSEID, nil, localIP)
+			}
+			sereq.CPFSEID = localFSEID
+
+			pConn.forwardToRealPFCP(sereq, comCh)
 		}
 	}
 }

@@ -11,6 +11,8 @@ import (
 
 	"github.com/omec-project/upf-epc/pfcpiface"
 	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/ie"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 var (
@@ -31,10 +33,13 @@ func main() {
 	ip_str := pfcpiface.GetLocalIP()
 	fmt.Println("parham log : local IP = ", ip_str)
 	comCh := pfcpiface.CommunicationChannel{
-		U2d:    make(chan []byte, 100),
-		D2u:    make(chan []byte, 100),
-		UpfD2u: make(chan *pfcpiface.Upf, 100),
+		U2d:              make(chan []byte, 100),
+		D2u:              make(chan []byte, 100),
+		UpfD2u:           make(chan *pfcpiface.Upf, 100),
+		SesEstU2d:        make(chan *message.SessionEstablishmentRequest, 100),
+		SesEstRespCuzD2U: make(chan *ie.IE, 100),
 	}
+
 	// Read and parse json startup file.
 	conf, err := pfcpiface.LoadConfigFile(*UPAconfigPath)
 	if err != nil {

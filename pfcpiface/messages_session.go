@@ -20,16 +20,15 @@ var (
 	ErrAllocateSession = errors.New("unable to allocate new PFCP session")
 )
 
-func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message) (message.Message, error) {
-	upf := pConn.upf
+func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
+	//upf := pConn.upf
 
 	sereq, ok := msg.(*message.SessionEstablishmentRequest)
-	//fmt.Println("parham log start handleSessionEstablishmentRequest", sereq)
-	//fmt.Println("parham log end handleSessionEstablishmentRequest")
-	//fmt.Println("parham log test printing IE field : ")
 	if !ok {
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
+
+	comCh.SesEstU2d <- sereq // TODO : handle it in down
 
 	errUnmarshalReply := func(err error, offendingIE *ie.IE) (message.Message, error) {
 		// Build response message
@@ -58,7 +57,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message) (m
 	//fmt.Println("parham log test printing nodeID : ", nodeID)
 	//fmt.Println("parham log test printing fseid : ", fseid)
 	remoteSEID := fseid.SEID
-	fseidIP := ip2int(fseid.IPv4Address)
+	//fseidIP := ip2int(fseid.IPv4Address)
 
 	errProcessReply := func(err error, cause uint8) (message.Message, error) {
 		// Build response message
@@ -86,63 +85,62 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message) (m
 			ie.CauseNoResourcesAvailable)
 	}
 
-	addPDRs := make([]pdr, 0, MaxItems)
-	addFARs := make([]far, 0, MaxItems)
-	addQERs := make([]qer, 0, MaxItems)
+	//addPDRs := make([]pdr, 0, MaxItems)
+	//addFARs := make([]far, 0, MaxItems)
+	//addQERs := make([]qer, 0, MaxItems)
 
-	for _, cPDR := range sereq.CreatePDR {
-		var p pdr
-		if err := p.parsePDR(cPDR, session.localSEID, pConn.appPFDs, upf.ippool); err != nil {
-			return errProcessReply(err, ie.CauseRequestRejected)
-		}
+	//for _, cPDR := range sereq.CreatePDR {
+	//	var p pdr
+	//	if err := p.parsePDR(cPDR, session.localSEID, pConn.appPFDs, upf.ippool); err != nil {
+	//		return errProcessReply(err, ie.CauseRequestRejected)
+	//	}
+	//
+	//	p.fseidIP = fseidIP
+	//	session.CreatePDR(p)
+	//	addPDRs = append(addPDRs, p)
+	//}
 
-		p.fseidIP = fseidIP
-		session.CreatePDR(p)
-		addPDRs = append(addPDRs, p)
-	}
+	//for _, cFAR := range sereq.CreateFAR {
+	//	var f far
+	//	if err := f.parseFAR(cFAR, session.localSEID, upf, create); err != nil {
+	//		return errProcessReply(err, ie.CauseRequestRejected)
+	//	}
+	//
+	//	f.fseidIP = fseidIP
+	//	session.CreateFAR(f)
+	//	addFARs = append(addFARs, f)
+	//}
 
-	for _, cFAR := range sereq.CreateFAR {
-		var f far
-		if err := f.parseFAR(cFAR, session.localSEID, upf, create); err != nil {
-			return errProcessReply(err, ie.CauseRequestRejected)
-		}
+	//for _, cQER := range sereq.CreateQER {
+	//	var q qer
+	//	if err := q.parseQER(cQER, session.localSEID); err != nil {
+	//		return errProcessReply(err, ie.CauseRequestRejected)
+	//	}
+	//
+	//	q.fseidIP = fseidIP
+	//	session.CreateQER(q)
+	//	addQERs = append(addQERs, q)
+	//}
 
-		f.fseidIP = fseidIP
-		session.CreateFAR(f)
-		addFARs = append(addFARs, f)
-	}
-
-	for _, cQER := range sereq.CreateQER {
-		var q qer
-		if err := q.parseQER(cQER, session.localSEID); err != nil {
-			return errProcessReply(err, ie.CauseRequestRejected)
-		}
-
-		q.fseidIP = fseidIP
-		session.CreateQER(q)
-		addQERs = append(addQERs, q)
-	}
-
-	session.MarkSessionQer(session.qers)
+	//session.MarkSessionQer(session.qers)
 	// FIXME: since PacketForwardingRules doesn't store pointers,
 	//  we must also mark session QERs in addQERs.
 	//  We need a kind of refactoring to clean it up.
-	session.MarkSessionQer(addQERs)
-
+	//session.MarkSessionQer(addQERs)
 	// session.PacketForwardingRules stores all PFCP rules that has been installed so far,
 	// while 'updated' stores only the PFCP rules that have been provided in this particular message.
-	updated := PacketForwardingRules{
-		pdrs: addPDRs,
-		fars: addFARs,
-		qers: addQERs,
-	}
+	//updated := PacketForwardingRules{
+	//	pdrs: addPDRs,
+	//	fars: addFARs,
+	//	qers: addQERs,
+	//}
 
-	cause := upf.SendMsgToUPF(upfMsgTypeAdd, session.PacketForwardingRules, updated)
-	if cause == ie.CauseRequestRejected {
-		pConn.RemoveSession(session)
-		return errProcessReply(ErrWriteToDatapath,
-			ie.CauseRequestRejected)
-	}
+	//cause := upf.SendMsgToUPF(upfMsgTypeAdd, session.PacketForwardingRules, updated)
+	//if cause == ie.CauseRequestRejected {
+	//	pConn.RemoveSession(session)
+	//	return errProcessReply(ErrWriteToDatapath,
+	//		ie.CauseRequestRejected)
+	//}
 
 	err = pConn.store.PutSession(session)
 	if err != nil {
@@ -159,6 +157,15 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message) (m
 	}
 
 	// Build response message
+	respCause := <-comCh.SesEstRespCuzD2U
+	causeValue, err := respCause.Cause()
+	if err != nil {
+		log.Errorln("can not extract response cause")
+	}
+	if causeValue != ie.CauseRequestAccepted {
+		return errProcessReply(ErrAllocateSession,
+			ie.CauseNoResourcesAvailable)
+	}
 	seres := message.NewSessionEstablishmentResponse(0, /* MO?? <-- what's this */
 		0,                                    /* FO <-- what's this? */
 		session.remoteSEID,                   /* seid */
@@ -169,9 +176,18 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message) (m
 		localFSEID,
 	)
 
-	addPdrInfo(seres, &session)
+	//addPdrInfo(seres, &session)
 
 	return seres, nil
+}
+
+func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, comCh CommunicationChannel) {
+	seres, ok := msg.(*message.SessionEstablishmentResponse)
+	if !ok {
+		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
 func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message) (message.Message, error) {

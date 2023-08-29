@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"errors"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
@@ -41,6 +42,26 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 	} else if timeout {
 		//fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
 		pConn.Shutdown()
+	}
+}
+
+func (pConn *PFCPConn) forwardToRealPFCP(msg message.Message, comCh CommunicationChannel) {
+	// Build request message
+	fmt.Println("parham log : sending a message to Real PFCP")
+	r := newRequest(msg)
+	reply, timeout := pConn.sendPFCPRequestMessage(r)
+	fmt.Println("parham log : response received from Real PFCP")
+	if reply != nil {
+		pConn.HandleForwardedMsgResp(reply, comCh)
+	} else if timeout {
+		log.Warn("Timeout for forwarded message")
+	}
+}
+
+func (pConn *PFCPConn) HandleForwardedMsgResp(msg message.Message, comCh CommunicationChannel) {
+	switch msg.MessageType() {
+	case message.MsgTypeSessionEstablishmentResponse:
+		pConn.handleSessionEstablishmentResponse(msg, comCh)
 	}
 }
 
