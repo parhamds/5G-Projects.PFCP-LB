@@ -97,9 +97,11 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
 		sereq := <-comCh.SesEstU2d
 		if len(node.upf.peersIP) > 0 {
-			v, ok := node.pConns.Load(node.upf.peersIP[0])
+			rAddr := node.upf.peersIP[0] + ":" + DownPFCPPort
+			v, ok := node.pConns.Load(rAddr)
 			if !ok {
 				log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[0])
+				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
 			pConn := v.(*PFCPConn)
@@ -109,6 +111,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 			session, ok := pConn.NewPFCPSession(remoteSEID)
 			if !ok {
 				log.Errorf("can not create session in down: %v", err)
+				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
 			err = pConn.store.PutSession(session)
