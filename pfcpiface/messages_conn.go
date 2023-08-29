@@ -49,13 +49,13 @@ func (pConn *PFCPConn) forwardToRealPFCP(msg message.Message, comCh Communicatio
 	// Build request message
 	fmt.Println("parham log : sending a message to Real PFCP")
 	r := newRequest(msg)
-	reply, timeout := pConn.sendPFCPRequestMessage(r)
-	fmt.Println("parham log : response received from Real PFCP")
-	if reply != nil {
-		pConn.HandleForwardedMsgResp(reply, comCh)
-	} else if timeout {
-		log.Warn("Timeout for forwarded message")
-	}
+	_, _ = pConn.sendPFCPRequestMessage(r)
+	//fmt.Println("parham log : response received from Real PFCP")
+	//if reply != nil {
+	//	pConn.HandleForwardedMsgResp(reply, comCh)
+	//} else if timeout {
+	//	log.Warn("Timeout for forwarded message")
+	//} !!!!!!!!!!!!!! it will be read by handlepfcpmsg func
 }
 
 func (pConn *PFCPConn) HandleForwardedMsgResp(msg message.Message, comCh CommunicationChannel) {
