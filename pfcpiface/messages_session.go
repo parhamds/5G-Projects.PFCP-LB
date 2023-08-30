@@ -213,20 +213,19 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//}
 	lseid := seres.Header.SEID
 
-	fmt.Println("parham log : printing all localtoSMFstore ...")
-	sessions := pConn.localtoSMFstore.GetAllSessions()
-	for _, v := range sessions {
-		fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
-	}
+	//fmt.Println("parham log : printing all localtoSMFstore ...")
+	//sessions := pConn.localtoSMFstore.GetAllSessions()
+	//for _, v := range sessions {
+	//	fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
+	//}
+	//fmt.Println("parham log : printing all smftoLocalstore ...")
+	//sessionss := pConn.smftoLocalstore.GetAllSessions()
+	//for _, v := range sessionss {
+	//	fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
+	//}
 
-	fmt.Println("parham log : printing all smftoLocalstore ...")
-	sessionss := pConn.smftoLocalstore.GetAllSessions()
-	for _, v := range sessionss {
-		fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
-	}
-
-	session, err := pConn.localtoSMFstore.GetSession(lseid)
-	if err != false {
+	session, ok := pConn.localtoSMFstore.GetSession(lseid)
+	if ok == false {
 		log.Errorln("can not get session from pConn.localtoSMFstore, lseid = ", lseid)
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
@@ -243,7 +242,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 
 	erro = pConn.SMFtoRealstore.SMFtoRealSEIDStore(smfseid, realSeid.SEID) //should be called in resp handler
 	if erro != nil {
-		log.Errorf("Failed to put smf to real seid mapping to store: %v", err)
+		log.Errorf("Failed to put smf to real seid mapping to store: %v", erro)
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
