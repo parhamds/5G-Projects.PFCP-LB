@@ -36,7 +36,7 @@ func (i *InMemoryStore) GetAllSessions() []PFCPSession {
 	return sessions
 }
 
-func (i *InMemoryStore) PutSession(session PFCPSession) error {
+func (i *InMemoryStore) PutSessionByLocalKey(session PFCPSession) error {
 	if session.localSEID == 0 {
 		return ErrInvalidArgument("session.localSEID", session.localSEID)
 	}
@@ -46,6 +46,38 @@ func (i *InMemoryStore) PutSession(session PFCPSession) error {
 	log.WithFields(log.Fields{
 		"session": session,
 	}).Trace("Saved PFCP sessions to local store")
+
+	return nil
+}
+
+func (i *InMemoryStore) PutSessionBySMFKey(session PFCPSession) error {
+	if session.localSEID == 0 {
+		return ErrInvalidArgument("session.localSEID", session.localSEID)
+	}
+
+	i.sessions.Store(session.remoteSEID, session)
+
+	log.WithFields(log.Fields{
+		"session": session,
+	}).Trace("Saved PFCP sessions to local store")
+
+	return nil
+}
+
+func (i *InMemoryStore) SMFtoRealSEIDStore(smfSEID, realSEID uint64) error {
+	if smfSEID == 0 {
+		return ErrInvalidArgument("smfSEID", smfSEID)
+	}
+	if realSEID == 0 {
+		return ErrInvalidArgument("realSEID", realSEID)
+	}
+
+	i.sessions.Store(smfSEID, realSEID)
+
+	log.WithFields(log.Fields{
+		"smfSEID":  smfSEID,
+		"realSEID": realSEID,
+	}).Trace("Saved smf seid to real seid map to local store")
 
 	return nil
 }

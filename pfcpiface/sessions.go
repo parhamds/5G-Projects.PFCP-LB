@@ -34,7 +34,7 @@ func (pConn *PFCPConn) NewPFCPSession(rseid uint64) (PFCPSession, bool) {
 	for i := 0; i < pConn.maxRetries; i++ {
 		lseid := pConn.rng.Uint64()
 		// Check if it already exists
-		if _, ok := pConn.store.GetSession(lseid); ok {
+		if _, ok := pConn.localtoSMFstore.GetSession(lseid); ok {
 			continue
 		}
 
@@ -64,7 +64,7 @@ func (pConn *PFCPConn) RemoveSession(session PFCPSession) {
 	session.metrics.Delete()
 	pConn.SaveSessions(session.metrics)
 
-	if err := pConn.store.DeleteSession(session.localSEID); err != nil {
+	if err := pConn.localtoSMFstore.DeleteSession(session.localSEID); err != nil {
 		log.Errorf("Failed to delete PFCP session from store: %v", err)
 	}
 }

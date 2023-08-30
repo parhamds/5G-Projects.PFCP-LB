@@ -115,18 +115,24 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 				continue
 			}
 
-			peerSessions := pConn.upf.peersSessions[0]
-			if _, ok := peerSessions[remoteSEID]; !ok {
-				peerSessions[remoteSEID] = &Sessionsinfo{}
-			} else {
-				log.Infoln("fseid already exists")
-			}
-			peerSessions[remoteSEID].LSeidDown = session.localSEID
+			//peerSessions := pConn.upf.peersSessions[0]
+			//if _, ok := peerSessions[remoteSEID]; !ok {
+			//	peerSessions[remoteSEID] = &Sessionsinfo{}
+			//} else {
+			//	log.Infoln("fseid already exists")
+			//}
+			//peerSessions[remoteSEID].LSeidDown = session.localSEID
 
-			err = pConn.store.PutSession(session)
+			err = pConn.smftoLocalstore.PutSessionBySMFKey(session)
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)
 			}
+
+			err = pConn.localtoSMFstore.PutSessionByLocalKey(session)
+			if err != nil {
+				log.Errorf("Failed to put PFCP session to store: %v", err)
+			}
+
 			var localFSEID *ie.IE
 
 			localIP := pConn.LocalAddr().(*net.UDPAddr).IP
