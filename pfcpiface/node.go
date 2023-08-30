@@ -127,11 +127,13 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)
 			}
+			fmt.Println("parham log : smf seid succesfully added to smftoLocalstore, smf = ", session.remoteSEID, " , lseid(down) = ", session.localSEID)
 
 			err = pConn.localtoSMFstore.PutSessionByLocalKey(session)
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)
 			}
+			fmt.Println("parham log : local seid succesfully added to localtoSMFstore, lseid(down) = ", session.localSEID, " , smf = ", session.remoteSEID)
 
 			var localFSEID *ie.IE
 

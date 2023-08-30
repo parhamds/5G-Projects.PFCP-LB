@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 
@@ -233,6 +234,8 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
+	fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
+
 	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
