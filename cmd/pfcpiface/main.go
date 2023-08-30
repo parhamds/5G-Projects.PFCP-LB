@@ -38,6 +38,8 @@ func main() {
 		UpfD2u:           make(chan *pfcpiface.Upf, 100),
 		SesEstU2d:        make(chan *message.SessionEstablishmentRequest, 100),
 		SesEstRespCuzD2U: make(chan *ie.IE, 100),
+		SesModU2d:        make(chan *message.SessionModificationRequest, 100),
+		SesModRespCuzD2U: make(chan *ie.IE, 100),
 	}
 
 	// Read and parse json startup file.
