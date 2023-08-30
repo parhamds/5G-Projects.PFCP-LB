@@ -212,6 +212,19 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//	}
 	//}
 	lseid := seres.Header.SEID
+
+	fmt.Println("parham log : printing all localtoSMFstore ...")
+	sessions := pConn.localtoSMFstore.GetAllSessions()
+	for _, v := range sessions {
+		fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
+	}
+
+	fmt.Println("parham log : printing all smftoLocalstore ...")
+	sessionss := pConn.smftoLocalstore.GetAllSessions()
+	for _, v := range sessionss {
+		fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
+	}
+
 	session, err := pConn.localtoSMFstore.GetSession(lseid)
 	if err != false {
 		log.Errorln("can not get session from pConn.localtoSMFstore, lseid = ", lseid)
