@@ -114,6 +114,15 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
+
+			peerSessions := pConn.upf.peersSessions[0]
+			if _, ok := peerSessions[remoteSEID]; !ok {
+				peerSessions[remoteSEID] = &Sessionsinfo{}
+			} else {
+				log.Infoln("fseid already exists")
+			}
+			peerSessions[remoteSEID].LSeidDown = session.localSEID
+
 			err = pConn.store.PutSession(session)
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)

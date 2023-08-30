@@ -26,6 +26,14 @@ type CommunicationChannel struct {
 	SesEstRespCuzD2U chan *ie.IE
 }
 
+type Sessionsinfo struct {
+	LSeidUp      uint64
+	LSeidDown    uint64
+	RealPFCPSeid uint64
+}
+
+type SessionMap map[uint64]*Sessionsinfo
+
 const (
 	Up Position = iota
 	Down

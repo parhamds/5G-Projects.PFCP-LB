@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 
@@ -158,6 +159,17 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 
 	// Build response message
 	respCause := <-comCh.SesEstRespCuzD2U
+
+	peerSessions := pConn.upf.peersSessions[0]
+	if _, ok := peerSessions[remoteSEID]; !ok {
+		log.Errorln("peersSessions for this sesion is not created in down")
+		return errProcessReply(ErrAllocateSession,
+			ie.CauseNoResourcesAvailable)
+	}
+	peerSessions[remoteSEID].LSeidUp = session.localSEID
+
+	fmt.Println("!!!!!!!!!!!!!! parham log : peerSessions[remoteSEID] = ", peerSessions[remoteSEID])
+
 	causeValue, err := respCause.Cause()
 	if err != nil {
 		log.Errorln("can not extract response cause")
@@ -187,6 +199,19 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
+	peerSessions := pConn.upf.peersSessions[0]
+	for k, v := range peerSessions {
+		if v.LSeidDown == seres.Header.SEID {
+			remoteSEID, err := seres.UPFSEID.FSEID()
+			if err != nil {
+				log.Errorln("error while reading fseid from real pfcp response")
+				break
+			}
+			peerSessions[k].RealPFCPSeid = remoteSEID.SEID
+			break
+		}
+	}
+
 	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
