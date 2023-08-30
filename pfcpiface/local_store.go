@@ -82,6 +82,24 @@ func (i *InMemoryStore) SMFtoRealSEIDStore(smfSEID, realSEID uint64) error {
 	return nil
 }
 
+//func (i *InMemoryStore) UptoDownSEIDStore(upSEID, downSEID uint64) error {
+//	if upSEID == 0 {
+//		return ErrInvalidArgument("upSEID", upSEID)
+//	}
+//	if downSEID == 0 {
+//		return ErrInvalidArgument("downSEID", downSEID)
+//	}
+//
+//	i.sessions.Store(upSEID, downSEID)
+//
+//	log.WithFields(log.Fields{
+//		"upSEID":   upSEID,
+//		"downSEID": downSEID,
+//	}).Trace("Saved smf seid to real seid map to local store")
+//
+//	return nil
+//}
+
 func (i *InMemoryStore) DeleteSession(fseid uint64) error {
 	i.sessions.Delete(fseid)
 
@@ -119,4 +137,22 @@ func (i *InMemoryStore) GetSession(fseid uint64) (PFCPSession, bool) {
 	}).Trace("Got PFCP session from local store")
 
 	return session, ok
+}
+
+func (i *InMemoryStore) GetSeid(fseid uint64) (uint64, bool) {
+	s, ok := i.sessions.Load(fseid)
+	if !ok {
+		return 0, false
+	}
+
+	seid, ok := s.(uint64)
+	if !ok {
+		return 0, false
+	}
+
+	log.WithFields(log.Fields{
+		"seid": seid,
+	}).Trace("Got seid from local store")
+
+	return seid, ok
 }

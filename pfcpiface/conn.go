@@ -57,6 +57,7 @@ type PFCPConn struct {
 	localtoSMFstore SessionsStore
 	SMFtoRealstore  SessionsStore
 	smftoLocalstore SessionsStore
+	//uptoDownstore   SessionsStore
 
 	nodeID nodeID
 	upf    *Upf
@@ -137,12 +138,13 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 		localtoSMFstore: NewInMemoryStore(),
 		SMFtoRealstore:  NewInMemoryStore(),
 		smftoLocalstore: NewInMemoryStore(),
-		upf:             node.upf,
-		done:            node.pConnDone,
-		shutdown:        make(chan struct{}),
-		InstrumentPFCP:  node.metrics,
-		hbReset:         make(chan struct{}, 100),
-		hbCtxCancel:     nil,
+		//uptoDownstore:   NewInMemoryStore(),
+		upf:            node.upf,
+		done:           node.pConnDone,
+		shutdown:       make(chan struct{}),
+		InstrumentPFCP: node.metrics,
+		hbReset:        make(chan struct{}, 100),
+		hbCtxCancel:    nil,
 	}
 
 	p.setLocalNodeID(node.upf.NodeID)

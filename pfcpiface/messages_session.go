@@ -246,18 +246,31 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
+
 	fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
 
 	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
-func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message) (message.Message, error) {
-	upf := pConn.upf
+func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, comCh CommunicationChannel) {
+	smres, ok := msg.(*message.SessionModificationResponse)
+	if !ok {
+		comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+
+	comCh.SesModRespCuzD2U <- smres.Cause
+}
+
+func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
+	//upf := pConn.upf
 
 	smreq, ok := msg.(*message.SessionModificationRequest)
 	if !ok {
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
+
+	comCh.SesModU2d <- smreq
 
 	var remoteSEID uint64
 
@@ -282,13 +295,16 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message) (me
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
 
-	var fseidIP uint32
+	//var fseidIP uint32
 
 	if smreq.CPFSEID != nil {
 		fseid, err := smreq.CPFSEID.FSEID()
 		if err == nil {
+			if session.remoteSEID != fseid.SEID {
+				fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! session id of smf has changed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			}
 			session.remoteSEID = fseid.SEID
-			fseidIP = ip2int(fseid.IPv4Address)
+			//fseidIP = ip2int(fseid.IPv4Address)
 
 			log.Traceln("Updated FSEID from session modification request")
 		}
@@ -296,194 +312,203 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message) (me
 
 	remoteSEID = session.remoteSEID
 
-	addPDRs := make([]pdr, 0, MaxItems)
-	addFARs := make([]far, 0, MaxItems)
-	addQERs := make([]qer, 0, MaxItems)
-	endMarkerList := make([][]byte, 0, MaxItems)
+	//addPDRs := make([]pdr, 0, MaxItems)
+	//addFARs := make([]far, 0, MaxItems)
+	//addQERs := make([]qer, 0, MaxItems)
+	//endMarkerList := make([][]byte, 0, MaxItems)
 
-	for _, cPDR := range smreq.CreatePDR {
-		var p pdr
-		if err := p.parsePDR(cPDR, localSEID, pConn.appPFDs, upf.ippool); err != nil {
-			return sendError(err)
-		}
+	//for _, cPDR := range smreq.CreatePDR {
+	//	var p pdr
+	//	if err := p.parsePDR(cPDR, localSEID, pConn.appPFDs, upf.ippool); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	p.fseidIP = fseidIP
+	//
+	//	session.CreatePDR(p)
+	//	addPDRs = append(addPDRs, p)
+	//}
 
-		p.fseidIP = fseidIP
+	//for _, cFAR := range smreq.CreateFAR {
+	//	var f far
+	//	if err := f.parseFAR(cFAR, localSEID, upf, create); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	f.fseidIP = fseidIP
+	//
+	//	session.CreateFAR(f)
+	//	addFARs = append(addFARs, f)
+	//}
 
-		session.CreatePDR(p)
-		addPDRs = append(addPDRs, p)
-	}
+	//for _, cQER := range smreq.CreateQER {
+	//	var q qer
+	//	if err := q.parseQER(cQER, localSEID); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	q.fseidIP = fseidIP
+	//
+	//	session.CreateQER(q)
+	//	addQERs = append(addQERs, q)
+	//}
 
-	for _, cFAR := range smreq.CreateFAR {
-		var f far
-		if err := f.parseFAR(cFAR, localSEID, upf, create); err != nil {
-			return sendError(err)
-		}
+	//for _, uPDR := range smreq.UpdatePDR {
+	//	var (
+	//		p   pdr
+	//		err error
+	//	)
+	//
+	//	if err = p.parsePDR(uPDR, localSEID, pConn.appPFDs, upf.ippool); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	p.fseidIP = fseidIP
+	//
+	//	err = session.UpdatePDR(p)
+	//	if err != nil {
+	//		log.Errorln("session PDR update failed ", err)
+	//		continue
+	//	}
+	//
+	//	addPDRs = append(addPDRs, p)
+	//}
 
-		f.fseidIP = fseidIP
+	//for _, uFAR := range smreq.UpdateFAR {
+	//	var (
+	//		f   far
+	//		err error
+	//	)
+	//
+	//	if err = f.parseFAR(uFAR, localSEID, upf, update); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	f.fseidIP = fseidIP
+	//
+	//	err = session.UpdateFAR(&f, &endMarkerList)
+	//	if err != nil {
+	//		log.Errorln("session PDR update failed ", err)
+	//		continue
+	//	}
+	//
+	//	addFARs = append(addFARs, f)
+	//}
 
-		session.CreateFAR(f)
-		addFARs = append(addFARs, f)
-	}
+	//for _, uQER := range smreq.UpdateQER {
+	//	var (
+	//		q   qer
+	//		err error
+	//	)
+	//
+	//	if err = q.parseQER(uQER, localSEID); err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	q.fseidIP = fseidIP
+	//
+	//	err = session.UpdateQER(q)
+	//	if err != nil {
+	//		log.Errorln("session QER update failed ", err)
+	//		continue
+	//	}
+	//
+	//	addQERs = append(addQERs, q)
+	//}
 
-	for _, cQER := range smreq.CreateQER {
-		var q qer
-		if err := q.parseQER(cQER, localSEID); err != nil {
-			return sendError(err)
-		}
-
-		q.fseidIP = fseidIP
-
-		session.CreateQER(q)
-		addQERs = append(addQERs, q)
-	}
-
-	for _, uPDR := range smreq.UpdatePDR {
-		var (
-			p   pdr
-			err error
-		)
-
-		if err = p.parsePDR(uPDR, localSEID, pConn.appPFDs, upf.ippool); err != nil {
-			return sendError(err)
-		}
-
-		p.fseidIP = fseidIP
-
-		err = session.UpdatePDR(p)
-		if err != nil {
-			log.Errorln("session PDR update failed ", err)
-			continue
-		}
-
-		addPDRs = append(addPDRs, p)
-	}
-
-	for _, uFAR := range smreq.UpdateFAR {
-		var (
-			f   far
-			err error
-		)
-
-		if err = f.parseFAR(uFAR, localSEID, upf, update); err != nil {
-			return sendError(err)
-		}
-
-		f.fseidIP = fseidIP
-
-		err = session.UpdateFAR(&f, &endMarkerList)
-		if err != nil {
-			log.Errorln("session PDR update failed ", err)
-			continue
-		}
-
-		addFARs = append(addFARs, f)
-	}
-
-	for _, uQER := range smreq.UpdateQER {
-		var (
-			q   qer
-			err error
-		)
-
-		if err = q.parseQER(uQER, localSEID); err != nil {
-			return sendError(err)
-		}
-
-		q.fseidIP = fseidIP
-
-		err = session.UpdateQER(q)
-		if err != nil {
-			log.Errorln("session QER update failed ", err)
-			continue
-		}
-
-		addQERs = append(addQERs, q)
-	}
-
-	session.MarkSessionQer(session.qers)
+	//session.MarkSessionQer(session.qers)
 	// FIXME: since PacketForwardingRules doesn't store pointers,
 	//  we must also mark session QERs in addQERs.
 	//  We need a kind of refactoring to clean it up.
-	session.MarkSessionQer(addQERs)
+	//session.MarkSessionQer(addQERs)
 
-	updated := PacketForwardingRules{
-		pdrs: addPDRs,
-		fars: addFARs,
-		qers: addQERs,
-	}
+	//updated := PacketForwardingRules{
+	//	pdrs: addPDRs,
+	//	fars: addFARs,
+	//	qers: addQERs,
+	//}
 
-	cause := upf.SendMsgToUPF(upfMsgTypeMod, session.PacketForwardingRules, updated)
-	if cause == ie.CauseRequestRejected {
-		return sendError(ErrWriteToDatapath)
-	}
+	//cause := upf.SendMsgToUPF(upfMsgTypeMod, session.PacketForwardingRules, updated)
+	//if cause == ie.CauseRequestRejected {
+	//	return sendError(ErrWriteToDatapath)
+	//}
 
-	if upf.EnableEndMarker {
-		err := upf.SendEndMarkers(&endMarkerList)
-		if err != nil {
-			log.Errorln("Sending End Markers Failed : ", err)
-		}
-	}
+	//if upf.EnableEndMarker {
+	//	err := upf.SendEndMarkers(&endMarkerList)
+	//	if err != nil {
+	//		log.Errorln("Sending End Markers Failed : ", err)
+	//	}
+	//}
 
-	delPDRs := make([]pdr, 0, MaxItems)
-	delFARs := make([]far, 0, MaxItems)
-	delQERs := make([]qer, 0, MaxItems)
+	//delPDRs := make([]pdr, 0, MaxItems)
+	//delFARs := make([]far, 0, MaxItems)
+	//delQERs := make([]qer, 0, MaxItems)
 
-	for _, rPDR := range smreq.RemovePDR {
-		pdrID, err := rPDR.PDRID()
-		if err != nil {
-			return sendError(err)
-		}
+	//for _, rPDR := range smreq.RemovePDR {
+	//	pdrID, err := rPDR.PDRID()
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	p, err := session.RemovePDR(uint32(pdrID))
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	delPDRs = append(delPDRs, *p)
+	//}
 
-		p, err := session.RemovePDR(uint32(pdrID))
-		if err != nil {
-			return sendError(err)
-		}
+	//for _, dFAR := range smreq.RemoveFAR {
+	//	farID, err := dFAR.FARID()
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	f, err := session.RemoveFAR(farID)
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	delFARs = append(delFARs, *f)
+	//}
 
-		delPDRs = append(delPDRs, *p)
-	}
+	//for _, dQER := range smreq.RemoveQER {
+	//	qerID, err := dQER.QERID()
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	q, err := session.RemoveQER(qerID)
+	//	if err != nil {
+	//		return sendError(err)
+	//	}
+	//
+	//	delQERs = append(delQERs, *q)
+	//}
 
-	for _, dFAR := range smreq.RemoveFAR {
-		farID, err := dFAR.FARID()
-		if err != nil {
-			return sendError(err)
-		}
+	//deleted := PacketForwardingRules{
+	//	pdrs: delPDRs,
+	//	fars: delFARs,
+	//	qers: delQERs,
+	//}
 
-		f, err := session.RemoveFAR(farID)
-		if err != nil {
-			return sendError(err)
-		}
-
-		delFARs = append(delFARs, *f)
-	}
-
-	for _, dQER := range smreq.RemoveQER {
-		qerID, err := dQER.QERID()
-		if err != nil {
-			return sendError(err)
-		}
-
-		q, err := session.RemoveQER(qerID)
-		if err != nil {
-			return sendError(err)
-		}
-
-		delQERs = append(delQERs, *q)
-	}
-
-	deleted := PacketForwardingRules{
-		pdrs: delPDRs,
-		fars: delFARs,
-		qers: delQERs,
-	}
-
-	cause = upf.SendMsgToUPF(upfMsgTypeDel, deleted, PacketForwardingRules{})
-	if cause == ie.CauseRequestRejected {
-		return sendError(ErrWriteToDatapath)
-	}
+	//cause = upf.SendMsgToUPF(upfMsgTypeDel, deleted, PacketForwardingRules{})
+	//if cause == ie.CauseRequestRejected {
+	//	return sendError(ErrWriteToDatapath)
+	//}
 
 	err := pConn.localtoSMFstore.PutSessionByLocalKey(session)
 	if err != nil {
 		log.Errorf("Failed to put PFCP session to store: %v", err)
+	}
+	respCause := <-comCh.SesModRespCuzD2U
+
+	causeValue, err := respCause.Cause()
+	if err != nil {
+		log.Errorln("can not extract response cause")
+	}
+	if causeValue != ie.CauseRequestAccepted {
+		return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
 	}
 
 	// Build response message

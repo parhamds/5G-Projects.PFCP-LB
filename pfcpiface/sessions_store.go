@@ -9,8 +9,10 @@ type SessionsStore interface {
 	PutSessionByLocalKey(session PFCPSession) error
 	// GetSession returns the PFCP Session data based on F-SEID.
 	GetSession(fseid uint64) (PFCPSession, bool)
+	GetSeid(fseid uint64) (uint64, bool)
 	PutSessionBySMFKey(session PFCPSession) error
 	SMFtoRealSEIDStore(smfSEID, realSEID uint64) error
+	//UptoDownSEIDStore(upSEID, downSEID uint64) error
 	// GetAllSessions returns all the PFCP Session records that are currently stored.
 	GetAllSessions() []PFCPSession
 	// DeleteSession removes a PFCP Session record indexed by F-SEID.

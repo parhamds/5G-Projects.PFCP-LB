@@ -94,6 +94,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 		lAddrStr := node.LocalAddr().String()
 		go node.tryConnectToN4Peers(lAddrStr, comCh)
 		go node.listenForSesEstReq(comCh)
+		go node.listenForSesModReq(comCh)
 		sendHTTPResp(http.StatusCreated, w)
 	default:
 		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")

@@ -24,6 +24,8 @@ type CommunicationChannel struct {
 	UpfD2u           chan *Upf
 	SesEstU2d        chan *message.SessionEstablishmentRequest
 	SesEstRespCuzD2U chan *ie.IE
+	SesModU2d        chan *message.SessionModificationRequest
+	SesModRespCuzD2U chan *ie.IE
 }
 
 //type Sessionsinfo struct {
