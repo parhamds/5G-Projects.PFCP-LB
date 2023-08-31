@@ -121,10 +121,12 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		pConn.handleSessionEstablishmentResponse(msg, comCh)
 	case message.MsgTypeSessionModificationResponse:
 		pConn.handleSessionModificationResponse(msg, comCh)
+	case message.MsgTypeSessionDeletionResponse:
+		pConn.handleSessionDeletionResponse(msg, comCh)
 	case message.MsgTypeSessionModificationRequest:
 		reply, err = pConn.handleSessionModificationRequest(msg, comCh)
 	case message.MsgTypeSessionDeletionRequest:
-		reply, err = pConn.handleSessionDeletionRequest(msg)
+		reply, err = pConn.handleSessionDeletionRequest(msg, comCh)
 	case message.MsgTypeSessionReportResponse:
 		err = pConn.handleSessionReportResponse(msg)
 

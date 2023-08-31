@@ -110,6 +110,16 @@ func (i *InMemoryStore) DeleteSession(fseid uint64) error {
 	return nil
 }
 
+func (i *InMemoryStore) DeleteSEID(SEID uint64) error {
+	i.sessions.Delete(SEID)
+
+	log.WithFields(log.Fields{
+		"SEID": SEID,
+	}).Trace("SEID removed from local store")
+
+	return nil
+}
+
 func (i *InMemoryStore) DeleteAllSessions() bool {
 	i.sessions.Range(func(key, value interface{}) bool {
 		i.sessions.Delete(key)

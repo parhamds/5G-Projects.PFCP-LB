@@ -39,6 +39,8 @@ func main() {
 		SesEstRespCuzD2U: make(chan *ie.IE, 100),
 		SesModU2d:        make(chan *pfcpiface.SesModU2dMsg, 100),
 		SesModRespCuzD2U: make(chan *ie.IE, 100),
+		SesDelU2d:        make(chan *pfcpiface.SesDelU2dMsg, 100),
+		SesDelRespCuzD2U: make(chan *ie.IE, 100),
 	}
 
 	// Read and parse json startup file.

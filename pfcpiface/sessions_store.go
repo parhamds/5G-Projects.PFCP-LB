@@ -11,6 +11,7 @@ type SessionsStore interface {
 	GetSession(fseid uint64) (PFCPSession, bool)
 	GetSeid(fseid uint64) (uint64, bool)
 	PutSEID(SEIDa, SEIDb uint64) error
+	DeleteSEID(SEID uint64) error
 	//PutSessionBySMFKey(session PFCPSession) error
 	//SMFtoRealSEIDStore(smfSEID, realSEID uint64) error
 	//UptoDownSEIDStore(upSEID, downSEID uint64) error

@@ -204,6 +204,19 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
+
+	causeValue, err := seres.Cause.Cause()
+	if err != nil {
+		log.Errorln("can not extract response cause")
+		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+	if causeValue != ie.CauseRequestAccepted {
+		log.Errorln("session establishment not accepted by real pfcp")
+		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+
 	//peerSessions := pConn.upf.peersSessions[0]
 	//for k, v := range peerSessions {
 	//	if v.LSeidDown == seres.Header.SEID {
@@ -314,9 +327,6 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	if smreq.CPFSEID != nil {
 		fseid, err := smreq.CPFSEID.FSEID()
 		if err == nil {
-			if session.remoteSEID != fseid.SEID {
-				fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! session id of smf has changed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			}
 			session.remoteSEID = fseid.SEID
 			//fseidIP = ip2int(fseid.IPv4Address)
 
@@ -537,8 +547,8 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	return smres, nil
 }
 
-func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message) (message.Message, error) {
-	upf := pConn.upf
+func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
+	//upf := pConn.upf
 
 	sdreq, ok := msg.(*message.SessionDeletionRequest)
 	if !ok {
@@ -559,22 +569,35 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message) (messag
 
 	/* retrieve sessionRecord */
 	localSEID := sdreq.SEID()
-
+	sdreqMsg := SesDelU2dMsg{
+		msg:    sdreq,
+		upSeid: localSEID,
+	}
+	comCh.SesDelU2d <- &sdreqMsg
 	session, ok := pConn.sessionStore.GetSession(localSEID)
 	if !ok {
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
 
-	cause := upf.SendMsgToUPF(upfMsgTypeDel, session.PacketForwardingRules, PacketForwardingRules{})
-	if cause == ie.CauseRequestRejected {
-		return sendError(ErrWriteToDatapath)
-	}
+	//cause := upf.SendMsgToUPF(upfMsgTypeDel, session.PacketForwardingRules, PacketForwardingRules{})
+	//if cause == ie.CauseRequestRejected {
+	//	return sendError(ErrWriteToDatapath)
+	//}
 
-	if err := releaseAllocatedIPs(upf.ippool, &session); err != nil {
-		return sendError(ErrOperationFailedWithReason("session IP dealloc", err.Error()))
-	}
+	//if err := releaseAllocatedIPs(upf.ippool, &session); err != nil {
+	//	return sendError(ErrOperationFailedWithReason("session IP dealloc", err.Error()))
+	//}
 
 	/* delete sessionRecord */
+	respCause := <-comCh.SesDelRespCuzD2U
+	causeValue, err := respCause.Cause()
+	if err != nil {
+		log.Errorln("can not extract response cause")
+	}
+	if causeValue != ie.CauseRequestAccepted {
+		return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
+	}
+
 	pConn.RemoveSession(session)
 
 	// Build response message
@@ -587,6 +610,44 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message) (messag
 	)
 
 	return smres, nil
+}
+
+func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh CommunicationChannel) {
+	fmt.Println("parham log : handling SessionDeletionnResponse in down")
+	smres, ok := msg.(*message.SessionModificationResponse)
+	if !ok {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+	causeValue, err := smres.Cause.Cause()
+	if err != nil {
+		log.Errorln("can not extract response cause")
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+	if causeValue != ie.CauseRequestAccepted {
+		log.Errorln("session deletion not accepted by real pfcp")
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+
+	downseid := smres.Header.SEID
+	session, ok := pConn.sessionStore.GetSession(downseid)
+	if !ok {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
+		log.Errorf("Failed to get session from sessionStore in down")
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+		return
+	}
+
+	upseid := session.remoteSEID
+	pConn.DownToRealStore.DeleteSEID(downseid)
+	pConn.upToDownstore.DeleteSEID(upseid)
+	pConn.RemoveSession(session)
+
+	fmt.Println("parham log : send received msg's cause from real to up in down")
+	comCh.SesDelRespCuzD2U <- smres.Cause
 }
 
 func (pConn *PFCPConn) handleDigestReport(fseid uint64) {

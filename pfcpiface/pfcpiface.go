@@ -26,6 +26,8 @@ type CommunicationChannel struct {
 	SesEstRespCuzD2U chan *ie.IE
 	SesModU2d        chan *SesModU2dMsg
 	SesModRespCuzD2U chan *ie.IE
+	SesDelU2d        chan *SesDelU2dMsg
+	SesDelRespCuzD2U chan *ie.IE
 }
 
 type SesEstU2dMsg struct {
@@ -35,6 +37,11 @@ type SesEstU2dMsg struct {
 
 type SesModU2dMsg struct {
 	msg    *message.SessionModificationRequest
+	upSeid uint64
+}
+
+type SesDelU2dMsg struct {
+	msg    *message.SessionDeletionRequest
 	upSeid uint64
 }
 

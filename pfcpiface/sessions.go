@@ -62,7 +62,7 @@ func (pConn *PFCPConn) NewPFCPSession(rseid uint64) (PFCPSession, bool) {
 func (pConn *PFCPConn) RemoveSession(session PFCPSession) {
 	// Metrics update
 	session.metrics.Delete()
-	pConn.SaveSessions(session.metrics)
+	//pConn.SaveSessions(session.metrics)
 
 	if err := pConn.sessionStore.DeleteSession(session.localSEID); err != nil {
 		log.Errorf("Failed to delete PFCP session from store: %v", err)
