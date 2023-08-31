@@ -95,6 +95,7 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 
 func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
+		fmt.Println("parham log : down is waiting for session establishment req from up")
 		sereq := <-comCh.SesEstU2d
 		if len(node.upf.peersIP) > 0 {
 			rAddr := node.upf.peersIP[0] + ":" + DownPFCPPort
@@ -162,6 +163,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 	for {
+		fmt.Println("parham log : down is waiting for session modification req from up")
 		smreq := <-comCh.SesModU2d
 		if len(node.upf.peersIP) > 0 {
 			rAddr := node.upf.peersIP[0] + ":" + DownPFCPPort
@@ -206,7 +208,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 			}
 
 			smreq.Header.SEID = realSeid
-
+			fmt.Println("parham log : send session modification req from up to real in down")
 			pConn.forwardToRealPFCP(smreq, comCh)
 		}
 	}

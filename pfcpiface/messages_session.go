@@ -194,6 +194,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 }
 
 func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, comCh CommunicationChannel) {
+	fmt.Println("parham log : handling SessionEstablishmentResponse in down")
 	seres, ok := msg.(*message.SessionEstablishmentResponse)
 	if !ok {
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
@@ -226,6 +227,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 
 	session, ok := pConn.localtoSMFstore.GetSession(lseid)
 	if ok == false {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
 		log.Errorln("can not get session from pConn.localtoSMFstore, lseid = ", lseid)
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
@@ -233,32 +235,37 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 
 	smfseid := session.remoteSEID
 
-	realSeid, erro := seres.UPFSEID.FSEID()
-	if erro != nil {
+	realSeid, err := seres.UPFSEID.FSEID()
+	if err != nil {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
 		log.Errorln("error while reading fseid from real pfcp response")
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
 
-	erro = pConn.SMFtoRealstore.SMFtoRealSEIDStore(smfseid, realSeid.SEID) //should be called in resp handler
-	if erro != nil {
-		log.Errorf("Failed to put smf to real seid mapping to store: %v", erro)
+	err = pConn.SMFtoRealstore.SMFtoRealSEIDStore(smfseid, realSeid.SEID) //should be called in resp handler
+	if err != nil {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
+		log.Errorf("Failed to put smf to real seid mapping to store: %v", err)
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
 
-	fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
-
+	//fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
+	fmt.Println("parham log : send received msg's cause from real to up in down")
 	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
 func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, comCh CommunicationChannel) {
+	fmt.Println("parham log : handling SessionModificationResponse in down")
 	smres, ok := msg.(*message.SessionModificationResponse)
 	if !ok {
+		fmt.Println("parham log : send received msg's cause from real to up in down")
 		comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
 
+	fmt.Println("parham log : send received msg's cause from real to up in down")
 	comCh.SesModRespCuzD2U <- smres.Cause
 }
 

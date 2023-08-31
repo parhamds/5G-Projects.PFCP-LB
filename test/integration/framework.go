@@ -6,6 +6,12 @@ package integration
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"net"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/omec-project/pfcpsim/pkg/pfcpsim"
 	"github.com/omec-project/upf-epc/internal/p4constants"
 	"github.com/omec-project/upf-epc/pfcpiface"
@@ -16,11 +22,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/wmnsk/go-pfcp/ie"
-	"io/ioutil"
-	"net"
-	"os"
-	"testing"
-	"time"
 )
 
 // this file should contain all the struct defs/constants used among different test cases.
@@ -330,6 +331,8 @@ func MustStopPFCPAgent() {
 func setup(t *testing.T, configType uint32) {
 	// TODO: we currently need to reset the DefaultRegisterer between tests, as some leave the
 	// 		 the registry in a bad state. Use custom registries to avoid global state.
+	var comCh pfcpiface.CommunicationChannel
+	var pos pfcpiface.Position
 	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 
 	switch os.Getenv(EnvDatapath) {
@@ -354,8 +357,8 @@ func setup(t *testing.T, configType uint32) {
 		require.NoError(t, err)
 		MustStartPFCPAgent()
 	case ModeNative:
-		pfcpAgent = pfcpiface.NewPFCPIface(GetConfig(os.Getenv(EnvDatapath), configType))
-		go pfcpAgent.Run()
+		pfcpAgent = pfcpiface.NewPFCPIface(GetConfig(os.Getenv(EnvDatapath), configType), pos)
+		go pfcpAgent.Run(comCh, pos)
 	default:
 		t.Fatal("Unexpected test mode")
 	}

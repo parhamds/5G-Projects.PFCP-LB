@@ -6,11 +6,12 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/omec-project/upf-epc/pfcpiface"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/omec-project/upf-epc/pfcpiface"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -124,9 +125,9 @@ func GetConfig(datapath string, configType uint32) pfcpiface.Conf {
 		case ConfigUPFBasedIPAllocation:
 			return BESSConfigUPFBasedIPAllocation()
 		}
+	default:
+		panic("Wrong datapath or config type provided")
 	}
-
-	panic("Wrong datapath or config type provided")
 
 	return pfcpiface.Conf{}
 }
