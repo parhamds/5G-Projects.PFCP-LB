@@ -208,3 +208,10 @@ func (pConn *PFCPConn) sendPFCPRequestMessage(r *Request) (message.Message, bool
 		}
 	}
 }
+
+func (pConn *PFCPConn) forwardPFCPRequestMessage(r *Request) {
+	pConn.pendingReqs.Store(r.msg.Sequence(), r)
+
+	pConn.SendPFCPMsg(r.msg)
+
+}

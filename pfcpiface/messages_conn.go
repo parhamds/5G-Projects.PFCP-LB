@@ -49,7 +49,8 @@ func (pConn *PFCPConn) forwardToRealPFCP(msg message.Message, comCh Communicatio
 	// Build request message
 	fmt.Println("parham log : sending a message to Real PFCP")
 	r := newRequest(msg)
-	_, _ = pConn.sendPFCPRequestMessage(r)
+	//_, _ = pConn.sendPFCPRequestMessage(r)
+	pConn.forwardPFCPRequestMessage(r)
 	//fmt.Println("parham log : response received from Real PFCP")
 	//if reply != nil {
 	//	pConn.HandleForwardedMsgResp(reply, comCh)
