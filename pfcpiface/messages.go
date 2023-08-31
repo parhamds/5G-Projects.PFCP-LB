@@ -145,7 +145,10 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		log.Errorln("Error handling PFCP message type", msgType, "from:", addr, "nodeID:", nodeID, err)
 	} else {
 		m.Finish(nodeID, "Success")
-		log.Traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
+		msgType := msg.MessageType()
+		if msgType != message.MsgTypeHeartbeatRequest && msgType != message.MsgTypeHeartbeatResponse {
+			log.Traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
+		}
 	}
 
 	//pConn.SaveMessages(m)
@@ -162,7 +165,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 func (pConn *PFCPConn) SendPFCPMsg(msg message.Message) {
 	addr := pConn.RemoteAddr().String()
 	//nodeID := pConn.nodeID.remote
-	msgType := msg.MessageTypeName()
+	msgTypeName := msg.MessageTypeName()
 
 	//m := metrics.NewMessage(msgType, "Outgoing")
 	//defer pConn.SaveMessages(m)
@@ -171,20 +174,24 @@ func (pConn *PFCPConn) SendPFCPMsg(msg message.Message) {
 
 	if err := msg.MarshalTo(out); err != nil {
 		//m.Finish(nodeID, "Failure")
-		log.Errorln("Failed to marshal", msgType, "for", addr, err)
+		log.Errorln("Failed to marshal", msgTypeName, "for", addr, err)
 
 		return
 	}
 
 	if _, err := pConn.Write(out); err != nil {
 		//m.Finish(nodeID, "Failure")
-		log.Errorln("Failed to transmit", msgType, "to", addr, err)
+		log.Errorln("Failed to transmit", msgTypeName, "to", addr, err)
 
 		return
 	}
 
 	//m.Finish(nodeID, "Success")
-	log.Traceln("Sent", msgType, "to", addr)
+	msgType := msg.MessageType()
+	if msgType != message.MsgTypeHeartbeatRequest && msgType != message.MsgTypeHeartbeatResponse {
+		log.Traceln("Sent", msgTypeName, "to", addr)
+	}
+
 }
 
 func (pConn *PFCPConn) sendPFCPRequestMessage(r *Request) (message.Message, bool) {
