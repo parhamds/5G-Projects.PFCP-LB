@@ -595,7 +595,7 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh C
 		log.Errorln("can not extract response cause")
 	}
 	if causeValue != ie.CauseRequestAccepted {
-		return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
+		return sendError(ErrNotFoundWithParam("session deletion reject recieved from real pfcp", "localSEID", localSEID))
 	}
 
 	pConn.RemoveSession(session)
@@ -647,7 +647,7 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 	pConn.RemoveSession(session)
 
 	fmt.Println("parham log : send received msg's cause from real to up in down")
-	comCh.SesDelRespCuzD2U <- smres.Cause
+	comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
 }
 
 func (pConn *PFCPConn) handleDigestReport(fseid uint64) {

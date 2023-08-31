@@ -147,8 +147,8 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		log.Errorln("Error handling PFCP message type", msgType, "from:", addr, "nodeID:", nodeID, err)
 	} else {
 		m.Finish(nodeID, "Success")
-		msgType := msg.MessageType()
-		if msgType != message.MsgTypeHeartbeatRequest && msgType != message.MsgTypeHeartbeatResponse {
+		msgTypeCode := msg.MessageType()
+		if msgTypeCode != message.MsgTypeHeartbeatRequest && msgTypeCode != message.MsgTypeHeartbeatResponse {
 			log.Traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
 		}
 	}
