@@ -12,7 +12,6 @@ import (
 	"github.com/omec-project/upf-epc/pfcpiface"
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
-	"github.com/wmnsk/go-pfcp/message"
 )
 
 var (
@@ -36,9 +35,9 @@ func main() {
 		U2d:              make(chan []byte, 100),
 		D2u:              make(chan []byte, 100),
 		UpfD2u:           make(chan *pfcpiface.Upf, 100),
-		SesEstU2d:        make(chan *message.SessionEstablishmentRequest, 100),
+		SesEstU2d:        make(chan *pfcpiface.SesEstU2dMsg, 100),
 		SesEstRespCuzD2U: make(chan *ie.IE, 100),
-		SesModU2d:        make(chan *message.SessionModificationRequest, 100),
+		SesModU2d:        make(chan *pfcpiface.SesModU2dMsg, 100),
 		SesModRespCuzD2U: make(chan *ie.IE, 100),
 	}
 

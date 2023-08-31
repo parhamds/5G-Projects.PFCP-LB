@@ -96,7 +96,8 @@ func (node *PFCPNode) tryConnectToN4Peers(lAddrStr string, comCh CommunicationCh
 func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
 		fmt.Println("parham log : down is waiting for session establishment req from up")
-		sereq := <-comCh.SesEstU2d
+		sereqMsg := <-comCh.SesEstU2d
+		sereq := sereqMsg.msg
 		if len(node.upf.peersIP) > 0 {
 			rAddr := node.upf.peersIP[0] + ":" + DownPFCPPort
 			v, ok := node.pConns.Load(rAddr)
@@ -107,44 +108,30 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 			}
 			pConn := v.(*PFCPConn)
 			sereq.NodeID = pConn.nodeID.localIE
-			fseid, err := sereq.CPFSEID.FSEID()
-			remoteSEID := fseid.SEID
-			session, ok := pConn.NewPFCPSession(remoteSEID)
+			//fseid, err := sereq.CPFSEID.FSEID()
+			//remoteSEID := fseid.SEID
+			session, ok := pConn.NewPFCPSession(sereqMsg.upSeid)
 			if !ok {
-				log.Errorf("can not create session in down: %v", err)
+				log.Errorf("can not create session in down:")
 				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
 
-			//peerSessions := pConn.upf.peersSessions[0]
-			//if _, ok := peerSessions[remoteSEID]; !ok {
-			//	peerSessions[remoteSEID] = &Sessionsinfo{}
-			//} else {
-			//	log.Infoln("fseid already exists")
-			//}
-			//peerSessions[remoteSEID].LSeidDown = session.localSEID
-
-			//err = pConn.uptoDownstore.UptoDownSEIDStore()
-			//if err != nil {
-			//	log.Errorf("Failed to put PFCP session to store: %v", err)
-			//}
-			//fmt.Println("parham log : smf seid succesfully added to smftoLocalstore, smf = ", session.remoteSEID, " , lseid(down) = ", session.localSEID)
-
-			err = pConn.smftoLocalstore.PutSessionBySMFKey(session)
+			err := pConn.sessionStore.PutSession(session)
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)
 				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
-			fmt.Println("parham log : smf seid succesfully added to smftoLocalstore, smf = ", session.remoteSEID, " , lseid(down) = ", session.localSEID)
+			fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
 
-			err = pConn.localtoSMFstore.PutSessionByLocalKey(session)
+			err = pConn.upToDownstore.PutSEID(sereqMsg.upSeid, session.localSEID)
 			if err != nil {
 				log.Errorf("Failed to put PFCP session to store: %v", err)
 				comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
-			fmt.Println("parham log : local seid succesfully added to localtoSMFstore, lseid(down) = ", session.localSEID, " , smf = ", session.remoteSEID)
+			fmt.Println("parham log : UP and Down seid succesfully added to upToDownstore, down = ", session.localSEID, " , up = ", session.remoteSEID)
 
 			var localFSEID *ie.IE
 
@@ -164,7 +151,8 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 	for {
 		fmt.Println("parham log : down is waiting for session modification req from up")
-		smreq := <-comCh.SesModU2d
+		smreqMsg := <-comCh.SesModU2d
+		smreq := smreqMsg.msg
 		if len(node.upf.peersIP) > 0 {
 			rAddr := node.upf.peersIP[0] + ":" + DownPFCPPort
 			v, ok := node.pConns.Load(rAddr)
@@ -176,33 +164,40 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 			pConn := v.(*PFCPConn)
 			//smreq.NodeID = pConn.nodeID.localIE
 
-			fseid, err := smreq.CPFSEID.FSEID()
-			if err != nil {
-				log.Errorln("can not read smf seid from smreq in down")
+			//fseid, err := smreq.CPFSEID.FSEID()
+			//if err != nil {
+			//	log.Errorln("can not read smf seid from smreq in down")
+			//	comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			//	continue
+			//}
+
+			downseid, ok := pConn.upToDownstore.GetSeid(smreqMsg.upSeid)
+			if !ok {
+				log.Errorln("can not find up seid in upToDownstore, up seid = ", smreqMsg.upSeid)
 				comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}
 
-			session, ok := pConn.smftoLocalstore.GetSession(fseid.SEID)
-			if !ok {
-				log.Errorln("can not find smf seid in smftoLocalstore, smf seid = ", fseid.SEID)
-				comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
-				continue
-			}
+			//session, ok := pConn.smftoLocalstore.GetSession(fseid.SEID)
+			//if !ok {
+			//	log.Errorln("can not find smf seid in smftoLocalstore, smf seid = ", fseid.SEID)
+			//	comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			//	continue
+			//}
 
 			var localFSEID *ie.IE
 
 			localIP := pConn.LocalAddr().(*net.UDPAddr).IP
 			if localIP.To4() != nil {
-				localFSEID = ie.NewFSEID(session.localSEID, localIP, nil)
+				localFSEID = ie.NewFSEID(downseid, localIP, nil)
 			} else {
-				localFSEID = ie.NewFSEID(session.localSEID, nil, localIP)
+				localFSEID = ie.NewFSEID(downseid, nil, localIP)
 			}
 			smreq.CPFSEID = localFSEID
 
-			realSeid, ok := pConn.SMFtoRealstore.GetSeid(fseid.SEID)
+			realSeid, ok := pConn.DownToRealStore.GetSeid(downseid)
 			if !ok {
-				log.Errorln("can not find reaol seid in smftorealstore, smf seid = ", fseid.SEID)
+				log.Errorln("can not find down seid in DownToRealStore, down seid = ", downseid)
 				comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 				continue
 			}

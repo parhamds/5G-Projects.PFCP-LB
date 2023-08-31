@@ -22,10 +22,20 @@ type CommunicationChannel struct {
 	U2d              chan []byte
 	D2u              chan []byte
 	UpfD2u           chan *Upf
-	SesEstU2d        chan *message.SessionEstablishmentRequest
+	SesEstU2d        chan *SesEstU2dMsg
 	SesEstRespCuzD2U chan *ie.IE
-	SesModU2d        chan *message.SessionModificationRequest
+	SesModU2d        chan *SesModU2dMsg
 	SesModRespCuzD2U chan *ie.IE
+}
+
+type SesEstU2dMsg struct {
+	msg    *message.SessionEstablishmentRequest
+	upSeid uint64
+}
+
+type SesModU2dMsg struct {
+	msg    *message.SessionModificationRequest
+	upSeid uint64
 }
 
 //type Sessionsinfo struct {

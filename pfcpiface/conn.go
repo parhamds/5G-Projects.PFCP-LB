@@ -54,10 +54,14 @@ type PFCPConn struct {
 	maxRetries int
 	appPFDs    map[string]appPFD
 
-	localtoSMFstore SessionsStore
-	SMFtoRealstore  SessionsStore
-	smftoLocalstore SessionsStore
+	//localtoSMFstore SessionsStore
+	//SMFtoRealstore  SessionsStore
+	//smftoLocalstore SessionsStore
 	//uptoDownstore   SessionsStore
+	sessionStore    SessionsStore
+	upToDownstore   SessionsStore
+	downToUpStore   SessionsStore
+	DownToRealStore SessionsStore
 
 	nodeID nodeID
 	upf    *Upf
@@ -130,21 +134,25 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 	rng := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404
 
 	var p = &PFCPConn{
-		ctx:             node.ctx,
-		Conn:            conn,
-		ts:              ts,
-		rng:             rng,
-		maxRetries:      100,
-		localtoSMFstore: NewInMemoryStore(),
-		SMFtoRealstore:  NewInMemoryStore(),
-		smftoLocalstore: NewInMemoryStore(),
+		ctx:        node.ctx,
+		Conn:       conn,
+		ts:         ts,
+		rng:        rng,
+		maxRetries: 100,
+		//localtoSMFstore: NewInMemoryStore(),
+		//SMFtoRealstore:  NewInMemoryStore(),
+		//smftoLocalstore: NewInMemoryStore(),
 		//uptoDownstore:   NewInMemoryStore(),
-		upf:            node.upf,
-		done:           node.pConnDone,
-		shutdown:       make(chan struct{}),
-		InstrumentPFCP: node.metrics,
-		hbReset:        make(chan struct{}, 100),
-		hbCtxCancel:    nil,
+		sessionStore:    NewInMemoryStore(),
+		upToDownstore:   NewInMemoryStore(),
+		downToUpStore:   NewInMemoryStore(),
+		DownToRealStore: NewInMemoryStore(),
+		upf:             node.upf,
+		done:            node.pConnDone,
+		shutdown:        make(chan struct{}),
+		InstrumentPFCP:  node.metrics,
+		hbReset:         make(chan struct{}, 100),
+		hbCtxCancel:     nil,
 	}
 
 	p.setLocalNodeID(node.upf.NodeID)
@@ -256,7 +264,7 @@ func (pConn *PFCPConn) Shutdown() {
 	}
 
 	// Cleanup all sessions in this conn
-	for _, sess := range pConn.localtoSMFstore.GetAllSessions() {
+	for _, sess := range pConn.sessionStore.GetAllSessions() {
 		pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
 		pConn.RemoveSession(sess)
 	}

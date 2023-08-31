@@ -29,8 +29,6 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
 
-	comCh.SesEstU2d <- sereq // TODO : handle it in down
-
 	errUnmarshalReply := func(err error, offendingIE *ie.IE) (message.Message, error) {
 		// Build response message
 		pfdres := message.NewSessionEstablishmentResponse(0,
@@ -86,6 +84,12 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 			ie.CauseNoResourcesAvailable)
 	}
 
+	sereqMsg := SesEstU2dMsg{
+		msg:    sereq,
+		upSeid: session.localSEID,
+	}
+
+	comCh.SesEstU2d <- &sereqMsg
 	//addPDRs := make([]pdr, 0, MaxItems)
 	//addFARs := make([]far, 0, MaxItems)
 	//addQERs := make([]qer, 0, MaxItems)
@@ -143,7 +147,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 	//		ie.CauseRequestRejected)
 	//}
 
-	err = pConn.localtoSMFstore.PutSessionByLocalKey(session)
+	err = pConn.sessionStore.PutSession(session)
 	if err != nil {
 		log.Errorf("Failed to put PFCP session to store: %v", err)
 	}
@@ -212,7 +216,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//		break
 	//	}
 	//}
-	lseid := seres.Header.SEID
+	downseid := seres.Header.SEID
 
 	//fmt.Println("parham log : printing all localtoSMFstore ...")
 	//sessions := pConn.localtoSMFstore.GetAllSessions()
@@ -225,15 +229,15 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//	fmt.Println("local = ", v.localSEID, " , smf = ", v.remoteSEID)
 	//}
 
-	session, ok := pConn.localtoSMFstore.GetSession(lseid)
-	if ok == false {
-		fmt.Println("parham log : send received msg's cause from real to up in down")
-		log.Errorln("can not get session from pConn.localtoSMFstore, lseid = ", lseid)
-		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
-		return
-	}
+	//session, ok := pConn.sessionStore.GetSession(lseid)
+	//if ok == false {
+	//	fmt.Println("parham log : send received msg's cause from real to up in down")
+	//	log.Errorln("can not get session from pConn.localtoSMFstore, lseid = ", lseid)
+	//	comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+	//	return
+	//}
 
-	smfseid := session.remoteSEID
+	//upseid := session.remoteSEID
 
 	realSeid, err := seres.UPFSEID.FSEID()
 	if err != nil {
@@ -243,10 +247,10 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 		return
 	}
 
-	err = pConn.SMFtoRealstore.SMFtoRealSEIDStore(smfseid, realSeid.SEID) //should be called in resp handler
+	err = pConn.DownToRealStore.PutSEID(downseid, realSeid.SEID) //should be called in resp handler
 	if err != nil {
 		fmt.Println("parham log : send received msg's cause from real to up in down")
-		log.Errorf("Failed to put smf to real seid mapping to store: %v", err)
+		log.Errorf("Failed to put down to real seid mapping to DownToRealStore: %v", err)
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
@@ -277,8 +281,6 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
 
-	comCh.SesModU2d <- smreq
-
 	var remoteSEID uint64
 
 	sendError := func(err error) (message.Message, error) {
@@ -296,8 +298,13 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	}
 
 	localSEID := smreq.SEID()
+	smreqMsg := SesModU2dMsg{
+		msg:    smreq,
+		upSeid: localSEID,
+	}
+	comCh.SesModU2d <- &smreqMsg
 
-	session, ok := pConn.localtoSMFstore.GetSession(localSEID)
+	session, ok := pConn.sessionStore.GetSession(localSEID)
 	if !ok {
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
@@ -504,7 +511,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	//	return sendError(ErrWriteToDatapath)
 	//}
 
-	err := pConn.localtoSMFstore.PutSessionByLocalKey(session)
+	err := pConn.sessionStore.PutSession(session)
 	if err != nil {
 		log.Errorf("Failed to put PFCP session to store: %v", err)
 	}
@@ -553,7 +560,7 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message) (messag
 	/* retrieve sessionRecord */
 	localSEID := sdreq.SEID()
 
-	session, ok := pConn.localtoSMFstore.GetSession(localSEID)
+	session, ok := pConn.sessionStore.GetSession(localSEID)
 	if !ok {
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
@@ -583,7 +590,7 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message) (messag
 }
 
 func (pConn *PFCPConn) handleDigestReport(fseid uint64) {
-	session, ok := pConn.localtoSMFstore.GetSession(fseid)
+	session, ok := pConn.sessionStore.GetSession(fseid)
 	if !ok {
 		log.Warnln("No session found for fseid : ", fseid)
 		return
@@ -657,7 +664,7 @@ func (pConn *PFCPConn) handleSessionReportResponse(msg message.Message) error {
 	seid := srres.SEID()
 
 	if cause == ie.CauseSessionContextNotFound {
-		sessItem, ok := pConn.localtoSMFstore.GetSession(seid)
+		sessItem, ok := pConn.sessionStore.GetSession(seid)
 		if !ok {
 			return errProcess(ErrNotFoundWithParam("PFCP session context", "SEID", seid))
 		}
