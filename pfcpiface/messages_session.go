@@ -201,6 +201,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	fmt.Println("parham log : handling SessionEstablishmentResponse in down")
 	seres, ok := msg.(*message.SessionEstablishmentResponse)
 	if !ok {
+		log.Errorln("can not convert recieved msg to SessionEstablishmentResponse")
 		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
@@ -277,6 +278,7 @@ func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, co
 	fmt.Println("parham log : handling SessionModificationResponse in down")
 	smres, ok := msg.(*message.SessionModificationResponse)
 	if !ok {
+		log.Errorln("can not convert recieved msg to SessionModificationResponse")
 		fmt.Println("parham log : send received msg's cause from real to up in down")
 		comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
@@ -614,13 +616,14 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh C
 
 func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh CommunicationChannel) {
 	fmt.Println("parham log : handling SessionDeletionnResponse in down")
-	smres, ok := msg.(*message.SessionModificationResponse)
+	sdres, ok := msg.(*message.SessionDeletionResponse)
 	if !ok {
+		log.Errorln("can not convert recieved msg to SessionDeletionResponse")
 		fmt.Println("parham log : send received msg's cause from real to up in down")
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
-	causeValue, err := smres.Cause.Cause()
+	causeValue, err := sdres.Cause.Cause()
 	if err != nil {
 		log.Errorln("can not extract response cause")
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
@@ -632,7 +635,7 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 		return
 	}
 
-	downseid := smres.Header.SEID
+	downseid := sdres.Header.SEID
 	session, ok := pConn.sessionStore.GetSession(downseid)
 	if !ok {
 		fmt.Println("parham log : send received msg's cause from real to up in down")
