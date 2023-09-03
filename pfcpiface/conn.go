@@ -199,7 +199,7 @@ func (pConn *PFCPConn) setLocalNodeID(id string) {
 	}
 }
 
-// Serve serves forever a single PFCP peer.(exept first assosiation req msg)
+// Serve serves forever a single PFCP peer.(exept first association req msg)
 func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 	//fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
 	connTimeout := make(chan struct{}, 1)
