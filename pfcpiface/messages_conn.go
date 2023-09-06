@@ -199,13 +199,15 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 	}
 	//fmt.Println("parham log : upf.accessIP = ", upf.AccessIP)
 	//fmt.Println("parham log : upf.coreIP = ", upf.CoreIP)
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEMP LOG : upf.AccessIP.String() = ", upf.AccessIP.String())
 	ies := []*ie.IE{
 		ie.NewRecoveryTimeStamp(pConn.ts.local),
 		//ie.NewNodeID(upf.NodeID, "", ""),
 		pConn.nodeID.localIE,
 		// 0x41 = Spare (0) | Assoc Src Inst (1) | Assoc Net Inst (0) | Tied Range (000) | IPV6 (0) | IPV4 (1)
 		//      = 01000001
-		ie.NewUserPlaneIPResourceInformation(flags, 0, upf.AccessIP.String(), "", networkInstance, ie.SrcInterfaceAccess),
+
+		ie.NewUserPlaneIPResourceInformation(flags, 0, "192.168.252.3", "", networkInstance, ie.SrcInterfaceAccess),
 		// ie.NewUserPlaneIPResourceInformation(0x41, 0, coreIP, "", "", ie.SrcInterfaceCore),
 		ie.NewUPFunctionFeatures(features...),
 	}
