@@ -113,6 +113,7 @@ func (node *PFCPNode) pfcpMsgLBer(fseid uint64) int {
 		}
 	}
 	node.upf.lbmap[fseid] = lightestUpf
+	node.upf.upfsSessions[lightestUpf]++
 	return lightestUpf
 }
 
