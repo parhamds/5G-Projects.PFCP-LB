@@ -21,7 +21,7 @@ type Position int
 type CommunicationChannel struct {
 	U2d              chan []byte
 	D2u              chan []byte
-	UpfD2u           chan *Upf
+	UpfD2u           chan *PfcpInfo
 	SesEstU2d        chan *SesEstU2dMsg
 	SesEstRespCuzD2U chan *ie.IE
 	SesModU2d        chan *SesModU2dMsg
@@ -113,14 +113,15 @@ func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
 func listenForUpf(comCh CommunicationChannel, upf *Upf) {
 	for {
 		exist := false
-		newRealUpf := <-comCh.UpfD2u
+		newPfcpInfo := <-comCh.UpfD2u
 		for _, u := range upf.peersUPF {
-			if u.NodeID == newRealUpf.NodeID {
+			if u.NodeID == newPfcpInfo.Upf.NodeID {
 				exist = true
 			}
 		}
 		if !exist {
-			upf.peersUPF = append(upf.peersUPF, newRealUpf)
+			upf.peersUPF = append(upf.peersUPF, newPfcpInfo.Upf)
+			upf.peersIP = append(upf.peersIP, newPfcpInfo.Ip)
 		}
 	}
 }

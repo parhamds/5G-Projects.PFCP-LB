@@ -85,14 +85,13 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		//handleSliceConfig(&nwSlice, c.upf)
 		handlePFCPConfig(&pfcpInfo, node.upf)
-		i := len(node.upf.peersUPF)
-		if i > 0 {
-			//fmt.Println("parham log : send real upf to up")
-			comCh.UpfD2u <- node.upf.peersUPF[i-1]
-		}
+
+		//fmt.Println("parham log : send real upf to up")
+		//comCh.UpfD2u <- &pfcpInfo
+
 		//fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
-		go node.tryConnectToN4Peers(lAddrStr, comCh)
+		go node.tryConnectToN4Peer(lAddrStr, comCh, pfcpInfo)
 		go node.listenForSesEstReq(comCh)
 		go node.listenForSesModReq(comCh)
 		go node.listenForSesDelReq(comCh)

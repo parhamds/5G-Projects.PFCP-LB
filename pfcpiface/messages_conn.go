@@ -16,7 +16,7 @@ var errFlowDescAbsent = errors.New("flow description not present")
 var errDatapathDown = errors.New("datapath down")
 var errReqRejected = errors.New("request rejected")
 
-func (pConn *PFCPConn) sendAssociationRequest() {
+func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh CommunicationChannel) {
 	// Build request message
 	asreq := message.NewAssociationSetupRequest(pConn.getSeqNum(),
 		pConn.associationIEs()...,
@@ -26,7 +26,7 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 	reply, timeout := pConn.sendPFCPRequestMessage(r)
 
 	if reply != nil {
-		err := pConn.handleAssociationSetupResponse(reply)
+		err := pConn.handleAssociationSetupResponse(reply, pfcpInfo, comCh)
 		if err != nil {
 			log.Errorln("Handling of Assoc Setup Response Failed ", pConn.RemoteAddr())
 			//fmt.Println("parham log : Shutdown called from sendAssociationRequest")
@@ -34,6 +34,7 @@ func (pConn *PFCPConn) sendAssociationRequest() {
 
 			return
 		}
+
 		//fmt.Println("parham log : pConn.upf.enableHBTimer = ", pConn.upf.enableHBTimer)
 		if pConn.upf.enableHBTimer || true {
 			//fmt.Println("parham log : starting pConn.startHeartBeatMonitor()")
@@ -271,7 +272,7 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 	return asres, nil
 }
 
-func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message) error {
+func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpInfo PfcpInfo, comCh CommunicationChannel) error {
 	addr := pConn.RemoteAddr().String()
 
 	asres, ok := msg.(*message.AssociationSetupResponse)
@@ -314,7 +315,7 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message) error
 	pConn.nodeID.remote = nodeID
 	log.Infoln("Association setup done between nodes",
 		"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
-
+	comCh.UpfD2u <- &pfcpInfo
 	return nil
 }
 
