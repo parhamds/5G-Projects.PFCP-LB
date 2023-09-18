@@ -64,24 +64,6 @@ func (i *InMemoryStore) PutSession(session PFCPSession) error {
 //	return nil
 //}
 
-func (i *InMemoryStore) PutSEID(SEIDa, SEIDb uint64) error {
-	if SEIDa == 0 {
-		return ErrInvalidArgument("SEIDa", SEIDa)
-	}
-	if SEIDb == 0 {
-		return ErrInvalidArgument("SEIDb", SEIDb)
-	}
-
-	i.sessions.Store(SEIDa, SEIDb)
-
-	log.WithFields(log.Fields{
-		"SEIDa": SEIDa,
-		"SEIDb": SEIDb,
-	}).Trace("Saved smf seid to real seid map to local store")
-
-	return nil
-}
-
 //func (i *InMemoryStore) UptoDownSEIDStore(upSEID, downSEID uint64) error {
 //	if upSEID == 0 {
 //		return ErrInvalidArgument("upSEID", upSEID)
@@ -106,16 +88,6 @@ func (i *InMemoryStore) DeleteSession(fseid uint64) error {
 	log.WithFields(log.Fields{
 		"F-SEID": fseid,
 	}).Trace("PFCP session removed from local store")
-
-	return nil
-}
-
-func (i *InMemoryStore) DeleteSEID(SEID uint64) error {
-	i.sessions.Delete(SEID)
-
-	log.WithFields(log.Fields{
-		"SEID": SEID,
-	}).Trace("SEID removed from local store")
 
 	return nil
 }
@@ -147,22 +119,4 @@ func (i *InMemoryStore) GetSession(fseid uint64) (PFCPSession, bool) {
 	}).Trace("Got PFCP session from local store")
 
 	return session, ok
-}
-
-func (i *InMemoryStore) GetSeid(fseid uint64) (uint64, bool) {
-	s, ok := i.sessions.Load(fseid)
-	if !ok {
-		return 0, false
-	}
-
-	seid, ok := s.(uint64)
-	if !ok {
-		return 0, false
-	}
-
-	log.WithFields(log.Fields{
-		"seid": seid,
-	}).Trace("Got seid from local store")
-
-	return seid, ok
 }

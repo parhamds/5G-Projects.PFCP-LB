@@ -58,6 +58,25 @@ func (pConn *PFCPConn) NewPFCPSession(rseid uint64) (PFCPSession, bool) {
 	return PFCPSession{}, false
 }
 
+func (pConn *PFCPConn) NewPFCPSessionForDown(rseid uint64) (PFCPSession, bool) {
+
+	s := PFCPSession{
+		localSEID:  rseid,
+		remoteSEID: rseid,
+		PacketForwardingRules: PacketForwardingRules{
+			pdrs: make([]pdr, 0, MaxItems),
+			fars: make([]far, 0, MaxItems),
+			qers: make([]qer, 0, MaxItems),
+		},
+	}
+	s.metrics = metrics.NewSession(pConn.nodeID.remote)
+
+	// Metrics update
+	//pConn.SaveSessions(s.metrics)
+
+	return s, true
+}
+
 // RemoveSession removes session using lseid.
 func (pConn *PFCPConn) RemoveSession(session PFCPSession) {
 	// Metrics update

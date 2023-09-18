@@ -230,7 +230,6 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//		break
 	//	}
 	//}
-	downseid := seres.Header.SEID
 
 	//fmt.Println("parham log : printing all localtoSMFstore ...")
 	//sessions := pConn.localtoSMFstore.GetAllSessions()
@@ -252,22 +251,6 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//}
 
 	//upseid := session.remoteSEID
-
-	realSeid, err := seres.UPFSEID.FSEID()
-	if err != nil {
-		fmt.Println("parham log : send received msg's cause from real to up in down")
-		log.Errorln("error while reading fseid from real pfcp response")
-		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
-		return
-	}
-
-	err = pConn.DownToRealStore.PutSEID(downseid, realSeid.SEID) //should be called in resp handler
-	if err != nil {
-		fmt.Println("parham log : send received msg's cause from real to up in down")
-		log.Errorf("Failed to put down to real seid mapping to DownToRealStore: %v", err)
-		comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
-		return
-	}
 
 	//fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
 	fmt.Println("parham log : send received msg's cause from real to up in down")
@@ -637,16 +620,7 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 
 	downseid := sdres.Header.SEID
 	session, ok := pConn.sessionStore.GetSession(downseid)
-	if !ok {
-		fmt.Println("parham log : send received msg's cause from real to up in down")
-		log.Errorf("Failed to get session from sessionStore in down")
-		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
-		return
-	}
 
-	upseid := session.remoteSEID
-	pConn.DownToRealStore.DeleteSEID(downseid)
-	pConn.upToDownstore.DeleteSEID(upseid)
 	pConn.RemoveSession(session)
 
 	fmt.Println("parham log : send received msg's cause from real to up in down")
