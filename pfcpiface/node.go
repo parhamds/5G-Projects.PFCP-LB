@@ -114,6 +114,8 @@ func (node *PFCPNode) pfcpMsgLBer(fseid uint64) int {
 	}
 	node.upf.lbmap[fseid] = lightestUpf
 	node.upf.upfsSessions[lightestUpf]++
+	fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
+	fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
 	return lightestUpf
 }
 

@@ -194,7 +194,9 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 			//http.ListenAndServe(":8081", nil)
 			server.ListenAndServe()
 		}()
-
+		go p.node.listenForSesEstReq(comch)
+		go p.node.listenForSesModReq(comch)
+		go p.node.listenForSesDelReq(comch)
 		//sig := make(chan os.Signal, 1)
 		//signal.Notify(sig, os.Interrupt)
 		//signal.Notify(sig, syscall.SIGTERM)
