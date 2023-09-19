@@ -286,6 +286,9 @@ func (pConn *PFCPConn) Shutdown() {
 
 func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 
+	fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
+	fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
+
 	for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
 		sessions := node.upf.upfsSessions[upfIndex]
 		node.reloadbalance(sessions, upfIndex)
@@ -299,6 +302,9 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 			node.upf.lbmap[k] = v - 1
 		}
 	}
+	fmt.Println("parham log : node.upf.lbmap after reloadbalance = ", node.upf.lbmap)
+	fmt.Println("parham log : node.upf.upfsSessions after reloadbalance = ", node.upf.upfsSessions)
+
 }
 
 func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
@@ -324,8 +330,6 @@ func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
 		}
 		node.upf.lbmap[v] = lightestUpf
 		node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], v)
-		fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
-		fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
 
 	}
 }
