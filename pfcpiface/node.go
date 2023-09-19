@@ -70,7 +70,7 @@ func NewPFCPNode(pos Position, upf *Upf) *PFCPNode {
 	}
 }
 
-func (node *PFCPNode) tryConnectToN4Peer(lAddrStr string, comCh CommunicationChannel, pfcpinfo PfcpInfo) {
+func (node *PFCPNode) tryConnectToN4Peer(lAddrStr string, comCh CommunicationChannel, pfcpinfo PfcpInfo, pos Position) {
 	//fmt.Println("parham log : start tryConnectToN4Peers func")
 
 	conn, err := net.Dial("udp", pfcpinfo.Ip+":"+DownPFCPPort)
@@ -87,7 +87,7 @@ func (node *PFCPNode) tryConnectToN4Peer(lAddrStr string, comCh CommunicationCha
 		"CP node":        n4DstIP.String(),
 	}).Info("Establishing PFCP Conn with CP node")
 	//fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
-	pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh)
+	pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh, pos)
 	if pfcpConn != nil {
 
 		go pfcpConn.sendAssociationRequest(pfcpinfo, comCh)
@@ -102,18 +102,18 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 		return upfIndex
 	}
 
-	minSessions := node.upf.upfsSessions[0]
+	minSessions := len(node.upf.upfsSessions[0])
 	lightestUpf := 0
 	if len(node.upf.upfsSessions) > 1 {
 		for i := 1; i < len(node.upf.upfsSessions); i++ {
-			if minSessions > node.upf.upfsSessions[i] {
-				minSessions = node.upf.upfsSessions[i]
+			if minSessions > len(node.upf.upfsSessions[i]) {
+				minSessions = len(node.upf.upfsSessions[i])
 				lightestUpf = i
 			}
 		}
 	}
 	node.upf.lbmap[seid] = lightestUpf
-	node.upf.upfsSessions[lightestUpf]++
+	node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], seid)
 	fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
 	fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
 	return lightestUpf
@@ -297,7 +297,7 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 			//} else {
 			//	fmt.Println("parham log: calling NewPFCPConn for down")
 			//}
-			node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n], comCh)
+			node.NewPFCPConn(lAddrStr, rAddrStr, buf[:n], comCh, pos)
 		}
 	}
 	if pos == Down {

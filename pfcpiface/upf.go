@@ -34,7 +34,6 @@ type UeResource struct {
 	name string
 	dnn  string
 }
-
 type Upf struct {
 	EnableUeIPAlloc   bool `json:"enableueipalloc"`
 	EnableEndMarker   bool `json:"enableendmarker"`
@@ -48,8 +47,8 @@ type Upf struct {
 	ippool            *IPPool
 	peersIP           []string
 	peersUPF          []*Upf
-	upfsSessions      []int // number of sessions assigned to each upf
-	lbmap             map[uint64]int
+	upfsSessions      [][]uint64     // each upf handles which sessions
+	lbmap             map[uint64]int // each session is handled by which upf
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -105,7 +104,8 @@ func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	//fmt.Println("nodeID = ", pfcpInfo.Upf.NodeID)
 	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
 	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
-	u.upfsSessions = append(u.upfsSessions, 0)
+	upfs := make([]uint64, 0)
+	u.upfsSessions = append(u.upfsSessions, upfs)
 
 	//u.peersSessions = append(u.peersSessions, SessionMap{})
 	//fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
@@ -157,7 +157,7 @@ func NewUPF(conf *Conf, pos Position,
 		Dnn:          conf.CPIface.Dnn,
 		peersIP:      make([]string, 0),
 		peersUPF:     make([]*Upf, 0),
-		upfsSessions: make([]int, 0),
+		upfsSessions: make([][]uint64, 0),
 		lbmap:        make(map[uint64]int, 0),
 		//peersSessions: make([]SessionMap, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),

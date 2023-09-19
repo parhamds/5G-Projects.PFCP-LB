@@ -181,7 +181,7 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		go p.node.listenForSesModReq(comch)
 		go p.node.listenForSesDelReq(comch)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			newPFCPHandler(w, r, p.node, comch)
+			newPFCPHandler(w, r, p.node, comch, pos)
 		})
 		server := http.Server{Addr: ":8081"}
 		go func() {

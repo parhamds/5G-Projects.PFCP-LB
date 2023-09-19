@@ -49,7 +49,7 @@ func setupConfigHandler(mux *http.ServeMux, upf *Upf) {
 	mux.Handle("/", &cfgHandler)
 }
 
-func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel) {
+func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
 	//fmt.Println("parham log : an http req recieved, ")
 	//_, err := r.Body.Read(body)
 	//body, err := io.ReadAll(r.Body)
@@ -91,7 +91,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		//fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
-		go node.tryConnectToN4Peer(lAddrStr, comCh, pfcpInfo)
+		go node.tryConnectToN4Peer(lAddrStr, comCh, pfcpInfo, pos)
 
 		sendHTTPResp(http.StatusCreated, w)
 	default:

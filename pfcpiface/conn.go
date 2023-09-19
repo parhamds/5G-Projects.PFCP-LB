@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -115,7 +116,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 
 // NewPFCPConn creates a connected UDP socket to the rAddr PFCP peer specified. (for the first association req msg)
 // buf is the first message received from the peer, nil if we are initiating.
-func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh CommunicationChannel) *PFCPConn {
+func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh CommunicationChannel, pos Position) *PFCPConn {
 	conn, err := reuse.Dial("udp", lAddr, rAddr)
 	if err != nil {
 		log.Errorln("dial socket failed", err)
@@ -162,7 +163,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 	// Update map of connections
 	node.pConns.Store(rAddr, p)
 
-	go p.Serve(comCh)
+	go p.Serve(comCh, node, pos)
 
 	return p
 }
@@ -194,7 +195,7 @@ func (pConn *PFCPConn) setLocalNodeID(id string) {
 }
 
 // Serve serves forever a single PFCP peer.(exept first association req msg)
-func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
+func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Position) {
 	//fmt.Println("parham log : registered Read Timeout = ", pConn.upf.readTimeout)
 	connTimeout := make(chan struct{}, 1)
 	go func(connTimeout chan struct{}) {
@@ -235,10 +236,18 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 		select {
 		case <-connTimeout:
 			//fmt.Println("parham log : Shutdown called from connTimeout channel")
+			if pos == Down {
+				pConn.ShutdownForDown(node)
+				return
+			}
 			pConn.Shutdown()
 			return
 		case <-pConn.ctx.Done():
 			//fmt.Println("parham log : Shutdown called from ctx.Done channel")
+			if pos == Down {
+				pConn.ShutdownForDown(node)
+				return
+			}
 			pConn.Shutdown()
 			return
 
@@ -250,6 +259,85 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel) {
 
 // Shutdown stops connection backing PFCPConn.
 func (pConn *PFCPConn) Shutdown() {
+	close(pConn.shutdown)
+
+	if pConn.hbCtxCancel != nil {
+		pConn.hbCtxCancel()
+		pConn.hbCtxCancel = nil
+	}
+
+	// Cleanup all sessions in this conn
+	for _, sess := range pConn.sessionStore.GetAllSessions() {
+		//pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
+		pConn.RemoveSession(sess)
+	}
+
+	rAddr := pConn.RemoteAddr().String()
+	pConn.done <- rAddr
+
+	err := pConn.Close()
+	if err != nil {
+		log.Error("Failed to close PFCP connection..")
+		return
+	}
+
+	log.Infoln("Shutdown complete for", rAddr)
+}
+
+func (node *PFCPNode) handleDeadUpf(upfIndex int) {
+
+	for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
+		sessions := node.upf.upfsSessions[upfIndex]
+		node.reloadbalance(sessions, upfIndex)
+	}
+
+	node.upf.upfsSessions = append(node.upf.upfsSessions[:upfIndex], node.upf.upfsSessions[upfIndex+1:]...)
+	node.upf.peersIP = append(node.upf.peersIP[:upfIndex], node.upf.peersIP[upfIndex+1:]...)
+	node.upf.peersUPF = append(node.upf.peersUPF[:upfIndex], node.upf.peersUPF[upfIndex+1:]...)
+	for k, v := range node.upf.lbmap {
+		if v > upfIndex {
+			node.upf.lbmap[k] = v - 1
+		}
+	}
+}
+
+func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
+	initupf := 0
+	if deadUpf == 0 {
+		initupf = 1
+	}
+	for _, v := range sessions {
+
+		curUpf := initupf
+		minSessions := len(node.upf.upfsSessions[curUpf])
+		lightestUpf := curUpf
+		if len(node.upf.upfsSessions) > 1 {
+			for i := 0; i < len(node.upf.upfsSessions); i++ {
+				if i == deadUpf {
+					continue
+				}
+				if minSessions > len(node.upf.upfsSessions[i]) {
+					minSessions = len(node.upf.upfsSessions[i])
+					lightestUpf = i
+				}
+			}
+		}
+		node.upf.lbmap[v] = lightestUpf
+		node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], v)
+		fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
+		fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
+
+	}
+}
+
+// Shutdown stops connection backing PFCPConn.
+func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode) {
+	for i, u := range node.upf.peersUPF {
+		if u.NodeID == pConn.nodeID.remote {
+			node.handleDeadUpf(i)
+			break
+		}
+	}
 	close(pConn.shutdown)
 
 	if pConn.hbCtxCancel != nil {
