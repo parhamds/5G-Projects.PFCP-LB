@@ -54,7 +54,7 @@ func (i *IPPool) LookupOrAllocIP(seid uint64) (net.IP, error) {
 	// Try to find an exiting session and return the allocated IP.
 	ip, found := i.inventory[seid]
 	if found {
-		log.Traceln("Found existing session", seid, "IP", ip)
+		//log.traceln("Found existing session", seid, "IP", ip)
 		return ip, nil
 	}
 
@@ -66,7 +66,7 @@ func (i *IPPool) LookupOrAllocIP(seid uint64) (net.IP, error) {
 	ip = i.freePool[0]
 	i.freePool = i.freePool[1:] // Slice off the element once it is dequeued.
 	i.inventory[seid] = ip
-	log.Traceln("Allocated new session", seid, "IP", ip)
+	//log.traceln("Allocated new session", seid, "IP", ip)
 
 	ipVal := make(net.IP, len(ip))
 	copy(ipVal, ip)
@@ -86,7 +86,7 @@ func (i *IPPool) DeallocIP(seid uint64) error {
 
 	delete(i.inventory, seid)
 	i.freePool = append(i.freePool, ip) // Simply append to enqueue.
-	log.Traceln("Deallocated session ", seid, "IP", ip)
+	//log.traceln("Deallocated session ", seid, "IP", ip)
 
 	return nil
 }

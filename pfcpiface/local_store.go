@@ -98,7 +98,7 @@ func (i *InMemoryStore) DeleteAllSessions() bool {
 		return true
 	})
 
-	log.Trace("All PFCP sessions removed from local store")
+	//log.trace("All PFCP sessions removed from local store")
 
 	return true
 }

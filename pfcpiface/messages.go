@@ -149,7 +149,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		m.Finish(nodeID, "Success")
 		msgTypeCode := msg.MessageType()
 		if msgTypeCode != message.MsgTypeHeartbeatRequest && msgTypeCode != message.MsgTypeHeartbeatResponse {
-			log.Traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
+			//log.traceln("Successfully processed", msgType, "from", addr, "nodeID:", nodeID)
 		}
 	}
 
@@ -191,7 +191,7 @@ func (pConn *PFCPConn) SendPFCPMsg(msg message.Message) {
 	//m.Finish(nodeID, "Success")
 	msgType := msg.MessageType()
 	if msgType != message.MsgTypeHeartbeatRequest && msgType != message.MsgTypeHeartbeatResponse {
-		log.Traceln("Sent", msgTypeName, "to", addr)
+		//log.traceln("Sent", msgTypeName, "to", addr)
 	}
 
 }
@@ -204,7 +204,7 @@ func (pConn *PFCPConn) sendPFCPRequestMessage(r *Request) (message.Message, bool
 
 	for {
 		if reply, rc := r.GetResponse(pConn.shutdown, pConn.upf.respTimeout); rc {
-			log.Traceln("Request Timeout, retriesLeft:", retriesLeft, " , time : ", pConn.upf.readTimeout)
+			//log.traceln("Request Timeout, retriesLeft:", retriesLeft, " , time : ", pConn.upf.readTimeout)
 
 			if retriesLeft > 0 {
 				pConn.SendPFCPMsg(r.msg)

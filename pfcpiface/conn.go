@@ -100,7 +100,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 		case <-pConn.hbReset:
 			heartBeatExpiryTimer.Reset(pConn.upf.hbInterval)
 		case <-heartBeatExpiryTimer.C:
-			//log.Traceln("HeartBeat Interval Timer Expired", pConn.RemoteAddr().String())
+			////log.traceln("HeartBeat Interval Timer Expired", pConn.RemoteAddr().String())
 
 			r := pConn.getHeartBeatRequest()
 

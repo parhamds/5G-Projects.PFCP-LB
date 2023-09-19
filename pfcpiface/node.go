@@ -121,11 +121,11 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 
 func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for session establishment req from up")
+		fmt.Println("parham log : down is waiting for new session establishment req from up ...")
 		sereqMsg := <-comCh.SesEstU2d
 		sereq := sereqMsg.msg
 
-		fmt.Println("!!!!!!!!!!!!!!!!!parham log: ses est recieved : upseid = ", sereqMsg.upSeid)
+		fmt.Println("parham log: ses est recieved by down : upseid = ", sereqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sereqMsg.upSeid)
 		fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
@@ -171,11 +171,11 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for session modification req from up")
+		fmt.Println("parham log : down is waiting for new session modification req from up ...")
 		smreqMsg := <-comCh.SesModU2d
 		smreq := smreqMsg.msg
 
-		fmt.Println("!!!!!!!!!!!!!!!!!parham log: ses mod recieved : upseid = ", smreqMsg.upSeid)
+		fmt.Println("parham log: ses mod recieved by down : upseid = ", smreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(smreqMsg.upSeid)
 		fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
@@ -221,11 +221,11 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for session deletion req from up")
+		fmt.Println("parham log : down is waiting for new session deletion req from up ...")
 		sdreqMsg := <-comCh.SesDelU2d
 		sdreq := sdreqMsg.msg
 
-		fmt.Println("!!!!!!!!!!!!!!!!!parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
+		fmt.Println("parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sdreqMsg.upSeid)
 		fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
@@ -302,7 +302,7 @@ func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	}
 	if pos == Down {
 		//fmt.Println("parham log : show recieved msg from up pfcp")
-		fmt.Println(<-comCh.U2d)
+		//fmt.Println(<-comCh.U2d)
 	}
 }
 

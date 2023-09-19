@@ -209,13 +209,13 @@ func (c *P4rtClient) GetNextDigestData() []byte {
 
 // ReadCounterEntry .. Read counter Entry.
 func (c *P4rtClient) ReadCounterEntry(entry *p4.CounterEntry) (*p4.ReadResponse, error) {
-	log.Traceln("Read Counter Entry ", entry.CounterId)
+	//log.traceln("Read Counter Entry ", entry.CounterId)
 
 	entity := &p4.Entity{
 		Entity: &p4.Entity_CounterEntry{CounterEntry: entry},
 	}
 
-	log.Traceln(proto.MarshalTextString(entity))
+	//log.traceln(proto.MarshalTextString(entity))
 
 	return c.ReadReq(entity)
 }
@@ -227,7 +227,7 @@ func (c *P4rtClient) ReadTableEntry(entry *p4.TableEntry) (*p4.ReadResponse, err
 	entity := &p4.Entity{
 		Entity: &p4.Entity_TableEntry{TableEntry: entry},
 	}
-	log.Traceln(proto.MarshalTextString(entity))
+	//log.traceln(proto.MarshalTextString(entity))
 
 	return c.ReadReq(entity)
 }
@@ -238,13 +238,13 @@ func (c *P4rtClient) ReadReqEntities(entities []*p4.Entity) (*p4.ReadResponse, e
 		DeviceId: c.deviceID,
 		Entities: entities,
 	}
-	log.Traceln(proto.MarshalTextString(req))
+	//log.traceln(proto.MarshalTextString(req))
 
 	readClient, err := c.client.Read(context.Background(), req)
 	if err == nil {
 		readRes, err := readClient.Recv()
 		if err == nil {
-			log.Traceln(proto.MarshalTextString(readRes))
+			//log.traceln(proto.MarshalTextString(readRes))
 			return readRes, nil
 		}
 	}
@@ -262,13 +262,13 @@ func (c *P4rtClient) ReadReq(entity *p4.Entity) (*p4.ReadResponse, error) {
 		2*time.Second)
 	defer cancel()
 
-	log.Traceln(proto.MarshalTextString(&req))
+	//log.traceln(proto.MarshalTextString(&req))
 
 	readClient, err := c.client.Read(ctx, &req)
 	if err == nil {
 		readRes, err := readClient.Recv()
 		if err == nil {
-			log.Traceln(proto.MarshalTextString(readRes))
+			//log.traceln(proto.MarshalTextString(readRes))
 			return readRes, nil
 		}
 	}
@@ -277,7 +277,7 @@ func (c *P4rtClient) ReadReq(entity *p4.Entity) (*p4.ReadResponse, error) {
 }
 
 func (c *P4rtClient) ClearTable(tableID uint32) error {
-	log.Traceln("Clearing P4 table: ", tableID)
+	//log.traceln("Clearing P4 table: ", tableID)
 
 	entry := &p4.TableEntry{
 		TableId:  tableID,
@@ -355,7 +355,7 @@ func (c *P4rtClient) InsertTableEntry(entry *p4.TableEntry, funcType uint8) erro
 		},
 	}
 
-	log.Traceln(proto.MarshalTextString(update))
+	//log.traceln(proto.MarshalTextString(update))
 
 	return c.WriteReq(update)
 }
@@ -370,7 +370,7 @@ func (c *P4rtClient) ApplyTableEntries(methodType p4.Update_Type, entries ...*p4
 				Entity: &p4.Entity_TableEntry{TableEntry: entry},
 			},
 		}
-		log.Traceln("Writing table entry: ", proto.MarshalTextString(update))
+		//log.traceln("Writing table entry: ", proto.MarshalTextString(update))
 
 		updates = append(updates, update)
 	}
@@ -388,7 +388,7 @@ func (c *P4rtClient) ApplyMeterEntries(methodType p4.Update_Type, entries ...*p4
 				Entity: &p4.Entity_MeterEntry{MeterEntry: entry},
 			},
 		}
-		log.Traceln("Writing meter entry: ", proto.MarshalTextString(update))
+		//log.traceln("Writing meter entry: ", proto.MarshalTextString(update))
 		updates = append(updates, update)
 	}
 
@@ -417,7 +417,7 @@ func (c *P4rtClient) WriteBatchReq(updates []*p4.Update) error {
 
 	req.Updates = append(req.Updates, updates...)
 
-	log.Traceln(proto.MarshalTextString(req))
+	//log.traceln(proto.MarshalTextString(req))
 
 	_, err := c.client.Write(context.Background(), req)
 

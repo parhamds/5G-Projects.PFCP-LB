@@ -346,7 +346,7 @@ func (p *pdr) parseUEAddressIE(ueAddrIE *ie.IE, ippool *IPPool) error {
 			return err
 		}
 
-		log.Traceln("Found or allocated new IP", ueIP4, "from pool", ippool)
+		//log.traceln("Found or allocated new IP", ueIP4, "from pool", ippool)
 
 		p.allocIPFlag = true
 	} else {

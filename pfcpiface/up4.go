@@ -346,14 +346,14 @@ func (up4 *UP4) initMetersPools() {
 				up4.appMeterCellIDsPool.Add(uint32(i))
 			}
 
-			log.Trace("Application meter IDs pool initialized: ", up4.appMeterCellIDsPool.String())
+			//log.trace("Application meter IDs pool initialized: ", up4.appMeterCellIDsPool.String())
 		case p4constants.MeterPreQosPipeSessionMeter:
 			up4.sessMeterCellIDsPool = set.NewSet()
 			for i := 1; i < int(meterSize); i++ {
 				up4.sessMeterCellIDsPool.Add(uint32(i))
 			}
 
-			log.Trace("Session meter IDs pool initialized: ", up4.sessMeterCellIDsPool.String())
+			//log.trace("Session meter IDs pool initialized: ", up4.sessMeterCellIDsPool.String())
 		}
 	}
 

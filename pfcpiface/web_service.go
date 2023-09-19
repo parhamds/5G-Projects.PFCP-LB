@@ -72,7 +72,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 			sendHTTPResp(http.StatusBadRequest, w)
 		}
 
-		log.Traceln(string(body))
+		//log.traceln(string(body))
 
 		//var nwSlice NetworkSlice
 		var pfcpInfo PfcpInfo
@@ -113,7 +113,7 @@ func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			sendHTTPResp(http.StatusBadRequest, w)
 		}
 
-		log.Traceln(string(body))
+		//log.traceln(string(body))
 
 		//var nwSlice NetworkSlice
 		var pfcpInfo PfcpInfo

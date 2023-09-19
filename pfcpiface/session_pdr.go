@@ -20,7 +20,7 @@ func releaseAllocatedIPs(ippool *IPPool, session *PFCPSession) error {
 		if (pdr.allocIPFlag) && (pdr.srcIface == core) {
 			var ueIP net.IP = int2ip(pdr.ueAddress)
 
-			log.Traceln("Releasing IP", ueIP, " of session", session.localSEID)
+			//log.traceln("Releasing IP", ueIP, " of session", session.localSEID)
 
 			return ippool.DeallocIP(session.localSEID)
 		}

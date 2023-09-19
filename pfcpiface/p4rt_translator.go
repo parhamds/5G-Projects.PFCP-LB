@@ -221,7 +221,7 @@ func (t *P4rtTranslator) withLPMField(entry *p4.TableEntry, name string, value u
 		"entry":      entry.String(),
 		"field name": name,
 	})
-	lpmFieldLog.Trace("Adding LPM match field to the entry")
+	lpmField //log.trace("Adding LPM match field to the entry")
 
 	if entry.TableId == 0 {
 		return ErrInvalidArgumentWithReason("entry.TableId", entry.TableId, "no table ID for entry defined, set table ID before adding match fields")
@@ -263,7 +263,7 @@ func (t *P4rtTranslator) withRangeMatchField(entry *p4.TableEntry, name string, 
 		"entry":      entry.String(),
 		"field name": name,
 	})
-	rangeFieldLog.Trace("Adding range match field to the entry")
+	rangeField //log.trace("Adding range match field to the entry")
 
 	if entry.TableId == 0 {
 		return ErrInvalidArgumentWithReason("entry.TableId", entry.TableId, "no table ID for entry defined, set table ID before adding match fields")
@@ -310,7 +310,7 @@ func (t *P4rtTranslator) withTernaryMatchField(entry *p4.TableEntry, name string
 		"entry":      entry.String(),
 		"field name": name,
 	})
-	ternaryFieldLog.Trace("Adding ternary match field to the entry")
+	ternaryField //log.trace("Adding ternary match field to the entry")
 
 	if entry.TableId == 0 {
 		return ErrInvalidArgumentWithReason("entry.TableId", entry.TableId, "no table name for entry defined, set table name before adding match fields")
@@ -327,7 +327,7 @@ func (t *P4rtTranslator) withTernaryMatchField(entry *p4.TableEntry, name string
 	}
 
 	if len(byteVal) != len(byteMask) {
-		ternaryFieldLog.Trace("value and mask length mismatch")
+		ternaryField //log.trace("value and mask length mismatch")
 		return ErrOperationFailedWithParam("value and mask length mismatch for ternary field", "field", name)
 	}
 
@@ -486,7 +486,7 @@ func (t *P4rtTranslator) BuildApplicationsTableEntry(pdr pdr, sliceID uint8, int
 	applicationsBuilderLog := log.WithFields(log.Fields{
 		"pdr": pdr,
 	})
-	applicationsBuilderLog.Trace("Building P4rt table entry for applications table")
+	applicationsBuilder //log.trace("Building P4rt table entry for applications table")
 
 	entry := &p4.TableEntry{
 		TableId: p4constants.TablePreQosPipeApplications,
@@ -545,7 +545,7 @@ func (t *P4rtTranslator) BuildApplicationsTableEntry(pdr pdr, sliceID uint8, int
 	}
 
 	applicationsBuilderLog = applicationsBuilderLog.WithField("entry", entry)
-	applicationsBuilderLog.Trace("Built P4rt table entry for applications table")
+	applicationsBuilder //log.trace("Built P4rt table entry for applications table")
 
 	return entry, nil
 }
@@ -555,7 +555,7 @@ func (t *P4rtTranslator) buildUplinkSessionsEntry(pdr pdr, sessMeterIdx uint32) 
 		"pdr":               pdr,
 		"sessionMeterIndex": sessMeterIdx,
 	})
-	uplinkBuilderLog.Trace("Building P4rt table entry for sessions_uplink table")
+	uplinkBuilder //log.trace("Building P4rt table entry for sessions_uplink table")
 
 	entry := &p4.TableEntry{
 		TableId:  p4constants.TablePreQosPipeSessionsUplink,
@@ -594,7 +594,7 @@ func (t *P4rtTranslator) buildDownlinkSessionsEntry(pdr pdr, sessMeterIdx uint32
 		"tunnelPeerID":      tunnelPeerID,
 		"needsBuffering":    needsBuffering,
 	})
-	builderLog.Trace("Building P4rt table entry for sessions_downlink table")
+	builder //log.trace("Building P4rt table entry for sessions_downlink table")
 
 	entry := &p4.TableEntry{
 		TableId:  p4constants.TablePreQosPipeSessionsDownlink,
@@ -784,7 +784,7 @@ func (t *P4rtTranslator) BuildGTPTunnelPeerTableEntry(tunnelPeerID uint8, tunnel
 		"tunnelPeerID":  tunnelPeerID,
 		"tunnel-params": tunnelParams,
 	})
-	builderLog.Trace("Building P4rt table entry for GTP Tunnel Peers table")
+	builder //log.trace("Building P4rt table entry for GTP Tunnel Peers table")
 
 	entry := &p4.TableEntry{
 		TableId:  p4constants.TablePreQosPipeTunnelPeers,
@@ -826,7 +826,7 @@ func (t *P4rtTranslator) BuildMeterEntry(meterID uint32, cellID uint32, config *
 		"Meter":   meterName,
 		"Cell ID": cellID,
 	})
-	builderLog.Trace("Building Meter entry")
+	builder //log.trace("Building Meter entry")
 
 	entry := &p4.MeterEntry{
 		MeterId: meterID,

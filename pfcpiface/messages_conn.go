@@ -389,7 +389,7 @@ func (pConn *PFCPConn) handlePFDMgmtRequest(msg message.Message) (message.Messag
 		}
 
 		pConn.appPFDs[id] = appPFD
-		log.Traceln("Flow descriptions for AppID", id, ":", appPFD.flowDescs)
+		//log.traceln("Flow descriptions for AppID", id, ":", appPFD.flowDescs)
 	}
 
 	// Build response message

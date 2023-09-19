@@ -6,6 +6,9 @@ package fake_bess
 import (
 	"context"
 	"fmt"
+	"math"
+	"sync"
+
 	"github.com/omec-project/upf-epc/pfcpiface/bess_pb"
 	"github.com/omec-project/upf-epc/pkg/utils"
 	log "github.com/sirupsen/logrus"
@@ -13,8 +16,6 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"math"
-	"sync"
 )
 
 const (
@@ -339,11 +340,11 @@ func (w *wildcardModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 			}
 		}
 		if existing != nil {
-			log.Tracef("updated existing entry %v", existing)
+			//log.tracef("updated existing entry %v", existing)
 			existing.Reset()
 			proto.Merge(existing, wc)
 		} else {
-			log.Tracef("added new entry %v", wc)
+			//log.tracef("added new entry %v", wc)
 			w.entries = append(w.entries, wc)
 		}
 	} else if cmd == "delete" {
@@ -362,7 +363,7 @@ func (w *wildcardModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 		if idx == -1 {
 			return status.Errorf(codes.NotFound, "entry not found: %v", wc)
 		} else {
-			log.Tracef("deleted existing entry %v", w.entries[idx])
+			//log.tracef("deleted existing entry %v", w.entries[idx])
 			w.entries = append(w.entries[:idx], w.entries[idx+1:]...)
 		}
 	} else if cmd == "clear" {
@@ -412,11 +413,11 @@ func (e *exactMatchModule) HandleRequest(cmd string, arg *anypb.Any) (err error)
 			}
 		}
 		if existing != nil {
-			log.Tracef("updated existing entry %v", em)
+			//log.tracef("updated existing entry %v", em)
 			existing.Reset()
 			proto.Merge(existing, em)
 		} else {
-			log.Tracef("added new entry %v", em)
+			//log.tracef("added new entry %v", em)
 			e.entries = append(e.entries, em)
 		}
 	} else if cmd == "delete" {
@@ -434,7 +435,7 @@ func (e *exactMatchModule) HandleRequest(cmd string, arg *anypb.Any) (err error)
 		if idx == -1 {
 			return status.Errorf(codes.NotFound, "entry not found: %v", em)
 		} else {
-			log.Tracef("deleted existing entry %v", e.entries[idx])
+			//log.tracef("deleted existing entry %v", e.entries[idx])
 			e.entries = append(e.entries[:idx], e.entries[idx+1:]...)
 		}
 	} else if cmd == "clear" {
@@ -484,11 +485,11 @@ func (q *qosModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 			}
 		}
 		if existing != nil {
-			log.Tracef("updated existing entry %v", existing)
+			//log.tracef("updated existing entry %v", existing)
 			existing.Reset()
 			proto.Merge(existing, wc)
 		} else {
-			log.Tracef("added new entry %v", wc)
+			//log.tracef("added new entry %v", wc)
 			q.entries = append(q.entries, wc)
 		}
 	} else if cmd == "delete" {
@@ -506,7 +507,7 @@ func (q *qosModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 		if idx == -1 {
 			return status.Errorf(codes.NotFound, "entry not found: %v", qc)
 		} else {
-			log.Tracef("deleted existing entry %v", q.entries[idx])
+			//log.tracef("deleted existing entry %v", q.entries[idx])
 			q.entries = append(q.entries[:idx], q.entries[idx+1:]...)
 		}
 	} else if cmd == "clear" {

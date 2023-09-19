@@ -253,7 +253,8 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//upseid := session.remoteSEID
 
 	//fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
-	fmt.Println("parham log : send received msg's cause from real to up in down")
+	c, err := seres.Cause.Cause()
+	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
 	comCh.SesEstRespCuzD2U <- seres.Cause
 }
 
@@ -262,12 +263,12 @@ func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, co
 	smres, ok := msg.(*message.SessionModificationResponse)
 	if !ok {
 		log.Errorln("can not convert recieved msg to SessionModificationResponse")
-		fmt.Println("parham log : send received msg's cause from real to up in down")
+		fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestRejected)
 		comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
-
-	fmt.Println("parham log : send received msg's cause from real to up in down")
+	c, _ := smres.Cause.Cause()
+	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
 	comCh.SesModRespCuzD2U <- smres.Cause
 }
 
@@ -315,7 +316,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 			session.remoteSEID = fseid.SEID
 			//fseidIP = ip2int(fseid.IPv4Address)
 
-			log.Traceln("Updated FSEID from session modification request")
+			//log.traceln("Updated FSEID from session modification request")
 		}
 	}
 
@@ -602,18 +603,20 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 	sdres, ok := msg.(*message.SessionDeletionResponse)
 	if !ok {
 		log.Errorln("can not convert recieved msg to SessionDeletionResponse")
-		fmt.Println("parham log : send received msg's cause from real to up in down")
+		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
 	causeValue, err := sdres.Cause.Cause()
 	if err != nil {
 		log.Errorln("can not extract response cause")
+		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
 	if causeValue != ie.CauseRequestAccepted {
 		log.Errorln("session deletion not accepted by real pfcp")
+		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
 		return
 	}
@@ -623,7 +626,7 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 
 	pConn.RemoveSession(session)
 
-	fmt.Println("parham log : send received msg's cause from real to up in down")
+	fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestAccepted)
 	comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
 }
 

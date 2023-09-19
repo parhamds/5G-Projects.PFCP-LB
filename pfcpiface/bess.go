@@ -145,7 +145,7 @@ func (b *bess) SendMsgToUPF(
 	done := make(chan bool)
 
 	for _, pdr := range pdrs {
-		log.Traceln(method, pdr)
+		//log.traceln(method, pdr)
 
 		switch method {
 		case upfMsgTypeAdd:
@@ -158,7 +158,7 @@ func (b *bess) SendMsgToUPF(
 	}
 
 	for _, far := range fars {
-		log.Traceln(method, far)
+		//log.traceln(method, far)
 
 		switch method {
 		case upfMsgTypeAdd:
@@ -171,7 +171,7 @@ func (b *bess) SendMsgToUPF(
 	}
 
 	for _, qer := range qers {
-		log.Traceln(method, qer)
+		//log.traceln(method, qer)
 
 		switch method {
 		case upfMsgTypeAdd:
@@ -503,7 +503,7 @@ func (b *bess) SessionStats(pc *PfcpNodeCollector, ch chan<- prometheus.Metric) 
 				for _, p := range session.pdrs {
 					if p.IsUplink() && p.ueAddress > 0 {
 						ueIpString = int2ip(p.ueAddress).String()
-						log.Traceln(p.fseID, " -> ", ueIpString)
+						//log.traceln(p.fseID, " -> ", ueIpString)
 
 						break
 					}
@@ -751,7 +751,7 @@ func (b *bess) processPDR(ctx context.Context, any *anypb.Any, method upfMsgType
 		Arg:  any,
 	})
 
-	log.Traceln("pdrlookup resp : ", resp)
+	//log.traceln("pdrlookup resp : ", resp)
 
 	if err != nil || resp.GetError() != nil {
 		log.Errorf("pdrLookup method failed with resp: %v, err: %v\n", resp, err)
@@ -779,7 +779,7 @@ func (b *bess) addPDR(ctx context.Context, done chan<- bool, p pdr) {
 			return
 		}
 
-		log.Tracef("PDR rules %+v", portRules)
+		//log.tracef("PDR rules %+v", portRules)
 
 		for _, r := range portRules {
 			f := &pb.WildcardMatchCommandAddArg{
@@ -1061,7 +1061,7 @@ func (b *bess) processFAR(ctx context.Context, any *anypb.Any, method upfMsgType
 		Arg:  any,
 	})
 
-	log.Traceln("farlookup resp : ", resp)
+	//log.traceln("farlookup resp : ", resp)
 
 	if err != nil || resp.GetError() != nil {
 		log.Errorf("farLookup method failed with resp: %v, err: %v\n", resp, err)
@@ -1194,7 +1194,7 @@ func (b *bess) addSliceMeter(ctx context.Context, done chan<- bool, meterConfig 
 			ebs = 0 // Unused
 		}
 
-		log.Traceln("uplink slice : cir: ", cir, ", pir: ", pir,
+		//log.traceln("uplink slice : cir: ", cir, ", pir: ", pir,
 			", cbs: ", cbs, ", pbs: ", pbs)
 
 		q := &pb.QosCommandAddArg{
@@ -1238,7 +1238,7 @@ func (b *bess) addSliceMeter(ctx context.Context, done chan<- bool, meterConfig 
 			ebs = 0 // Unused
 		}
 
-		log.Traceln("downlink slice : cir: ", cir, ", pir: ", pir,
+		//log.traceln("downlink slice : cir: ", cir, ", pir: ", pir,
 			", cbs: ", cbs, ", pbs: ", pbs)
 		// TODO: packet deduction should take GTPU extension header into account
 		q = &pb.QosCommandAddArg{
@@ -1279,7 +1279,7 @@ func (b *bess) processQER(ctx context.Context, any *anypb.Any, method upfMsgType
 		Arg:  any,
 	})
 
-	log.Traceln("qerlookup resp : ", resp)
+	//log.traceln("qerlookup resp : ", resp)
 
 	if err != nil || resp.GetError() != nil {
 		log.Errorf("%v for qer %v failed with resp: %v, error: %v", qosTableName, methods[method], resp, err)
