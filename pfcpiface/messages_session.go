@@ -255,7 +255,10 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	//fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
 	c, err := seres.Cause.Cause()
 	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
-	comCh.SesEstRespCuzD2U <- seres.Cause
+	if seres.Header.MessagePriority != 123 {
+		comCh.SesEstRespCuzD2U <- seres.Cause
+	}
+
 }
 
 func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, comCh CommunicationChannel) {
@@ -269,7 +272,9 @@ func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, co
 	}
 	c, _ := smres.Cause.Cause()
 	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
-	comCh.SesModRespCuzD2U <- smres.Cause
+	if smres.Header.MessagePriority != 123 {
+		comCh.SesModRespCuzD2U <- smres.Cause
+	}
 }
 
 func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
@@ -626,8 +631,10 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 
 	pConn.RemoveSession(session)
 
-	fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestAccepted)
-	comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
+	if sdres.Header.MessagePriority != 123 {
+		fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestAccepted)
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
+	}
 }
 
 func (pConn *PFCPConn) handleDigestReport(fseid uint64) {

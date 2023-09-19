@@ -163,7 +163,11 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 			localFSEID = ie.NewFSEID(sereqMsg.upSeid, nil, localIP)
 		}
 		sereq.CPFSEID = localFSEID
-
+		if sereqMsg.reforward == true {
+			sereq.Header.MessagePriority = 123
+		} else {
+			node.upf.sesEstMsgStore[sereqMsg.upSeid] = sereq
+		}
 		pConn.forwardToRealPFCP(sereq, comCh)
 
 	}
@@ -214,6 +218,11 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 
 		smreq.Header.SEID = smreqMsg.upSeid
 		fmt.Println("parham log : send session modification req from up to real in down")
+		if smreqMsg.reforward == true {
+			smreq.Header.MessagePriority = 123
+		} else {
+			node.upf.sesModMsgStore[smreqMsg.upSeid] = smreq
+		}
 		pConn.forwardToRealPFCP(smreq, comCh)
 
 	}
@@ -249,6 +258,9 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 
 		sdreq.Header.SEID = sdreqMsg.upSeid
 		fmt.Println("parham log : send session deletion req from up to real in down")
+		if sdreqMsg.reforward == true {
+			sdreq.Header.MessagePriority = 123
+		}
 		pConn.forwardToRealPFCP(sdreq, comCh)
 
 	}

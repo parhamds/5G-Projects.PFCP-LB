@@ -237,7 +237,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 		case <-connTimeout:
 			//fmt.Println("parham log : Shutdown called from connTimeout channel")
 			if pos == Down {
-				pConn.ShutdownForDown(node)
+				pConn.ShutdownForDown(node, comCh)
 				return
 			}
 			pConn.Shutdown()
@@ -245,7 +245,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 		case <-pConn.ctx.Done():
 			//fmt.Println("parham log : Shutdown called from ctx.Done channel")
 			if pos == Down {
-				pConn.ShutdownForDown(node)
+				pConn.ShutdownForDown(node, comCh)
 				return
 			}
 			pConn.Shutdown()
@@ -331,11 +331,36 @@ func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
 		node.upf.lbmap[v] = lightestUpf
 		node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], v)
 
+		sourceUpfIndex := deadUpf
+		destUpfIndex := lightestUpf
+		sourceAddr := node.upf.peersIP[sourceUpfIndex] + ":" + DownPFCPPort
+		destAddr := node.upf.peersIP[destUpfIndex] + ":" + DownPFCPPort
+		fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
+		sourcePconn, ok := node.pConns.Load(sourceAddr)
+		if !ok {
+			fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+			continue
+		}
+		destPconn, ok := node.pConns.Load(destAddr)
+		if !ok {
+			fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
+			continue
+		}
+		sPconn := sourcePconn.(*PFCPConn)
+		dPconn := destPconn.(*PFCPConn)
+		fmt.Println("parham log : geting session from dead upf")
+		sess, ok := sPconn.sessionStore.GetSession(v)
+		if !ok {
+			fmt.Println("parham log : can not find sessioin in sPconn.sessionStore.GetSession(v)")
+			continue
+		}
+		fmt.Println("parham log : puting to lightest upf")
+		dPconn.sessionStore.PutSession(sess)
 	}
 }
 
 // Shutdown stops connection backing PFCPConn.
-func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode) {
+func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode, comCh CommunicationChannel) {
 	for i, u := range node.upf.peersUPF {
 		if u.NodeID == pConn.nodeID.remote {
 			node.handleDeadUpf(i)
@@ -352,6 +377,25 @@ func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode) {
 	// Cleanup all sessions in this conn
 	for _, sess := range pConn.sessionStore.GetAllSessions() {
 		//pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
+		estMsg, ok := node.upf.sesEstMsgStore[sess.localSEID]
+		if ok {
+			sesEstMsg := SesEstU2dMsg{
+				msg:       estMsg,
+				upSeid:    sess.localSEID,
+				reforward: true,
+			}
+			comCh.SesEstU2d <- &sesEstMsg
+		}
+
+		ModMsg, ok := node.upf.sesModMsgStore[sess.localSEID]
+		if ok {
+			sesModMsg := SesModU2dMsg{
+				msg:       ModMsg,
+				upSeid:    sess.localSEID,
+				reforward: true,
+			}
+			comCh.SesModU2d <- &sesModMsg
+		}
 		pConn.RemoveSession(sess)
 	}
 

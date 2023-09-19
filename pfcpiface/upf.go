@@ -10,6 +10,7 @@ import (
 
 	"github.com/Showmax/go-fqdn"
 	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 // QosConfigVal : Qos configured value.
@@ -49,6 +50,8 @@ type Upf struct {
 	peersUPF          []*Upf
 	upfsSessions      [][]uint64     // each upf handles which sessions
 	lbmap             map[uint64]int // each session is handled by which upf
+	sesEstMsgStore    map[uint64]*message.SessionEstablishmentRequest
+	sesModMsgStore    map[uint64]*message.SessionModificationRequest
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -154,11 +157,13 @@ func NewUPF(conf *Conf, pos Position,
 		//ippoolCidr:        conf.CPIface.UEIPPool,
 		NodeID: nodeID,
 		//datapath:          fp,
-		Dnn:          conf.CPIface.Dnn,
-		peersIP:      make([]string, 0),
-		peersUPF:     make([]*Upf, 0),
-		upfsSessions: make([][]uint64, 0),
-		lbmap:        make(map[uint64]int, 0),
+		Dnn:            conf.CPIface.Dnn,
+		peersIP:        make([]string, 0),
+		peersUPF:       make([]*Upf, 0),
+		upfsSessions:   make([][]uint64, 0),
+		lbmap:          make(map[uint64]int, 0),
+		sesEstMsgStore: make(map[uint64]*message.SessionEstablishmentRequest, 0),
+		sesModMsgStore: make(map[uint64]*message.SessionModificationRequest, 0),
 		//peersSessions: make([]SessionMap, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
 		maxReqRetries: conf.MaxReqRetries,

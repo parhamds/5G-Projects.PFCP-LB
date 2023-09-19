@@ -49,6 +49,7 @@ func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh Communica
 func (pConn *PFCPConn) forwardToRealPFCP(msg message.Message, comCh CommunicationChannel) {
 	// Build request message
 	fmt.Println("parham log : sending a message to Real PFCP")
+
 	r := newRequest(msg)
 	//_, _ = pConn.sendPFCPRequestMessage(r)
 	pConn.forwardPFCPRequestMessage(r)

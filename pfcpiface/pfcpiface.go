@@ -31,18 +31,21 @@ type CommunicationChannel struct {
 }
 
 type SesEstU2dMsg struct {
-	msg    *message.SessionEstablishmentRequest
-	upSeid uint64
+	msg       *message.SessionEstablishmentRequest
+	upSeid    uint64
+	reforward bool
 }
 
 type SesModU2dMsg struct {
-	msg    *message.SessionModificationRequest
-	upSeid uint64
+	msg       *message.SessionModificationRequest
+	upSeid    uint64
+	reforward bool
 }
 
 type SesDelU2dMsg struct {
-	msg    *message.SessionDeletionRequest
-	upSeid uint64
+	msg       *message.SessionDeletionRequest
+	upSeid    uint64
+	reforward bool
 }
 
 //type Sessionsinfo struct {
