@@ -1195,7 +1195,7 @@ func (b *bess) addSliceMeter(ctx context.Context, done chan<- bool, meterConfig 
 		}
 
 		//log.traceln("uplink slice : cir: ", cir, ", pir: ", pir,
-			", cbs: ", cbs, ", pbs: ", pbs)
+		//	", cbs: ", cbs, ", pbs: ", pbs)
 
 		q := &pb.QosCommandAddArg{
 			Gate:              gate,
@@ -1239,7 +1239,7 @@ func (b *bess) addSliceMeter(ctx context.Context, done chan<- bool, meterConfig 
 		}
 
 		//log.traceln("downlink slice : cir: ", cir, ", pir: ", pir,
-			", cbs: ", cbs, ", pbs: ", pbs)
+		//	", cbs: ", cbs, ", pbs: ", pbs)
 		// TODO: packet deduction should take GTPU extension header into account
 		q = &pb.QosCommandAddArg{
 			Gate:              gate,

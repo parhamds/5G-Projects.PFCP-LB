@@ -324,7 +324,7 @@ func (w *wildcardModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 		return
 	}
 
-	log := log.WithField("module", w.Name()).WithField("cmd", cmd)
+	//log := log.WithField("module", w.Name()).WithField("cmd", cmd)
 
 	if cmd == "add" {
 		wc := &bess_pb.WildcardMatchCommandAddArg{}
@@ -398,7 +398,7 @@ func (e *exactMatchModule) HandleRequest(cmd string, arg *anypb.Any) (err error)
 		return
 	}
 
-	log := log.WithField("module", e.Name()).WithField("cmd", cmd)
+	//log := log.WithField("module", e.Name()).WithField("cmd", cmd)
 
 	if cmd == "add" {
 		em := &bess_pb.ExactMatchCommandAddArg{}
@@ -470,7 +470,7 @@ func (q *qosModule) HandleRequest(cmd string, arg *anypb.Any) (err error) {
 		return
 	}
 
-	log := log.WithField("module", q.Name()).WithField("cmd", cmd)
+	//log := log.WithField("module", q.Name()).WithField("cmd", cmd)
 
 	if cmd == "add" {
 		wc := &bess_pb.QosCommandAddArg{}
