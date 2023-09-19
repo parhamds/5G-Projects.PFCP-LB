@@ -177,6 +177,9 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 
 	if pos == Down {
 		//time.Sleep(10 * time.Minute)
+		go p.node.listenForSesEstReq(comch)
+		go p.node.listenForSesModReq(comch)
+		go p.node.listenForSesDelReq(comch)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch)
 		})
@@ -195,9 +198,6 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 			server.ListenAndServe()
 		}()
 
-		go p.node.listenForSesEstReq(comch)
-		go p.node.listenForSesModReq(comch)
-		go p.node.listenForSesDelReq(comch)
 		//sig := make(chan os.Signal, 1)
 		//signal.Notify(sig, os.Interrupt)
 		//signal.Notify(sig, syscall.SIGTERM)
