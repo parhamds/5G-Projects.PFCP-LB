@@ -285,7 +285,7 @@ func (pConn *PFCPConn) Shutdown() {
 }
 
 func (node *PFCPNode) handleDeadUpf(upfIndex int) {
-
+	fmt.Println("parham log : start handling dead upf")
 	fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
 	fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
 
@@ -304,7 +304,7 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 	}
 	fmt.Println("parham log : node.upf.lbmap after reloadbalance = ", node.upf.lbmap)
 	fmt.Println("parham log : node.upf.upfsSessions after reloadbalance = ", node.upf.upfsSessions)
-
+	fmt.Println("parham log : done handling dead upf")
 }
 
 func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {

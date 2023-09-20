@@ -652,6 +652,7 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 }
 
 func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
+	fmt.Println("parham log : start deleting session from everywhere")
 	delete(node.upf.lbmap, seid)
 	var found bool
 	var upfIndex int
@@ -677,9 +678,10 @@ func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
 	if !found {
 		return errors.New("can not find sessionIndex in node.upf.upfsSessions")
 	}
-	node.upf.upfsSessions = append(node.upf.upfsSessions[:sessionIndex], node.upf.upfsSessions[sessionIndex+1:]...)
+	node.upf.upfsSessions[upfIndex] = append(node.upf.upfsSessions[upfIndex][:sessionIndex], node.upf.upfsSessions[upfIndex][sessionIndex+1:]...)
 	delete(node.upf.sesEstMsgStore, seid)
 	delete(node.upf.sesModMsgStore, seid)
+	fmt.Println("parham log : done deleting session from everywhere")
 	return nil
 }
 
