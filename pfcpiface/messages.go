@@ -71,7 +71,7 @@ func (r *Request) GetResponse(done <-chan struct{}, respDuration time.Duration) 
 //}
 
 // HandlePFCPMsg handles different types of PFCP messages.
-func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
+func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel, node *PFCPNode) {
 	var (
 		reply message.Message
 		err   error
@@ -118,7 +118,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel) {
 		//fmt.Println("parham log end ParseSessionEstablishmentRequest : ")
 		reply, err = pConn.handleSessionEstablishmentRequest(msg, comCh)
 	case message.MsgTypeSessionEstablishmentResponse:
-		pConn.handleSessionEstablishmentResponse(msg, comCh)
+		pConn.handleSessionEstablishmentResponse(msg, comCh, node)
 	case message.MsgTypeSessionModificationResponse:
 		pConn.handleSessionModificationResponse(msg, comCh)
 	case message.MsgTypeSessionDeletionResponse:

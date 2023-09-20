@@ -61,12 +61,12 @@ func (pConn *PFCPConn) forwardToRealPFCP(msg message.Message, comCh Communicatio
 	//} !!!!!!!!!!!!!! it will be read by handlepfcpmsg func
 }
 
-func (pConn *PFCPConn) HandleForwardedMsgResp(msg message.Message, comCh CommunicationChannel) {
-	switch msg.MessageType() {
-	case message.MsgTypeSessionEstablishmentResponse:
-		pConn.handleSessionEstablishmentResponse(msg, comCh)
-	}
-}
+//func (pConn *PFCPConn) HandleForwardedMsgResp(msg message.Message, comCh CommunicationChannel,node ) {
+//	switch msg.MessageType() {
+//	case message.MsgTypeSessionEstablishmentResponse:
+//		pConn.handleSessionEstablishmentResponse(msg, comCh,node)
+//	}
+//}
 
 //func (pConn *PFCPConn) ForwardAssociationRequest(msg message.Message, comCh CommunicationChannel) {
 //

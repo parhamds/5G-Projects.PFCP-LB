@@ -197,7 +197,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 	return seres, nil
 }
 
-func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, comCh CommunicationChannel) {
+func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, comCh CommunicationChannel, node *PFCPNode) {
 	fmt.Println("parham log : handling SessionEstablishmentResponse in down")
 	seres, ok := msg.(*message.SessionEstablishmentResponse)
 	if !ok {
@@ -257,6 +257,16 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
 	if seres.Header.MessagePriority != 123 {
 		comCh.SesEstRespCuzD2U <- seres.Cause
+	} else {
+		ModMsg, ok := node.upf.sesModMsgStore[seres.SEID()]
+		if ok {
+			sesModMsg := SesModU2dMsg{
+				msg:       ModMsg,
+				upSeid:    seres.SEID(),
+				reforward: true,
+			}
+			comCh.SesModU2d <- &sesModMsg
+		}
 	}
 
 }

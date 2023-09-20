@@ -157,7 +157,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 		//fmt.Println("parham log: pause 10 min calling HandlePFCPMsg from NewPFCPConn func for UP")
 		//time.Sleep(10 * time.Minute)
 		//fmt.Println("parham log: calling HandlePFCPMsg from NewPFCPConn func")
-		p.HandlePFCPMsg(buf, comCh)
+		p.HandlePFCPMsg(buf, comCh, node)
 	}
 
 	// Update map of connections
@@ -226,7 +226,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 
 			buf := append([]byte{}, recvBuf[:n]...)
 			//fmt.Println("parham log: calling HandlePFCPMsg from Serve func")
-			pConn.HandlePFCPMsg(buf, comCh)
+			pConn.HandlePFCPMsg(buf, comCh, node)
 		}
 	}(connTimeout)
 
@@ -387,15 +387,6 @@ func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode, comCh CommunicationChanne
 			comCh.SesEstU2d <- &sesEstMsg
 		}
 
-		ModMsg, ok := node.upf.sesModMsgStore[sess.localSEID]
-		if ok {
-			sesModMsg := SesModU2dMsg{
-				msg:       ModMsg,
-				upSeid:    sess.localSEID,
-				reforward: true,
-			}
-			comCh.SesModU2d <- &sesModMsg
-		}
 		pConn.RemoveSession(sess)
 	}
 
