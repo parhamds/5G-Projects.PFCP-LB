@@ -613,7 +613,7 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh C
 	return smres, nil
 }
 
-func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh CommunicationChannel) {
+func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh CommunicationChannel, node *PFCPNode) {
 	fmt.Println("parham log : handling SessionDeletionnResponse in down")
 	sdres, ok := msg.(*message.SessionDeletionResponse)
 	if !ok {
@@ -640,11 +640,47 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 	session, ok := pConn.sessionStore.GetSession(downseid)
 
 	pConn.RemoveSession(session)
-
+	err = pConn.pruneSession(node, downseid)
+	if err != nil {
+		log.Errorln(err)
+		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
+	}
 	if sdres.Header.MessagePriority != 123 {
 		fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestAccepted)
 		comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestAccepted)
 	}
+}
+
+func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
+	delete(node.upf.lbmap, seid)
+	var found bool
+	var upfIndex int
+	for i, u := range node.upf.peersUPF {
+		if u.NodeID == pConn.nodeID.remote {
+			upfIndex = i
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New("can not find upfIndex in node.upf.peersUPF")
+	}
+	found = false
+	var sessionIndex int
+	for i, s := range node.upf.upfsSessions[upfIndex] {
+		if s == seid {
+			sessionIndex = i
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New("can not find sessionIndex in node.upf.upfsSessions")
+	}
+	node.upf.upfsSessions = append(node.upf.upfsSessions[:sessionIndex], node.upf.upfsSessions[sessionIndex+1:]...)
+	delete(node.upf.sesEstMsgStore, seid)
+	delete(node.upf.sesModMsgStore, seid)
+	return nil
 }
 
 func (pConn *PFCPConn) handleDigestReport(fseid uint64) {

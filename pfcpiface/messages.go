@@ -85,7 +85,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel, nod
 	}
 	msgtype := msg.MessageType()
 	if msgtype != 1 && msgtype != 2 {
-		fmt.Println("!!!!! parham log : a PFCP msg received with type = ", msg.MessageTypeName())
+		fmt.Println(" parham log : a PFCP msg received with type = ", msg.MessageTypeName())
 	}
 	addr := pConn.RemoteAddr().String()
 	msgType := msg.MessageTypeName()
@@ -122,7 +122,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel, nod
 	case message.MsgTypeSessionModificationResponse:
 		pConn.handleSessionModificationResponse(msg, comCh)
 	case message.MsgTypeSessionDeletionResponse:
-		pConn.handleSessionDeletionResponse(msg, comCh)
+		pConn.handleSessionDeletionResponse(msg, comCh, node)
 	case message.MsgTypeSessionModificationRequest:
 		reply, err = pConn.handleSessionModificationRequest(msg, comCh)
 	case message.MsgTypeSessionDeletionRequest:
