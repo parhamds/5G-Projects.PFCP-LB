@@ -124,6 +124,11 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		fmt.Println("parham log : down is waiting for new session establishment req from up ...")
 		sereqMsg := <-comCh.SesEstU2d
 		sereq := sereqMsg.msg
+		var respCh chan *ie.IE
+		if !sereqMsg.reforward {
+			respCh = sereqMsg.respCh
+
+		}
 
 		fmt.Println("parham log: ses est recieved by down : upseid = ", sereqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sereqMsg.upSeid)
@@ -132,7 +137,9 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
 			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
-			comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			if !sereqMsg.reforward {
+				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			}
 			continue
 		}
 		pConn := v.(*PFCPConn)
@@ -142,14 +149,18 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		session, ok := pConn.NewPFCPSessionForDown(sereqMsg.upSeid)
 		if !ok {
 			log.Errorf("can not create session in down:")
-			comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			if !sereqMsg.reforward {
+				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			}
 			continue
 		}
 
 		err := pConn.sessionStore.PutSession(session)
 		if err != nil {
 			log.Errorf("Failed to put PFCP session to store: %v", err)
-			comCh.SesEstRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			if !sereqMsg.reforward {
+				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			}
 			continue
 		}
 		fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
@@ -168,6 +179,9 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		} else {
 			node.upf.sesEstMsgStore[sereqMsg.upSeid] = sereq
 		}
+		if !sereqMsg.reforward {
+			pConn.upf.seidToRespCh[sereqMsg.upSeid] = respCh
+		}
 		pConn.forwardToRealPFCP(sereq, comCh)
 
 	}
@@ -178,6 +192,10 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		fmt.Println("parham log : down is waiting for new session modification req from up ...")
 		smreqMsg := <-comCh.SesModU2d
 		smreq := smreqMsg.msg
+		var respCh chan *ie.IE
+		if !smreqMsg.reforward {
+			respCh = smreqMsg.respCh
+		}
 
 		fmt.Println("parham log: ses mod recieved by down : upseid = ", smreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(smreqMsg.upSeid)
@@ -186,7 +204,9 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
 			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
-			comCh.SesModRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			if !smreqMsg.reforward {
+				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			}
 			continue
 		}
 		pConn := v.(*PFCPConn)
@@ -223,6 +243,9 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		} else {
 			node.upf.sesModMsgStore[smreqMsg.upSeid] = smreq
 		}
+		if !smreqMsg.reforward {
+			pConn.upf.seidToRespCh[smreqMsg.upSeid] = respCh
+		}
 		pConn.forwardToRealPFCP(smreq, comCh)
 
 	}
@@ -233,6 +256,10 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		fmt.Println("parham log : down is waiting for new session deletion req from up ...")
 		sdreqMsg := <-comCh.SesDelU2d
 		sdreq := sdreqMsg.msg
+		var respCh chan *ie.IE
+		if !sdreqMsg.reforward {
+			respCh = sdreqMsg.respCh
+		}
 
 		fmt.Println("parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sdreqMsg.upSeid)
@@ -241,7 +268,9 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
 			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
-			comCh.SesDelRespCuzD2U <- ie.NewCause(ie.CauseRequestRejected)
+			if !sdreqMsg.reforward {
+				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			}
 			continue
 		}
 		pConn := v.(*PFCPConn)
@@ -260,6 +289,9 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		fmt.Println("parham log : send session deletion req from up to real in down")
 		if sdreqMsg.reforward == true {
 			sdreq.Header.MessagePriority = 123
+		}
+		if !sdreqMsg.reforward {
+			pConn.upf.seidToRespCh[sdreqMsg.upSeid] = respCh
 		}
 		pConn.forwardToRealPFCP(sdreq, comCh)
 

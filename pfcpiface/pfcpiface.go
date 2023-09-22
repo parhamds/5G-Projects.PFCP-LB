@@ -19,33 +19,33 @@ import (
 type Position int
 
 type CommunicationChannel struct {
-	U2d              chan []byte
-	D2u              chan []byte
-	UpfD2u           chan *PfcpInfo
-	SesEstU2d        chan *SesEstU2dMsg
-	SesEstRespCuzD2U chan *ie.IE
-	SesModU2d        chan *SesModU2dMsg
-	SesModRespCuzD2U chan *ie.IE
-	SesDelU2d        chan *SesDelU2dMsg
-	SesDelRespCuzD2U chan *ie.IE
+	U2d       chan []byte
+	D2u       chan []byte
+	UpfD2u    chan *PfcpInfo
+	SesEstU2d chan *SesEstU2dMsg
+	SesModU2d chan *SesModU2dMsg
+	SesDelU2d chan *SesDelU2dMsg
 }
 
 type SesEstU2dMsg struct {
 	msg       *message.SessionEstablishmentRequest
 	upSeid    uint64
 	reforward bool
+	respCh    chan *ie.IE
 }
 
 type SesModU2dMsg struct {
 	msg       *message.SessionModificationRequest
 	upSeid    uint64
 	reforward bool
+	respCh    chan *ie.IE
 }
 
 type SesDelU2dMsg struct {
 	msg       *message.SessionDeletionRequest
 	upSeid    uint64
 	reforward bool
+	respCh    chan *ie.IE
 }
 
 //type Sessionsinfo struct {

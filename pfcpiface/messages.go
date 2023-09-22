@@ -85,7 +85,7 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel, nod
 	}
 	msgtype := msg.MessageType()
 	if msgtype != 1 && msgtype != 2 {
-		fmt.Println(" parham log : a PFCP msg received with type = ", msg.MessageTypeName())
+		fmt.Println("parham log : a PFCP msg received with type = ", msg.MessageTypeName())
 	}
 	addr := pConn.RemoteAddr().String()
 	msgType := msg.MessageTypeName()

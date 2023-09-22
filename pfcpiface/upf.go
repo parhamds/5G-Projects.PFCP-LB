@@ -10,6 +10,7 @@ import (
 
 	"github.com/Showmax/go-fqdn"
 	log "github.com/sirupsen/logrus"
+	"github.com/wmnsk/go-pfcp/ie"
 	"github.com/wmnsk/go-pfcp/message"
 )
 
@@ -52,6 +53,7 @@ type Upf struct {
 	lbmap             map[uint64]int // each session is handled by which upf
 	sesEstMsgStore    map[uint64]*message.SessionEstablishmentRequest
 	sesModMsgStore    map[uint64]*message.SessionModificationRequest
+	seidToRespCh      map[uint64]chan *ie.IE
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -164,6 +166,7 @@ func NewUPF(conf *Conf, pos Position,
 		lbmap:          make(map[uint64]int, 0),
 		sesEstMsgStore: make(map[uint64]*message.SessionEstablishmentRequest, 0),
 		sesModMsgStore: make(map[uint64]*message.SessionModificationRequest, 0),
+		seidToRespCh:   make(map[uint64]chan *ie.IE),
 		//peersSessions: make([]SessionMap, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
 		maxReqRetries: conf.MaxReqRetries,
