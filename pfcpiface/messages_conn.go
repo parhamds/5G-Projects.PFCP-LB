@@ -344,7 +344,7 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 				heaviestUpf = i
 			}
 		}
-		if len(pConn.upf.upfsSessions[heaviestUpf]) < int(pConn.upf.sessionsThreshold) {
+		if len(pConn.upf.upfsSessions[heaviestUpf]) <= int(pConn.upf.sessionsThreshold) {
 			fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
 			return
 		}
