@@ -369,7 +369,10 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 	}
 	fmt.Println("parham log : start transferSessions")
 	for _, v := range sessions {
-
+		if len(pConn.upf.upfsSessions[dUPFid]) > int(pConn.upf.sessionsThreshold) {
+			fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
+			return
+		}
 		sourceAddr := pConn.upf.peersIP[sUPFid] + ":" + DownPFCPPort
 		destAddr := pConn.upf.peersIP[dUPFid] + ":" + DownPFCPPort
 		fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
