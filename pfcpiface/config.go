@@ -46,6 +46,7 @@ type Conf struct {
 	RespTimeout       string           `json:"resp_timeout"`
 	EnableHBTimer     bool             `json:"enable_hbTimer"`
 	HeartBeatInterval string           `json:"heart_beat_interval"`
+	SessionsThreshold uint32           `json:"sessions_threshold"`
 }
 
 // QciQosConfig : Qos configured attributes.
@@ -200,6 +201,10 @@ func LoadConfigFile(filepath string) (Conf, error) {
 
 	if conf.ReadTimeout == 0 {
 		conf.ReadTimeout = uint32(readTimeoutDefault.Seconds())
+	}
+
+	if conf.SessionsThreshold == 0 {
+		conf.SessionsThreshold = uint32(100000)
 	}
 
 	if conf.MaxReqRetries == 0 {

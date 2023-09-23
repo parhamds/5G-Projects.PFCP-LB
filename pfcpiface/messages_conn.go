@@ -16,7 +16,7 @@ var errFlowDescAbsent = errors.New("flow description not present")
 var errDatapathDown = errors.New("datapath down")
 var errReqRejected = errors.New("request rejected")
 
-func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh CommunicationChannel) {
+func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh CommunicationChannel, node *PFCPNode) {
 	// Build request message
 	asreq := message.NewAssociationSetupRequest(pConn.getSeqNum(),
 		pConn.associationIEs()...,
@@ -26,7 +26,7 @@ func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh Communica
 	reply, timeout := pConn.sendPFCPRequestMessage(r)
 
 	if reply != nil {
-		err := pConn.handleAssociationSetupResponse(reply, pfcpInfo, comCh)
+		err := pConn.handleAssociationSetupResponse(reply, pfcpInfo, comCh, node)
 		if err != nil {
 			log.Errorln("Handling of Assoc Setup Response Failed ", pConn.RemoteAddr())
 			//fmt.Println("parham log : Shutdown called from sendAssociationRequest")
@@ -273,7 +273,7 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 	return asres, nil
 }
 
-func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpInfo PfcpInfo, comCh CommunicationChannel) error {
+func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpInfo PfcpInfo, comCh CommunicationChannel, node *PFCPNode) error {
 	addr := pConn.RemoteAddr().String()
 
 	asres, ok := msg.(*message.AssociationSetupResponse)
@@ -317,7 +317,102 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 	log.Infoln("Association setup done between nodes",
 		"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
 	comCh.UpfD2u <- &pfcpInfo
+	pConn.makeUPFsLighter(node, comCh)
 	return nil
+}
+
+func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
+	var destUpfIndex int
+	if len(pConn.upf.peersUPF) < 2 {
+		return
+	}
+	for i, u := range pConn.upf.peersUPF {
+		if u.NodeID == pConn.nodeID.remote {
+			destUpfIndex = i
+			break
+		}
+	}
+	for len(pConn.upf.upfsSessions[destUpfIndex]) < int(pConn.upf.sessionsThreshold) {
+		heaviestUpf := 0
+		if destUpfIndex == 0 {
+			heaviestUpf = 1
+		}
+		for i := range pConn.upf.peersUPF {
+			if i != destUpfIndex && len(pConn.upf.upfsSessions[i]) > len(pConn.upf.upfsSessions[heaviestUpf]) {
+				heaviestUpf = i
+			}
+		}
+		if len(pConn.upf.upfsSessions[heaviestUpf]) < int(pConn.upf.sessionsThreshold) {
+			return
+		}
+
+		totalSourceSessions := pConn.upf.upfsSessions[heaviestUpf]
+		excessedSessions := totalSourceSessions[pConn.upf.sessionsThreshold:]
+		if len(excessedSessions) > int(pConn.upf.sessionsThreshold) {
+			excessedSessions = excessedSessions[len(excessedSessions)-int(pConn.upf.sessionsThreshold):]
+		}
+		pConn.transferSessions(heaviestUpf, destUpfIndex, excessedSessions, node, comCh)
+	}
+
+}
+
+func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, node *PFCPNode, comCh CommunicationChannel) {
+	if len(sessions) == 0 {
+		return
+	}
+
+	for _, v := range sessions {
+
+		sourceAddr := pConn.upf.peersIP[sUPFid] + ":" + DownPFCPPort
+		destAddr := pConn.upf.peersIP[dUPFid] + ":" + DownPFCPPort
+		fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
+		sourcePconn, ok := node.pConns.Load(sourceAddr)
+		if !ok {
+			fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+			continue
+		}
+		destPconn, ok := node.pConns.Load(destAddr)
+		if !ok {
+			fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
+			continue
+		}
+		sPconn := sourcePconn.(*PFCPConn)
+		dPconn := destPconn.(*PFCPConn)
+		fmt.Println("parham log : geting session from dead upf")
+		sess, ok := sPconn.sessionStore.GetSession(v)
+		if !ok {
+			fmt.Println("parham log : can not find sessioin in sPconn.sessionStore.GetSession(v)")
+			continue
+		}
+		fmt.Println("parham log : puting to lightest upf")
+		dPconn.sessionStore.PutSession(sess)
+
+		//pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
+		estMsg, ok := node.upf.sesEstMsgStore[sess.localSEID]
+		if ok {
+			sesEstMsg := SesEstU2dMsg{
+				msg:       estMsg,
+				upSeid:    sess.localSEID,
+				reforward: true,
+			}
+			comCh.SesEstU2d <- &sesEstMsg
+		}
+
+		sPconn.RemoveSession(sess)
+
+		pConn.upf.lbmap[v] = dUPFid
+		pConn.upf.upfsSessions[dUPFid] = append(pConn.upf.upfsSessions[dUPFid], v)
+		var sessId int
+
+		for i := len(pConn.upf.upfsSessions[sUPFid]) - 1; i >= 0; i-- {
+			if pConn.upf.upfsSessions[sUPFid][i] == v {
+				sessId = i
+				break
+			}
+		}
+		pConn.upf.upfsSessions[sUPFid] = append(pConn.upf.upfsSessions[sUPFid][:sessId], pConn.upf.upfsSessions[sUPFid][:sessId+1]...)
+
+	}
 }
 
 func (pConn *PFCPConn) handleAssociationReleaseRequest(msg message.Message) (message.Message, error) {

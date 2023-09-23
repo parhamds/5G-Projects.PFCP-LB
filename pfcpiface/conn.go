@@ -288,10 +288,11 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 	fmt.Println("parham log : start handling dead upf")
 	fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
 	fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
-
-	for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
-		sessions := node.upf.upfsSessions[upfIndex]
-		node.reloadbalance(sessions, upfIndex)
+	if len(node.upf.peersUPF) > 1 {
+		for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
+			sessions := node.upf.upfsSessions[upfIndex]
+			node.reloadbalance(sessions, upfIndex)
+		}
 	}
 
 	node.upf.upfsSessions = append(node.upf.upfsSessions[:upfIndex], node.upf.upfsSessions[upfIndex+1:]...)

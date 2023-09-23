@@ -54,6 +54,7 @@ type Upf struct {
 	sesEstMsgStore    map[uint64]*message.SessionEstablishmentRequest
 	sesModMsgStore    map[uint64]*message.SessionModificationRequest
 	seidToRespCh      map[uint64]chan *ie.IE
+	sessionsThreshold uint32
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -169,10 +170,11 @@ func NewUPF(conf *Conf, pos Position,
 		seidToRespCh:   make(map[uint64]chan *ie.IE),
 		//peersSessions: make([]SessionMap, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
-		maxReqRetries: conf.MaxReqRetries,
-		enableHBTimer: conf.EnableHBTimer,
-		readTimeout:   time.Second * time.Duration(conf.ReadTimeout),
-		respTimeout:   time.Second * resptime,
+		maxReqRetries:     conf.MaxReqRetries,
+		enableHBTimer:     conf.EnableHBTimer,
+		readTimeout:       time.Second * time.Duration(conf.ReadTimeout),
+		respTimeout:       time.Second * resptime,
+		sessionsThreshold: conf.SessionsThreshold,
 		//readTimeout: 15 * time.Second,
 	}
 

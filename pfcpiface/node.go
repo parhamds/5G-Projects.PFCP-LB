@@ -90,7 +90,7 @@ func (node *PFCPNode) tryConnectToN4Peer(lAddrStr string, comCh CommunicationCha
 	pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh, pos)
 	if pfcpConn != nil {
 
-		go pfcpConn.sendAssociationRequest(pfcpinfo, comCh)
+		go pfcpConn.sendAssociationRequest(pfcpinfo, comCh, node)
 	}
 
 }
