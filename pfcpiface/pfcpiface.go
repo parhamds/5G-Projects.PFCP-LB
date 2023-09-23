@@ -46,6 +46,8 @@ type SesDelU2dMsg struct {
 	upSeid    uint64
 	reforward bool
 	respCh    chan *ie.IE
+	upfIndex  int
+	pConn     *PFCPConn
 }
 
 //type Sessionsinfo struct {

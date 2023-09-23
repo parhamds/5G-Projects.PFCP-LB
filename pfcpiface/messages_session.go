@@ -382,30 +382,34 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 	causeValue, err := sdres.Cause.Cause()
 	if err != nil {
 		log.Errorln("can not extract response cause")
-		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
+		fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
 		sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
 		return
 	}
 	if causeValue != ie.CauseRequestAccepted {
 		log.Errorln("session deletion not accepted by real pfcp")
-		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
+		fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
 		sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
 		return
 	}
 
-	downseid := sdres.Header.SEID
-	session, ok := pConn.sessionStore.GetSession(downseid)
-
-	pConn.RemoveSession(session)
-	err = pConn.pruneSession(node, downseid)
-	if err != nil {
-		log.Errorln(err)
-		sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
-		return
-	}
 	if sdres.Header.MessagePriority != 123 {
-		fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestAccepted)
+		downseid := sdres.Header.SEID
+		session, ok := pConn.sessionStore.GetSession(downseid)
+		if !ok {
+			log.Errorln(errors.New("can not find seid in pConn.sessionStore.GetSession(downseid) for seid = "), downseid)
+			sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
+			return
+		}
+		pConn.RemoveSession(session)
+		err = pConn.pruneSession(node, downseid)
+		if err != nil {
+			log.Errorln(err)
+			sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
+			return
+		}
 	}
+	fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestAccepted)
 	sendResptoUp(sdres.Cause, respCh, reforward)
 }
 

@@ -263,28 +263,25 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		}
 
 		fmt.Println("parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
-		upfIndex := node.pfcpMsgLBer(sdreqMsg.upSeid)
-		fmt.Println("parham log: selected upfIndex = ", upfIndex)
-		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
-		v, ok := node.pConns.Load(rAddr)
-		if !ok {
-			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
-			if !sdreqMsg.reforward {
-				respCh <- ie.NewCause(ie.CauseRequestRejected)
+		var upfIndex int
+		var pConn *PFCPConn
+		if sdreqMsg.reforward {
+			upfIndex = sdreqMsg.upfIndex
+			pConn = sdreqMsg.pConn
+		} else {
+			upfIndex = node.pfcpMsgLBer(sdreqMsg.upSeid)
+			rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
+			v, ok := node.pConns.Load(rAddr)
+			if !ok {
+				log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
+				if !sdreqMsg.reforward {
+					respCh <- ie.NewCause(ie.CauseRequestRejected)
+				}
+				continue
 			}
-			continue
+			pConn = v.(*PFCPConn)
 		}
-		pConn := v.(*PFCPConn)
-
-		//var localFSEID *ie.IE
-
-		//localIP := pConn.LocalAddr().(*net.UDPAddr).IP
-		//if localIP.To4() != nil {
-		//	localFSEID = ie.NewFSEID(downseid, localIP, nil)
-		//} else {
-		//	localFSEID = ie.NewFSEID(downseid, nil, localIP)
-		//}
-		//sdreq.CPFSEID = localFSEID
+		fmt.Println("parham log: selected upfIndex = ", upfIndex)
 
 		sdreq.Header.SEID = sdreqMsg.upSeid
 		fmt.Println("parham log : send session deletion req from up to real in down")

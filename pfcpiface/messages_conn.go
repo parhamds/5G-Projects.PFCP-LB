@@ -388,7 +388,7 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 		fmt.Println("parham log : geting session from dead upf")
 		sess, ok := sPconn.sessionStore.GetSession(v)
 		if !ok {
-			fmt.Println("parham log : can not find sessioin in sPconn.sessionStore.GetSession(v)")
+			fmt.Println("parham log : can not find session = ", v, "in sPconn.sessionStore.GetSession(v)")
 			continue
 		}
 		fmt.Println("parham log : puting to lightest upf")
@@ -404,6 +404,17 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 			}
 			comCh.SesEstU2d <- &sesEstMsg
 		}
+		delMsg := message.NewSessionDeletionRequest(0, 0, sess.localSEID, pConn.getSeqNum(), 123,
+			nil,
+		)
+		sesDelMsg := SesDelU2dMsg{
+			msg:       delMsg,
+			upSeid:    sess.localSEID,
+			reforward: true,
+			upfIndex:  sUPFid,
+			pConn:     sPconn,
+		}
+		comCh.SesDelU2d <- &sesDelMsg
 
 		sPconn.RemoveSession(sess)
 
