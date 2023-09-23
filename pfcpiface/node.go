@@ -146,25 +146,26 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		sereq.NodeID = pConn.nodeID.localIE
 		//fseid, err := sereq.CPFSEID.FSEID()
 		//remoteSEID := fseid.SEID
-		session, ok := pConn.NewPFCPSessionForDown(sereqMsg.upSeid)
-		if !ok {
-			log.Errorf("can not create session in down:")
-			if !sereqMsg.reforward {
-				respCh <- ie.NewCause(ie.CauseRequestRejected)
+		if !sereqMsg.reforward {
+			session, ok := pConn.NewPFCPSessionForDown(sereqMsg.upSeid)
+			if !ok {
+				log.Errorf("can not create session in down:")
+				if !sereqMsg.reforward {
+					respCh <- ie.NewCause(ie.CauseRequestRejected)
+				}
+				continue
 			}
-			continue
-		}
 
-		err := pConn.sessionStore.PutSession(session)
-		if err != nil {
-			log.Errorf("Failed to put PFCP session to store: %v", err)
-			if !sereqMsg.reforward {
-				respCh <- ie.NewCause(ie.CauseRequestRejected)
+			err := pConn.sessionStore.PutSession(session)
+			if err != nil {
+				log.Errorf("Failed to put PFCP session to store: %v", err)
+				if !sereqMsg.reforward {
+					respCh <- ie.NewCause(ie.CauseRequestRejected)
+				}
+				continue
 			}
-			continue
+			fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
 		}
-		fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
-
 		var localFSEID *ie.IE
 
 		localIP := pConn.LocalAddr().(*net.UDPAddr).IP

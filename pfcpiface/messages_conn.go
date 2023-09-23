@@ -417,7 +417,7 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 				break
 			}
 		}
-		pConn.upf.upfsSessions[sUPFid] = append(pConn.upf.upfsSessions[sUPFid][:sessId], pConn.upf.upfsSessions[sUPFid][:sessId+1]...)
+		pConn.upf.upfsSessions[sUPFid] = append(pConn.upf.upfsSessions[sUPFid][:sessId], pConn.upf.upfsSessions[sUPFid][sessId+1:]...)
 		fmt.Println("parham log : Sessions with seid = ", sess.localSEID, " has beed transfered")
 
 	}
