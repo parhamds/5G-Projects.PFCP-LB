@@ -218,6 +218,7 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 
 func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
 	//fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
+	comCh.ResetSessions <- struct{}{}
 	addr := pConn.RemoteAddr().String()
 	//fmt.Println("parham log : remote addr = ", addr)
 	//upf := pConn.upf
@@ -274,7 +275,7 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 }
 
 func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpInfo PfcpInfo, comCh CommunicationChannel, node *PFCPNode) error {
-	comCh.ResetSessions <- struct{}{}
+
 	addr := pConn.RemoteAddr().String()
 
 	asres, ok := msg.(*message.AssociationSetupResponse)
