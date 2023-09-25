@@ -274,6 +274,7 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 }
 
 func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpInfo PfcpInfo, comCh CommunicationChannel, node *PFCPNode) error {
+	comCh.ResetSessions <- struct{}{}
 	addr := pConn.RemoteAddr().String()
 
 	asres, ok := msg.(*message.AssociationSetupResponse)
