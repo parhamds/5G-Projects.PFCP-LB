@@ -299,7 +299,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 	for {
-		<-comCh.SesDelU2d
+		<-comCh.ResetSessions
 		fmt.Println("start reseting all upfs' sessions")
 		for k, v := range node.upf.lbmap {
 			node.sendDeletionReq(k, v, comCh)
