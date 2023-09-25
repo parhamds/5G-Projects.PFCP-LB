@@ -75,7 +75,7 @@ type PFCPConn struct {
 	pendingReqs sync.Map
 }
 
-func (pConn *PFCPConn) startHeartBeatMonitor() {
+func (pConn *PFCPConn) startHeartBeatMonitor(comCh CommunicationChannel) {
 	// Stop HeartBeat routine if already running
 	if pConn.hbCtxCancel != nil {
 		pConn.hbCtxCancel()
@@ -108,7 +108,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor() {
 			if _, timeout := pConn.sendPFCPRequestMessage(r); timeout {
 				heartBeatExpiryTimer.Stop()
 				//fmt.Println("parham log : Shutdown called from startHeartBeatMonitor")
-				pConn.Shutdown()
+				pConn.Shutdown(comCh)
 			}
 		}
 	}
@@ -240,7 +240,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 				pConn.ShutdownForDown(node, comCh)
 				return
 			}
-			pConn.Shutdown()
+			pConn.Shutdown(comCh)
 			return
 		case <-pConn.ctx.Done():
 			//fmt.Println("parham log : Shutdown called from ctx.Done channel")
@@ -248,7 +248,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 				pConn.ShutdownForDown(node, comCh)
 				return
 			}
-			pConn.Shutdown()
+			pConn.Shutdown(comCh)
 			return
 
 		case <-pConn.shutdown:
@@ -258,7 +258,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 }
 
 // Shutdown stops connection backing PFCPConn.
-func (pConn *PFCPConn) Shutdown() {
+func (pConn *PFCPConn) Shutdown(comCh CommunicationChannel) {
 	close(pConn.shutdown)
 
 	if pConn.hbCtxCancel != nil {
@@ -282,6 +282,8 @@ func (pConn *PFCPConn) Shutdown() {
 	}
 
 	log.Infoln("Shutdown complete for", rAddr)
+	comCh.ResetSessions <- struct{}{}
+
 }
 
 func (node *PFCPNode) handleDeadUpf(upfIndex int) {

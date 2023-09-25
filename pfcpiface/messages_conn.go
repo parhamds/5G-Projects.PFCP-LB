@@ -30,7 +30,7 @@ func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh Communica
 		if err != nil {
 			log.Errorln("Handling of Assoc Setup Response Failed ", pConn.RemoteAddr())
 			//fmt.Println("parham log : Shutdown called from sendAssociationRequest")
-			pConn.Shutdown()
+			pConn.Shutdown(comCh)
 
 			return
 		}
@@ -38,11 +38,11 @@ func (pConn *PFCPConn) sendAssociationRequest(pfcpInfo PfcpInfo, comCh Communica
 		//fmt.Println("parham log : pConn.upf.enableHBTimer = ", pConn.upf.enableHBTimer)
 		if pConn.upf.enableHBTimer || true {
 			//fmt.Println("parham log : starting pConn.startHeartBeatMonitor()")
-			go pConn.startHeartBeatMonitor()
+			go pConn.startHeartBeatMonitor(comCh)
 		}
 	} else if timeout {
 		//fmt.Println("parham log : Shutdown called from sendAssociationRequest, timeout channel")
-		pConn.Shutdown()
+		pConn.Shutdown(comCh)
 	}
 }
 

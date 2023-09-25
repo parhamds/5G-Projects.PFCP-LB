@@ -31,12 +31,13 @@ func main() {
 	ip_str := pfcpiface.GetLocalIP()
 	fmt.Println("parham log : local IP = ", ip_str)
 	comCh := pfcpiface.CommunicationChannel{
-		U2d:       make(chan []byte, 100),
-		D2u:       make(chan []byte, 100),
-		UpfD2u:    make(chan *pfcpiface.PfcpInfo, 100),
-		SesEstU2d: make(chan *pfcpiface.SesEstU2dMsg, 100),
-		SesModU2d: make(chan *pfcpiface.SesModU2dMsg, 100),
-		SesDelU2d: make(chan *pfcpiface.SesDelU2dMsg, 100),
+		U2d:           make(chan []byte, 100),
+		D2u:           make(chan []byte, 100),
+		UpfD2u:        make(chan *pfcpiface.PfcpInfo, 100),
+		SesEstU2d:     make(chan *pfcpiface.SesEstU2dMsg, 100),
+		SesModU2d:     make(chan *pfcpiface.SesModU2dMsg, 100),
+		SesDelU2d:     make(chan *pfcpiface.SesDelU2dMsg, 100),
+		ResetSessions: make(chan struct{}, 100),
 	}
 
 	// Read and parse json startup file.

@@ -19,12 +19,13 @@ import (
 type Position int
 
 type CommunicationChannel struct {
-	U2d       chan []byte
-	D2u       chan []byte
-	UpfD2u    chan *PfcpInfo
-	SesEstU2d chan *SesEstU2dMsg
-	SesModU2d chan *SesModU2dMsg
-	SesDelU2d chan *SesDelU2dMsg
+	U2d           chan []byte
+	D2u           chan []byte
+	UpfD2u        chan *PfcpInfo
+	SesEstU2d     chan *SesEstU2dMsg
+	SesModU2d     chan *SesModU2dMsg
+	SesDelU2d     chan *SesDelU2dMsg
+	ResetSessions chan struct{}
 }
 
 type SesEstU2dMsg struct {
@@ -185,6 +186,7 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		go p.node.listenForSesEstReq(comch)
 		go p.node.listenForSesModReq(comch)
 		go p.node.listenForSesDelReq(comch)
+		go p.node.listenForResetSes(comch)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch, pos)
 		})

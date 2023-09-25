@@ -14,6 +14,7 @@ import (
 	"github.com/omec-project/upf-epc/pfcpiface/metrics"
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
+	"github.com/wmnsk/go-pfcp/message"
 )
 
 // PFCPNode represents a PFCP endpoint of the UPF.
@@ -294,6 +295,48 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		pConn.forwardToRealPFCP(sdreq, comCh)
 
 	}
+}
+
+func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
+	for k, v := range node.upf.lbmap {
+		node.sendDeletionReq(k, v, comCh)
+	}
+
+	for i := range node.upf.peersIP {
+		node.upf.upfsSessions[i] = node.upf.upfsSessions[i][:0]
+	}
+
+	for key := range node.upf.lbmap {
+		delete(node.upf.lbmap, key)
+	}
+}
+
+func (node *PFCPNode) sendDeletionReq(sessId uint64, upfId int, comCh CommunicationChannel) {
+	upfAddr := node.upf.peersIP[upfId] + ":" + DownPFCPPort
+	upfpconn, ok := node.pConns.Load(upfAddr)
+	if !ok {
+		fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+		return
+	}
+	upfPconn := upfpconn.(*PFCPConn)
+	sess, ok := upfPconn.sessionStore.GetSession(sessId)
+	if !ok {
+		fmt.Println("parham log : can not find session = ", sessId, "in sPconn.sessionStore.GetSession(v)")
+		return
+	}
+	delMsg := message.NewSessionDeletionRequest(0, 0, sess.localSEID, upfPconn.getSeqNum(), 123,
+		nil,
+	)
+
+	sesDelMsg := SesDelU2dMsg{
+		msg:       delMsg,
+		upSeid:    sess.localSEID,
+		reforward: true,
+		upfIndex:  upfId,
+		pConn:     upfPconn,
+	}
+	comCh.SesDelU2d <- &sesDelMsg
+	upfPconn.RemoveSession(sess)
 }
 
 func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {

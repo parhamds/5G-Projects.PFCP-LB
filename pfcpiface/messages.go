@@ -103,13 +103,13 @@ func (pConn *PFCPConn) HandlePFCPMsg(buf []byte, comCh CommunicationChannel, nod
 	case message.MsgTypeAssociationSetupRequest:
 		reply, err = pConn.handleAssociationSetupRequest(msg, comCh)
 		if reply != nil && err == nil && pConn.upf.enableHBTimer {
-			go pConn.startHeartBeatMonitor()
+			go pConn.startHeartBeatMonitor(comCh)
 		}
 		// TODO: Cleanup sessions
 
 	case message.MsgTypeAssociationReleaseRequest:
 		reply, err = pConn.handleAssociationReleaseRequest(msg)
-		defer pConn.Shutdown()
+		defer pConn.Shutdown(comCh)
 
 	// Session related messages
 	case message.MsgTypeSessionEstablishmentRequest:
