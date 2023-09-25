@@ -75,7 +75,7 @@ func (s *PFCPSession) MarkSessionQer(qers []qer) {
 	// If PDRS have one QER and all PDRs point to same QER, then consider it as application qer.
 	// If number of QERS is 2 or more, then search for session QER
 	if (len(sessQerIDList) < 1) || (len(qers) < 2) {
-		log.Infoln("need atleast 1 QER in PDR or 2 QERs in session to mark session QER.")
+		//log.infoln("need atleast 1 QER in PDR or 2 QERs in session to mark session QER.")
 		return
 	}
 
@@ -111,7 +111,7 @@ func (s *PFCPSession) MarkSessionQer(qers []qer) {
 	for idx, qer := range qers {
 		if contains(sessQerIDList, qer.qerID) {
 			if qer.ulGbr > 0 || qer.dlGbr > 0 {
-				log.Infoln("Do not consider qer with non zero gbr value for session qer")
+				//log.infoln("Do not consider qer with non zero gbr value for session qer")
 				continue
 			}
 
@@ -123,7 +123,7 @@ func (s *PFCPSession) MarkSessionQer(qers []qer) {
 		}
 	}
 
-	log.Infoln("session QER found. QER ID : ", sessQerID)
+	//log.infoln("session QER found. QER ID : ", sessQerID)
 
 	qers[sessionIdx].qosLevel = SessionQos
 

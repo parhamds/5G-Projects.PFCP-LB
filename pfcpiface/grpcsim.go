@@ -4,8 +4,6 @@
 package pfcpiface
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
 )
@@ -69,9 +67,9 @@ func (s simMode) enable() bool {
 }
 
 func (u *Upf) sim(mode simMode, s *SimModeInfo) {
-	log.Infoln(simulate.String(), "sessions:", s.MaxSessions)
+	//log.infoln(simulate.String(), "sessions:", s.MaxSessions)
 
-	start := time.Now()
+	//start := time.Now()
 	ueip := s.StartUEIP
 	enbip := s.StartENBIP
 	aupfip := s.StartAUPFIP
@@ -268,5 +266,5 @@ func (u *Upf) sim(mode simMode, s *SimModeInfo) {
 		}
 	}
 
-	log.Infoln("Sessions/s:", float64(s.MaxSessions)/time.Since(start).Seconds())
+	//log.infoln("Sessions/s:", float64(s.MaxSessions)/time.Since(start).Seconds())
 }

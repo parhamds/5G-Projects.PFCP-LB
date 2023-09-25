@@ -338,7 +338,7 @@ func (p *pdr) parseUEAddressIE(ueAddrIE *ie.IE, ippool *IPPool) error {
 
 	if needAllocIP(ueIPaddr) {
 		/* alloc IPV6 if CHV6 is enabled : TBD */
-		log.Infof("UPF should alloc UE IP for SEID %v. CHV4 flag set", p.fseID)
+		//log.infof("UPF should alloc UE IP for SEID %v. CHV4 flag set", p.fseID)
 
 		ueIP4, err = ippool.LookupOrAllocIP(p.fseID)
 		if err != nil {

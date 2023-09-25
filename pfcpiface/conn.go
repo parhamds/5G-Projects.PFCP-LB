@@ -6,7 +6,6 @@ package pfcpiface
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -94,7 +93,7 @@ func (pConn *PFCPConn) startHeartBeatMonitor(comCh CommunicationChannel) {
 	for {
 		select {
 		case <-hbCtx.Done():
-			log.Infoln("Cancel HeartBeat Timer", pConn.RemoteAddr().String())
+			//log.infoln("Cancel HeartBeat Timer", pConn.RemoteAddr().String())
 			heartBeatExpiryTimer.Stop()
 
 			return
@@ -127,7 +126,7 @@ func (node *PFCPNode) NewPFCPConn(lAddr, rAddr string, buf []byte, comCh Communi
 	}
 
 	// TODO: Get SEID range from PFCPNode for this PFCPConn
-	log.Infoln("Created PFCPConn from:", conn.LocalAddr(), "to:", conn.RemoteAddr())
+	//log.infoln("Created PFCPConn from:", conn.LocalAddr(), "to:", conn.RemoteAddr())
 
 	rng := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404
 
@@ -210,8 +209,8 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 			n, err := pConn.Read(recvBuf)
 			if err != nil {
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-					log.Infof("Read timeout for connection %v<->%v, is the SMF still alive?",
-						pConn.LocalAddr(), pConn.RemoteAddr())
+					//log.infof("Read timeout for connection %v<->%v, is the SMF still alive?",
+					//pConn.LocalAddr(), pConn.RemoteAddr())
 					connTimeout <- struct{}{}
 
 					return
@@ -281,15 +280,15 @@ func (pConn *PFCPConn) Shutdown(comCh CommunicationChannel) {
 		return
 	}
 
-	log.Infoln("Shutdown complete for", rAddr)
+	//log.infoln("Shutdown complete for", rAddr)
 	comCh.ResetSessions <- struct{}{}
 
 }
 
 func (node *PFCPNode) handleDeadUpf(upfIndex int) {
-	fmt.Println("parham log : start handling dead upf")
-	fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
-	fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
+	//fmt.Println("parham log : start handling dead upf")
+	//fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
+	//fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
 	if len(node.upf.peersUPF) > 1 {
 		for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
 			sessions := node.upf.upfsSessions[upfIndex]
@@ -305,9 +304,9 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 			node.upf.lbmap[k] = v - 1
 		}
 	}
-	fmt.Println("parham log : node.upf.lbmap after reloadbalance = ", node.upf.lbmap)
-	fmt.Println("parham log : node.upf.upfsSessions after reloadbalance = ", node.upf.upfsSessions)
-	fmt.Println("parham log : done handling dead upf")
+	//fmt.Println("parham log : node.upf.lbmap after reloadbalance = ", node.upf.lbmap)
+	//fmt.Println("parham log : node.upf.upfsSessions after reloadbalance = ", node.upf.upfsSessions)
+	//fmt.Println("parham log : done handling dead upf")
 }
 
 func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
@@ -338,26 +337,26 @@ func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
 		destUpfIndex := lightestUpf
 		sourceAddr := node.upf.peersIP[sourceUpfIndex] + ":" + DownPFCPPort
 		destAddr := node.upf.peersIP[destUpfIndex] + ":" + DownPFCPPort
-		fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
+		//fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
 		sourcePconn, ok := node.pConns.Load(sourceAddr)
 		if !ok {
-			fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+			//	fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
 			continue
 		}
 		destPconn, ok := node.pConns.Load(destAddr)
 		if !ok {
-			fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
+			//	fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
 			continue
 		}
 		sPconn := sourcePconn.(*PFCPConn)
 		dPconn := destPconn.(*PFCPConn)
-		fmt.Println("parham log : geting session from dead upf")
+		//fmt.Println("parham log : geting session from dead upf")
 		sess, ok := sPconn.sessionStore.GetSession(v)
 		if !ok {
-			fmt.Println("parham log : can not find sessioin in sPconn.sessionStore.GetSession(v)")
+			//	fmt.Println("parham log : can not find sessioin in sPconn.sessionStore.GetSession(v)")
 			continue
 		}
-		fmt.Println("parham log : puting to lightest upf")
+		//fmt.Println("parham log : puting to lightest upf")
 		dPconn.sessionStore.PutSession(sess)
 	}
 }
@@ -402,7 +401,7 @@ func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode, comCh CommunicationChanne
 		return
 	}
 
-	log.Infoln("Shutdown complete for", rAddr)
+	//log.infoln("Shutdown complete for", rAddr)
 }
 
 func (pConn *PFCPConn) getSeqNum() uint32 {

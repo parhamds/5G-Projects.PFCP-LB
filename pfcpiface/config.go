@@ -186,7 +186,7 @@ func LoadConfigFile(filepath string) (Conf, error) {
 	}
 
 	var conf Conf
-	conf.LogLevel = log.InfoLevel
+	//conf.LogLevel = log.InfoLevel
 	conf.P4rtcIface.DefaultTC = uint8(p4constants.EnumTrafficClassElastic)
 
 	err = json.Unmarshal(byteValue, &conf)

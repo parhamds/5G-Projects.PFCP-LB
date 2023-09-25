@@ -196,7 +196,7 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 			//if err := p.httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			//	log.Fatalln("http server failed", err)
 			//}
-			//log.Infoln("http server closed")
+			////log.infoln("http server closed")
 			//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			//	newPFCPHandler(w, r, p.upf)
 			//})
@@ -211,12 +211,12 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 
 		//go func() {
 		//	oscall := <-sig
-		//	log.Infof("System call received: %+v", oscall)
+		//	//log.infof("System call received: %+v", oscall)
 		//	server.Shutdown(nil)
 		//}()
 		//go func() {
 		//	oscall := <-sig
-		//	log.Infof("System call received: %+v", oscall)
+		//	//log.infof("System call received: %+v", oscall)
 		//	p.Stop()
 		//}()
 	}

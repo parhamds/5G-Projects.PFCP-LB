@@ -95,13 +95,13 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 
 		sendHTTPResp(http.StatusCreated, w)
 	default:
-		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")
+		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
 		sendHTTPResp(http.StatusMethodNotAllowed, w)
 	}
 }
 
 func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("parham log : handle http request for /")
+	//log.infoln("parham log : handle http request for /")
 
 	switch r.Method {
 	case "PUT":
@@ -128,7 +128,7 @@ func (c *ConfigHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handlePFCPConfig(&pfcpInfo, c.upf)
 		sendHTTPResp(http.StatusCreated, w)
 	default:
-		log.Infoln(w, "Sorry, only PUT and POST methods are supported.")
+		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
 		sendHTTPResp(http.StatusMethodNotAllowed, w)
 	}
 }
@@ -182,7 +182,7 @@ func calculateBitRates(mbr uint64, rate string) uint64 {
 }
 
 func handleSliceConfig(nwSlice *NetworkSlice, upf *Upf) {
-	log.Infoln("handle slice config : ", nwSlice.SliceName)
+	//log.infoln("handle slice config : ", nwSlice.SliceName)
 
 	ulMbr := calculateBitRates(nwSlice.SliceQos.UplinkMbr,
 		nwSlice.SliceQos.BitrateUnit)
@@ -215,7 +215,7 @@ func handleSliceConfig(nwSlice *NetworkSlice, upf *Upf) {
 }
 
 func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *Upf) {
-	log.Infoln("handle register pfcp agent : ", pfcpInfo.Ip)
+	//log.infoln("handle register pfcp agent : ", pfcpInfo.Ip)
 
 	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {

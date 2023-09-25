@@ -140,7 +140,7 @@ func (pConn *PFCPConn) associationIEs() []*ie.IE {
 	//fmt.Println("parham log : flags = ", flags)
 
 	if len(upf.Dnn) != 0 {
-		log.Infoln("Association Setup with DNN:", upf.Dnn)
+		//log.infoln("Association Setup with DNN:", upf.Dnn)
 		//fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
@@ -181,7 +181,7 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 	//fmt.Println("parham log : flags = ", flags)
 
 	if len(upf.Dnn) != 0 {
-		log.Infoln("Association Setup with DNN:", upf.Dnn)
+		//log.infoln("Association Setup with DNN:", upf.Dnn)
 		//fmt.Println("parham log : upf.dnn = ", upf.Dnn)
 		// add ASSONI flag to set network instance.
 		flags = uint8(0x61)
@@ -256,8 +256,8 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 
 	if pConn.ts.remote.IsZero() {
 		pConn.ts.remote = ts
-		log.Infoln("Association Setup Request from", addr,
-			"with recovery timestamp:", ts)
+		//log.infoln("Association Setup Request from", addr,
+		//"with recovery timestamp:", ts)
 	} else if ts.After(pConn.ts.remote) {
 		old := pConn.ts.remote
 		pConn.ts.remote = ts
@@ -268,8 +268,8 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 	pConn.nodeID.remote = nodeID
 	asres.Cause = ie.NewCause(ie.CauseRequestAccepted)
 
-	log.Infoln("Association setup done between nodes",
-		"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
+	//log.infoln("Association setup done between nodes",
+	//"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
 
 	return asres, nil
 }
@@ -306,8 +306,8 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 
 	if pConn.ts.remote.IsZero() {
 		pConn.ts.remote = ts
-		log.Infoln("Association Setup Response from", addr,
-			"with recovery timestamp:", ts)
+		//log.infoln("Association Setup Response from", addr,
+		//"with recovery timestamp:", ts)
 	} else if ts.After(pConn.ts.remote) {
 		old := pConn.ts.remote
 		pConn.ts.remote = ts
@@ -316,18 +316,18 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 	}
 
 	pConn.nodeID.remote = nodeID
-	log.Infoln("Association setup done between nodes",
-		"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
+	//log.infoln("Association setup done between nodes",
+	//"local:", pConn.nodeID.local, "remote:", pConn.nodeID.remote)
 	comCh.UpfD2u <- &pfcpInfo
 	pConn.makeUPFsLighter(node, comCh)
 	return nil
 }
 
 func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
-	fmt.Println("parham log : start makeUPFsLighter")
+	//fmt.Println("parham log : start makeUPFsLighter")
 	var destUpfIndex int
 	if len(pConn.upf.peersUPF) < 2 {
-		fmt.Println("parham log : not enough upfs to make and upf lighter")
+		//fmt.Println("parham log : not enough upfs to make and upf lighter")
 		return
 	}
 	for i, u := range pConn.upf.peersUPF {
@@ -347,21 +347,21 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 			}
 		}
 		if len(pConn.upf.upfsSessions[heaviestUpf]) <= int(pConn.upf.sessionsThreshold) {
-			fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
+			//	fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
 			return
 		}
 
 		totalSourceSessions := pConn.upf.upfsSessions[heaviestUpf]
-		fmt.Println("parham log : list of all excessed sessions : ", totalSourceSessions)
+		//fmt.Println("parham log : list of all excessed sessions : ", totalSourceSessions)
 		excessedSessions := totalSourceSessions[pConn.upf.sessionsThreshold:]
 		if len(excessedSessions) > int(pConn.upf.sessionsThreshold) {
 			excessedSessions = excessedSessions[len(excessedSessions)-int(pConn.upf.sessionsThreshold):]
 		}
-		fmt.Println("parham log : list of excessed sessions that we want to transfer : ", excessedSessions)
+		//fmt.Println("parham log : list of excessed sessions that we want to transfer : ", excessedSessions)
 		pConn.transferSessions(heaviestUpf, destUpfIndex, excessedSessions, node, comCh)
 	}
-	fmt.Println("parham log : new upf received enough sessions")
-	fmt.Println("parham log : done makeUPFsLighter")
+	//fmt.Println("parham log : new upf received enough sessions")
+	//fmt.Println("parham log : done makeUPFsLighter")
 
 }
 
@@ -369,34 +369,34 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 	if len(sessions) == 0 {
 		return
 	}
-	fmt.Println("parham log : start transferSessions")
+	//fmt.Println("parham log : start transferSessions")
 	for _, v := range sessions {
 		if len(pConn.upf.upfsSessions[dUPFid]) > int(pConn.upf.sessionsThreshold) {
-			fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
+			//		fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
 			return
 		}
 		sourceAddr := pConn.upf.peersIP[sUPFid] + ":" + DownPFCPPort
 		destAddr := pConn.upf.peersIP[dUPFid] + ":" + DownPFCPPort
-		fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
+		//	fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
 		sourcePconn, ok := node.pConns.Load(sourceAddr)
 		if !ok {
-			fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+			//		fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
 			continue
 		}
 		destPconn, ok := node.pConns.Load(destAddr)
 		if !ok {
-			fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
+			//		fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
 			continue
 		}
 		sPconn := sourcePconn.(*PFCPConn)
 		dPconn := destPconn.(*PFCPConn)
-		fmt.Println("parham log : geting session from dead upf")
+		//	fmt.Println("parham log : geting session from dead upf")
 		sess, ok := sPconn.sessionStore.GetSession(v)
 		if !ok {
-			fmt.Println("parham log : can not find session = ", v, "in sPconn.sessionStore.GetSession(v)")
+			//		fmt.Println("parham log : can not find session = ", v, "in sPconn.sessionStore.GetSession(v)")
 			continue
 		}
-		fmt.Println("parham log : puting to lightest upf")
+		//	fmt.Println("parham log : puting to lightest upf")
 		dPconn.sessionStore.PutSession(sess)
 
 		//pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
@@ -434,10 +434,10 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 			}
 		}
 		pConn.upf.upfsSessions[sUPFid] = append(pConn.upf.upfsSessions[sUPFid][:sessId], pConn.upf.upfsSessions[sUPFid][sessId+1:]...)
-		fmt.Println("parham log : Sessions with seid = ", sess.localSEID, " has beed transfered")
+		//	fmt.Println("parham log : Sessions with seid = ", sess.localSEID, " has beed transfered")
 
 	}
-	fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
+	//fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
 }
 
 func (pConn *PFCPConn) handleAssociationReleaseRequest(msg message.Message) (message.Message, error) {

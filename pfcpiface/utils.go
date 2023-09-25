@@ -102,12 +102,12 @@ func calcBurstSizeFromRate(kbps uint64, ms uint64) uint64 {
 
 // MustParseStrIP : parse IP address from config and fail on error.
 func MustParseStrIP(address string) *net.IPNet {
-	ip, ipNet, err := net.ParseCIDR(address)
+	_, ipNet, err := net.ParseCIDR(address)
 	if err != nil {
 		log.Fatalf("unable to parse IP %v that we should parse", address)
 	}
 
-	log.Info("Parsed IP: ", ip)
+	//log.info("Parsed IP: ", ip)
 
 	return ipNet
 }

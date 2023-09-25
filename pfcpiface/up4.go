@@ -412,11 +412,11 @@ func (up4 *UP4) SetUpfInfo(u *Upf, conf *Conf) {
 	up4.accessIP = MustParseStrIP(conf.P4rtcIface.AccessIP)
 	u.AccessIP = up4.accessIP.IP
 
-	log.Infof("AccessIP: %v", up4.accessIP)
+	//log.infof("AccessIP: %v", up4.accessIP)
 
 	up4.ueIPPool = MustParseStrIP(conf.CPIface.UEIPPool)
 
-	log.Infof("UE IP pool: %v", up4.ueIPPool)
+	//log.infof("UE IP pool: %v", up4.ueIPPool)
 
 	p4rtcServer := conf.P4rtcIface.P4rtcServer
 
@@ -543,7 +543,7 @@ func (up4 *UP4) initInterfaces() error {
 }
 
 func (up4 *UP4) listenToDDNs() {
-	log.Info("Listening to Data Notifications from UP4..")
+	//log.info("Listening to Data Notifications from UP4..")
 
 	notifier := NewDownlinkDataNotifier(up4.reportNotifyChan, 20*time.Second)
 

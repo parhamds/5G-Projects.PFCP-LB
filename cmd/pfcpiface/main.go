@@ -48,7 +48,7 @@ func main() {
 
 	log.SetLevel(conf.LogLevel)
 
-	log.Infof("%+v", conf)
+	//log.Infof("%+v", conf)
 
 	upaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Up)
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)

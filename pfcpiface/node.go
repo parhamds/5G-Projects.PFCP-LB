@@ -6,7 +6,6 @@ package pfcpiface
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 
@@ -115,14 +114,14 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 	}
 	node.upf.lbmap[seid] = lightestUpf
 	node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], seid)
-	fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
-	fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
+	//fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
+	//fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
 	return lightestUpf
 }
 
 func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for new session establishment req from up ...")
+		//fmt.Println("parham log : down is waiting for new session establishment req from up ...")
 		sereqMsg := <-comCh.SesEstU2d
 		sereq := sereqMsg.msg
 		var respCh chan *ie.IE
@@ -131,13 +130,13 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 
 		}
 
-		fmt.Println("parham log: ses est recieved by down : upseid = ", sereqMsg.upSeid)
+		//fmt.Println("parham log: ses est recieved by down : upseid = ", sereqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sereqMsg.upSeid)
-		fmt.Println("parham log: selected upfIndex = ", upfIndex)
+		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
-			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
+			//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
 			if !sereqMsg.reforward {
 				respCh <- ie.NewCause(ie.CauseRequestRejected)
 			}
@@ -165,7 +164,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 				}
 				continue
 			}
-			fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
+			//fmt.Println("parham log : session succesfully added to sessionStore, down = ", session.localSEID, " , up = ", session.remoteSEID)
 		}
 		var localFSEID *ie.IE
 
@@ -191,7 +190,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for new session modification req from up ...")
+		//fmt.Println("parham log : down is waiting for new session modification req from up ...")
 		smreqMsg := <-comCh.SesModU2d
 		smreq := smreqMsg.msg
 		var respCh chan *ie.IE
@@ -199,13 +198,13 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 			respCh = smreqMsg.respCh
 		}
 
-		fmt.Println("parham log: ses mod recieved by down : upseid = ", smreqMsg.upSeid)
+		//fmt.Println("parham log: ses mod recieved by down : upseid = ", smreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(smreqMsg.upSeid)
-		fmt.Println("parham log: selected upfIndex = ", upfIndex)
+		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
-			log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
+			//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
 			if !smreqMsg.reforward {
 				respCh <- ie.NewCause(ie.CauseRequestRejected)
 			}
@@ -239,7 +238,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		smreq.CPFSEID = localFSEID
 
 		smreq.Header.SEID = smreqMsg.upSeid
-		fmt.Println("parham log : send session modification req from up to real in down")
+		//fmt.Println("parham log : send session modification req from up to real in down")
 		if smreqMsg.reforward == true {
 			smreq.Header.MessagePriority = 123
 		} else {
@@ -255,7 +254,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 
 func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 	for {
-		fmt.Println("parham log : down is waiting for new session deletion req from up ...")
+		//fmt.Println("parham log : down is waiting for new session deletion req from up ...")
 		sdreqMsg := <-comCh.SesDelU2d
 		sdreq := sdreqMsg.msg
 		var respCh chan *ie.IE
@@ -263,7 +262,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 			respCh = sdreqMsg.respCh
 		}
 
-		fmt.Println("parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
+		//fmt.Println("parham log: ses del recieved : upseid = ", sdreqMsg.upSeid)
 		var upfIndex int
 		var pConn *PFCPConn
 		if sdreqMsg.reforward {
@@ -274,7 +273,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 			rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 			v, ok := node.pConns.Load(rAddr)
 			if !ok {
-				log.Infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
+				//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
 				if !sdreqMsg.reforward {
 					respCh <- ie.NewCause(ie.CauseRequestRejected)
 				}
@@ -282,10 +281,10 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 			}
 			pConn = v.(*PFCPConn)
 		}
-		fmt.Println("parham log: selected upfIndex = ", upfIndex)
+		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
 
 		sdreq.Header.SEID = sdreqMsg.upSeid
-		fmt.Println("parham log : send session deletion req from up to real in down")
+		//fmt.Println("parham log : send session deletion req from up to real in down")
 		if sdreqMsg.reforward == true {
 			sdreq.Header.MessagePriority = 123
 		}
@@ -300,7 +299,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 	for {
 		<-comCh.ResetSessions
-		fmt.Println("start reseting all upfs' sessions")
+		//fmt.Println("start reseting all upfs' sessions")
 		for k, v := range node.upf.lbmap {
 			node.sendDeletionReq(k, v, comCh)
 		}
@@ -319,13 +318,13 @@ func (node *PFCPNode) sendDeletionReq(sessId uint64, upfId int, comCh Communicat
 	upfAddr := node.upf.peersIP[upfId] + ":" + DownPFCPPort
 	upfpconn, ok := node.pConns.Load(upfAddr)
 	if !ok {
-		fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+		//fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
 		return
 	}
 	upfPconn := upfpconn.(*PFCPConn)
 	sess, ok := upfPconn.sessionStore.GetSession(sessId)
 	if !ok {
-		fmt.Println("parham log : can not find session = ", sessId, "in sPconn.sessionStore.GetSession(v)")
+		//fmt.Println("parham log : can not find session = ", sessId, "in sPconn.sessionStore.GetSession(v)")
 		return
 	}
 	delMsg := message.NewSessionDeletionRequest(0, 0, sess.localSEID, upfPconn.getSeqNum(), 123,
@@ -346,7 +345,7 @@ func (node *PFCPNode) sendDeletionReq(sessId uint64, upfId int, comCh Communicat
 func (node *PFCPNode) handleNewPeers(comCh CommunicationChannel, pos Position) {
 	//fmt.Println("parham log : start handleNewPeers func")
 	lAddrStr := node.LocalAddr().String()
-	log.Infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
+	//log.infoln("listening for new PFCP connections on", lAddrStr, "for ", pos)
 
 	//node.tryConnectToN4Peers(lAddrStr)
 
@@ -417,11 +416,11 @@ func (node *PFCPNode) Serve(comCh CommunicationChannel, pos Position) {
 		//	})
 		case rAddr := <-node.pConnDone:
 			node.pConns.Delete(rAddr)
-			log.Infoln("Removed connection to", rAddr)
+			//log.infoln("Removed connection to", rAddr)
 		case <-node.ctx.Done():
 			shutdown = true
 
-			log.Infoln("Shutting down PFCP node")
+			//log.infoln("Shutting down PFCP node")
 
 			err := node.Close()
 			if err != nil {
@@ -439,7 +438,7 @@ func (node *PFCPNode) Serve(comCh CommunicationChannel, pos Position) {
 							break clearLoop
 						}
 						node.pConns.Delete(rAddr)
-						log.Infoln("Removed connection to", rAddr)
+						//log.infoln("Removed connection to", rAddr)
 					}
 				default:
 					// nothing to read from channel
@@ -450,12 +449,12 @@ func (node *PFCPNode) Serve(comCh CommunicationChannel, pos Position) {
 			if len(node.pConnDone) > 0 {
 				for rAddr := range node.pConnDone {
 					node.pConns.Delete(rAddr)
-					log.Infoln("Removed connection to", rAddr)
+					//log.infoln("Removed connection to", rAddr)
 				}
 			}
 
 			close(node.pConnDone)
-			log.Infoln("Done waiting for PFCPConn completions")
+			//log.infoln("Done waiting for PFCPConn completions")
 
 			node.upf.Exit()
 		}
@@ -476,5 +475,5 @@ func (node *PFCPNode) Stop() {
 // Done waits for Shutdown() to complete
 func (node *PFCPNode) Done() {
 	<-node.done
-	log.Infoln("Shutdown complete")
+	//log.infoln("Shutdown complete")
 }

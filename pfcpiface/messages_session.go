@@ -6,7 +6,6 @@ package pfcpiface
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -133,7 +132,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 		)
 		return seres, nil
 	case <-ctx.Done():
-		fmt.Println("timed out waiting for response from Down.")
+		//fmt.Println("timed out waiting for response from Down.")
 		return errProcessReply(ErrAllocateSession,
 			ie.CauseNoResourcesAvailable)
 	}
@@ -147,7 +146,7 @@ func sendResptoUp(resp *ie.IE, respCh chan *ie.IE, reforward bool) {
 }
 
 func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, comCh CommunicationChannel, node *PFCPNode) {
-	fmt.Println("parham log : handling SessionEstablishmentResponse in down")
+	//fmt.Println("parham log : handling SessionEstablishmentResponse in down")
 	seres, ok := msg.(*message.SessionEstablishmentResponse)
 	if !ok {
 		log.Errorln("can not convert recieved msg to SessionEstablishmentResponse")
@@ -175,8 +174,8 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 	}
 
 	//fmt.Println("parham log : real seid succesfully added to SMFtoRealstore, real seid = ", realSeid.SEID, " , smf = ", smfseid)
-	c, err := seres.Cause.Cause()
-	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
+	//c, err := seres.Cause.Cause()
+	//fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
 	sendResptoUp(seres.Cause, respCh, reforward)
 	if reforward {
 		ModMsg, ok := node.upf.sesModMsgStore[seres.SEID()]
@@ -192,11 +191,11 @@ func (pConn *PFCPConn) handleSessionEstablishmentResponse(msg message.Message, c
 }
 
 func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, comCh CommunicationChannel) {
-	fmt.Println("parham log : handling SessionModificationResponse in down")
+	//fmt.Println("parham log : handling SessionModificationResponse in down")
 	smres, ok := msg.(*message.SessionModificationResponse)
 	if !ok {
 		log.Errorln("can not convert recieved msg to SessionModificationResponse")
-		fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestRejected)
+		//fmt.Println("parham log : send received msg's cause from real to up in down : ", ie.CauseRequestRejected)
 		return
 	}
 	var respCh chan *ie.IE
@@ -207,19 +206,20 @@ func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, co
 		reforward = false
 	}
 
-	c, _ := smres.Cause.Cause()
-	fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
+	//c, _ := smres.Cause.Cause()
+	//fmt.Println("parham log : send received msg's cause from real to up in down : ", c)
 	sendResptoUp(smres.Cause, respCh, reforward)
 }
 
 func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
 	//upf := pConn.upf
-
+	log.Traceln("------------------ start handling ses mod req ------------------")
+	startTime := time.Now()
 	smreq, ok := msg.(*message.SessionModificationRequest)
 	if !ok {
+		log.Traceln("error while converting msg to SessionModificationRequest")
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
-
 	var remoteSEID uint64
 
 	sendError := func(err error) (message.Message, error) {
@@ -237,6 +237,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	}
 
 	localSEID := smreq.SEID()
+	log.Traceln("localSEID = ", localSEID)
 	respch := make(chan *ie.IE, 10)
 	smreqMsg := SesModU2dMsg{
 		msg:    smreq,
@@ -244,44 +245,60 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 		respCh: respch,
 	}
 	comCh.SesModU2d <- &smreqMsg
+	log.Traceln("ses est sent to down")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	defer close(respch)
+	log.Traceln("recovering session")
 	session, ok := pConn.sessionStore.GetSession(localSEID)
 	if !ok {
+		log.Traceln("error while recovering session")
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
 
 	//var fseidIP uint32
 
 	if smreq.CPFSEID != nil {
+		log.Traceln("smreq.CPFSEID != nil")
 		fseid, err := smreq.CPFSEID.FSEID()
+		log.Traceln("fseid = ", fseid)
 		if err == nil {
+			log.Traceln("old session.remoteSEID = ", session.remoteSEID)
 			session.remoteSEID = fseid.SEID
+			log.Traceln("updated session.remoteSEID = ", session.remoteSEID)
 			//fseidIP = ip2int(fseid.IPv4Address)
 
 			//log.traceln("Updated FSEID from session modification request")
+		} else {
+			log.Traceln("error while getting fseid ", fseid)
 		}
 	}
 
 	remoteSEID = session.remoteSEID
+	log.Traceln("remoteSEID = ", remoteSEID)
 
 	err := pConn.sessionStore.PutSession(session)
+	log.Traceln("session put in sessionStore")
 	if err != nil {
 		log.Errorf("Failed to put PFCP session to store: %v", err)
+		log.Traceln("error while putting session in sessionStore")
 	}
 	select {
 	case respCause := <-respch:
-
+		log.Traceln("resp recieved from down")
 		causeValue, err := respCause.Cause()
+
 		if err != nil {
-			log.Errorln("can not extract response cause")
+			log.Traceln("error while getting resp cause")
 		}
+		log.Traceln("resp cause = ", causeValue)
 		if causeValue != ie.CauseRequestAccepted {
+			log.Traceln("causeValue != ie.CauseRequestAccepted")
 			return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
 		}
 
 		// Build response message
+		log.Traceln("building resp msg")
 		smres := message.NewSessionModificationResponse(0, /* MO?? <-- what's this */
 			0,                                    /* FO <-- what's this? */
 			remoteSEID,                           /* seid */
@@ -289,9 +306,14 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 			0,                                    /* priority */
 			ie.NewCause(ie.CauseRequestAccepted), /* accept it blindly for the time being */
 		)
+		log.Traceln("smreq.SequenceNumber = ", smreq.SequenceNumber)
+		endTime := time.Now()
+		elapsedTime := endTime.Sub(startTime).Milliseconds()
+		log.Traceln("total process time = ", elapsedTime, " ms")
+		log.Traceln("------------------ end handling ses mod req ------------------")
 		return smres, nil
 	case <-ctx.Done():
-		fmt.Println("timed out waiting for response from Down.")
+		//fmt.Println("timed out waiting for response from Down.")
 		return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
 	}
 }
@@ -358,17 +380,17 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh C
 
 		return smres, nil
 	case <-ctx.Done():
-		fmt.Println("timed out waiting for response from Down.")
+		//fmt.Println("timed out waiting for response from Down.")
 		return sendError(ErrNotFoundWithParam("session deletion timeout from real pfcp", "localSEID", localSEID))
 	}
 }
 
 func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh CommunicationChannel, node *PFCPNode) {
-	fmt.Println("parham log : handling SessionDeletionnResponse in down")
+	//fmt.Println("parham log : handling SessionDeletionnResponse in down")
 	sdres, ok := msg.(*message.SessionDeletionResponse)
 	if !ok {
 		log.Errorln("can not convert recieved msg to SessionDeletionResponse")
-		fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
+		//fmt.Println("parham log : send received msg's cause from real to up in down", ie.CauseRequestRejected)
 		return
 	}
 	var respCh chan *ie.IE
@@ -382,13 +404,13 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 	causeValue, err := sdres.Cause.Cause()
 	if err != nil {
 		log.Errorln("can not extract response cause")
-		fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
+		//fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
 		sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
 		return
 	}
 	if causeValue != ie.CauseRequestAccepted {
 		log.Errorln("session deletion not accepted by real pfcp")
-		fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
+		//fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestRejected)
 		sendResptoUp(ie.NewCause(ie.CauseRequestRejected), respCh, reforward)
 		return
 	}
@@ -409,12 +431,12 @@ func (pConn *PFCPConn) handleSessionDeletionResponse(msg message.Message, comCh 
 			return
 		}
 	}
-	fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestAccepted)
+	//fmt.Println("parham log : send received msg's cause from real to up in down for seid = ", sdres.SEID(), " resp cause = ", ie.CauseRequestAccepted)
 	sendResptoUp(sdres.Cause, respCh, reforward)
 }
 
 func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
-	fmt.Println("parham log : start deleting session from everywhere")
+	//fmt.Println("parham log : start deleting session from everywhere")
 	delete(node.upf.lbmap, seid)
 	var found bool
 	var upfIndex int
@@ -443,7 +465,7 @@ func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
 	node.upf.upfsSessions[upfIndex] = append(node.upf.upfsSessions[upfIndex][:sessionIndex], node.upf.upfsSessions[upfIndex][sessionIndex+1:]...)
 	delete(node.upf.sesEstMsgStore, seid)
 	delete(node.upf.sesModMsgStore, seid)
-	fmt.Println("parham log : done deleting session from everywhere")
+	//fmt.Println("parham log : done deleting session from everywhere")
 	return nil
 }
 
