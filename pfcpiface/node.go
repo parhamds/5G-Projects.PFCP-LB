@@ -298,16 +298,20 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 }
 
 func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
-	for k, v := range node.upf.lbmap {
-		node.sendDeletionReq(k, v, comCh)
-	}
+	for {
+		<-comCh.SesDelU2d
+		fmt.Println("start reseting all upfs' sessions")
+		for k, v := range node.upf.lbmap {
+			node.sendDeletionReq(k, v, comCh)
+		}
 
-	for i := range node.upf.peersIP {
-		node.upf.upfsSessions[i] = node.upf.upfsSessions[i][:0]
-	}
+		for i := range node.upf.peersIP {
+			node.upf.upfsSessions[i] = node.upf.upfsSessions[i][:0]
+		}
 
-	for key := range node.upf.lbmap {
-		delete(node.upf.lbmap, key)
+		for key := range node.upf.lbmap {
+			delete(node.upf.lbmap, key)
+		}
 	}
 }
 
