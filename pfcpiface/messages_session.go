@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -114,6 +115,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 	case respCause := <-respch:
 
 		causeValue, err := respCause.Cause()
+		fmt.Println("ses est resp received by up for upseid = ", session.localSEID, ", causeValue = ", causeValue)
 		if err != nil {
 			log.Errorln("can not extract response cause")
 		}
@@ -213,11 +215,11 @@ func (pConn *PFCPConn) handleSessionModificationResponse(msg message.Message, co
 
 func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
 	//upf := pConn.upf
-	log.Traceln("------------------ start handling ses mod req ------------------")
-	startTime := time.Now()
+	//log.Traceln("------------------ start handling ses mod req ------------------")
+	//startTime := time.Now()
 	smreq, ok := msg.(*message.SessionModificationRequest)
 	if !ok {
-		log.Traceln("error while converting msg to SessionModificationRequest")
+		//log.Traceln("error while converting msg to SessionModificationRequest")
 		return nil, errUnmarshal(errMsgUnexpectedType)
 	}
 	var remoteSEID uint64
@@ -237,7 +239,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 	}
 
 	localSEID := smreq.SEID()
-	log.Traceln("localSEID = ", localSEID)
+	//log.Traceln("localSEID = ", localSEID)
 	respch := make(chan *ie.IE, 10)
 	smreqMsg := SesModU2dMsg{
 		msg:    smreq,
@@ -245,57 +247,57 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 		respCh: respch,
 	}
 	comCh.SesModU2d <- &smreqMsg
-	log.Traceln("ses est sent to down")
+	//log.Traceln("ses est sent to down")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	defer close(respch)
-	log.Traceln("recovering session")
+	//log.Traceln("recovering session")
 	session, ok := pConn.sessionStore.GetSession(localSEID)
 	if !ok {
-		log.Traceln("error while recovering session")
+		//log.Traceln("error while recovering session")
 		return sendError(ErrNotFoundWithParam("PFCP session", "localSEID", localSEID))
 	}
 
 	//var fseidIP uint32
 
 	if smreq.CPFSEID != nil {
-		log.Traceln("smreq.CPFSEID != nil")
-		fseid, err := smreq.CPFSEID.FSEID()
-		log.Traceln("fseid = ", fseid)
-		if err == nil {
-			log.Traceln("old session.remoteSEID = ", session.remoteSEID)
-			//session.remoteSEID = fseid.SEID
-			log.Traceln("updated session.remoteSEID = ", session.remoteSEID)
-		} else {
-			log.Traceln("error while getting fseid ", fseid)
-		}
+		//log.Traceln("smreq.CPFSEID != nil")
+		//fseid, err := smreq.CPFSEID.FSEID()
+		//log.Traceln("fseid = ", fseid)
+		//if err == nil {
+		//log.Traceln("old session.remoteSEID = ", session.remoteSEID)
+		//session.remoteSEID = fseid.SEID
+		//log.Traceln("updated session.remoteSEID = ", session.remoteSEID)
+	} else {
+		//log.Traceln("error while getting fseid ", fseid)
+		//}
 	}
 
 	remoteSEID = session.remoteSEID
-	log.Traceln("remoteSEID = ", remoteSEID)
+	//log.Traceln("remoteSEID = ", remoteSEID)
 
 	err := pConn.sessionStore.PutSession(session)
-	log.Traceln("session put in sessionStore")
+	//log.Traceln("session put in sessionStore")
 	if err != nil {
 		log.Errorf("Failed to put PFCP session to store: %v", err)
-		log.Traceln("error while putting session in sessionStore")
+		//log.Traceln("error while putting session in sessionStore")
 	}
 	select {
 	case respCause := <-respch:
-		log.Traceln("resp recieved from down")
+		//log.Traceln("resp recieved from down")
 		causeValue, err := respCause.Cause()
-
+		fmt.Println("ses mod resp received by up for upseid = ", session.localSEID, ", causeValue = ", causeValue)
 		if err != nil {
-			log.Traceln("error while getting resp cause")
+			//log.Traceln("error while getting resp cause")
 		}
-		log.Traceln("resp cause = ", causeValue)
+		//log.Traceln("resp cause = ", causeValue)
 		if causeValue != ie.CauseRequestAccepted {
-			log.Traceln("causeValue != ie.CauseRequestAccepted")
+			//log.Traceln("causeValue != ie.CauseRequestAccepted")
 			return sendError(ErrNotFoundWithParam("reject from real pfcp", "localSEID", localSEID))
 		}
 
 		// Build response message
-		log.Traceln("building resp msg")
+		//log.Traceln("building resp msg")
 		smres := message.NewSessionModificationResponse(0, /* MO?? <-- what's this */
 			0,                                    /* FO <-- what's this? */
 			remoteSEID,                           /* seid */
@@ -303,11 +305,11 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 			0,                                    /* priority */
 			ie.NewCause(ie.CauseRequestAccepted), /* accept it blindly for the time being */
 		)
-		log.Traceln("smreq.SequenceNumber = ", smreq.SequenceNumber)
-		endTime := time.Now()
-		elapsedTime := endTime.Sub(startTime).Milliseconds()
-		log.Traceln("total process time = ", elapsedTime, " ms")
-		log.Traceln("------------------ end handling ses mod req ------------------")
+		//log.Traceln("smreq.SequenceNumber = ", smreq.SequenceNumber)
+		//endTime := time.Now()
+		//elapsedTime := endTime.Sub(startTime).Milliseconds()
+		//log.Traceln("total process time of = ", elapsedTime, " ms")
+		//log.Traceln("------------------ end handling ses mod req ------------------")
 		return smres, nil
 	case <-ctx.Done():
 		//fmt.Println("timed out waiting for response from Down.")
@@ -357,6 +359,7 @@ func (pConn *PFCPConn) handleSessionDeletionRequest(msg message.Message, comCh C
 	case respCause := <-respch:
 
 		causeValue, err := respCause.Cause()
+		fmt.Println("ses del resp received by up for upseid = ", session.localSEID, ", causeValue = ", causeValue)
 		if err != nil {
 			log.Errorln("can not extract response cause")
 		}
@@ -515,10 +518,10 @@ func (pConn *PFCPConn) handleDigestReport(fseid uint64) {
 	srreq.DownlinkDataReport = ie.NewDownlinkDataReport(
 		ie.NewPDRID(uint16(pdrID)))
 
-	log.WithFields(log.Fields{
-		"F-SEID": fseid,
-		"PDR ID": pdrID,
-	}).Debug("Sending Downlink Data Report")
+	//log.WithFields(log.Fields{
+	//	"F-SEID": fseid,
+	//	"PDR ID": pdrID,
+	//}).Debug("Sending Downlink Data Report")
 
 	pConn.SendPFCPMsg(srreq)
 }

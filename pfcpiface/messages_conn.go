@@ -219,7 +219,7 @@ func (pConn *PFCPConn) lbAssociationIEs(upf *Upf) []*ie.IE {
 func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
 	//fmt.Println("!!!!! parham log : start handleAssociationSetupRequest !!!!!")
 	comCh.ResetSessions <- struct{}{}
-	addr := pConn.RemoteAddr().String()
+	//addr := pConn.RemoteAddr().String()
 	//fmt.Println("parham log : remote addr = ", addr)
 	//upf := pConn.upf
 
@@ -259,10 +259,10 @@ func (pConn *PFCPConn) handleAssociationSetupRequest(msg message.Message, comCh 
 		//log.infoln("Association Setup Request from", addr,
 		//"with recovery timestamp:", ts)
 	} else if ts.After(pConn.ts.remote) {
-		old := pConn.ts.remote
+		//old := pConn.ts.remote
 		pConn.ts.remote = ts
-		log.Warnln("Association Setup Request from", addr,
-			"with newer recovery timestamp:", ts, "older:", old)
+		//log.Warnln("Association Setup Request from", addr,
+		//	"with newer recovery timestamp:", ts, "older:", old)
 	}
 
 	pConn.nodeID.remote = nodeID
@@ -309,10 +309,10 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 		//log.infoln("Association Setup Response from", addr,
 		//"with recovery timestamp:", ts)
 	} else if ts.After(pConn.ts.remote) {
-		old := pConn.ts.remote
+		//old := pConn.ts.remote
 		pConn.ts.remote = ts
-		log.Warnln("Association Setup Response from", addr,
-			"with newer recovery timestamp:", ts, "older:", old)
+		//log.Warnln("Association Setup Response from", addr,
+		//	"with newer recovery timestamp:", ts, "older:", old)
 	}
 
 	pConn.nodeID.remote = nodeID

@@ -84,9 +84,9 @@ func (pConn *PFCPConn) startHeartBeatMonitor(comCh CommunicationChannel) {
 	hbCtx, hbCancel := context.WithCancel(pConn.ctx)
 	pConn.hbCtxCancel = hbCancel
 
-	log.WithFields(log.Fields{
-		"interval": pConn.upf.hbInterval,
-	}).Infoln("Starting Heartbeat timer")
+	//log.WithFields(log.Fields{
+	//	"interval": pConn.upf.hbInterval,
+	//}).Infoln("Starting Heartbeat timer")
 
 	heartBeatExpiryTimer := time.NewTicker(pConn.upf.hbInterval)
 

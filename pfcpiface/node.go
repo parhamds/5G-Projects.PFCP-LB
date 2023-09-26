@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 
@@ -82,10 +83,10 @@ func (node *PFCPNode) tryConnectToN4Peer(lAddrStr string, comCh CommunicationCha
 	remoteAddr := conn.RemoteAddr().(*net.UDPAddr)
 	n4DstIP := remoteAddr.IP
 
-	log.WithFields(log.Fields{
-		"SPGWC/SMF host": pfcpinfo.Ip,
-		"CP node":        n4DstIP.String(),
-	}).Info("Establishing PFCP Conn with CP node")
+	//log.WithFields(log.Fields{
+	//	"SPGWC/SMF host": pfcpinfo.Ip,
+	//	"CP node":        n4DstIP.String(),
+	//}).Info("Establishing PFCP Conn with CP node")
 	//fmt.Println("parham log : call NewPFCPConn from tryConnectToN4Peers func for down")
 	pfcpConn := node.NewPFCPConn(lAddrStr, n4DstIP.String()+":"+DownPFCPPort, nil, comCh, pos)
 	if pfcpConn != nil {
@@ -114,6 +115,11 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 	}
 	node.upf.lbmap[seid] = lightestUpf
 	node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], seid)
+	fmt.Println("pfcpMsgLBer called, node.upf.upfsSessions = ", node.upf.upfsSessions)
+	for i := 0; i < len(node.upf.upfsSessions[lightestUpf]); i++ {
+		fmt.Printf("len(node.upf.upfsSessions[%v]) = %v", i, len(node.upf.upfsSessions[i]))
+	}
+
 	//fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
 	//fmt.Println("parham log : node.upf.upfsSessions = ", node.upf.upfsSessions)
 	return lightestUpf
@@ -123,6 +129,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 	for {
 		//fmt.Println("parham log : down is waiting for new session establishment req from up ...")
 		sereqMsg := <-comCh.SesEstU2d
+
 		sereq := sereqMsg.msg
 		var respCh chan *ie.IE
 		if !sereqMsg.reforward {
@@ -132,6 +139,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 
 		//fmt.Println("parham log: ses est recieved by down : upseid = ", sereqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(sereqMsg.upSeid)
+		fmt.Println("ses est received by down, up seid = ", sereqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", sereqMsg.reforward)
 		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
@@ -183,6 +191,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		if !sereqMsg.reforward {
 			pConn.upf.seidToRespCh[sereqMsg.upSeid] = respCh
 		}
+		fmt.Println("sending ses est to Real PFCP")
 		pConn.forwardToRealPFCP(sereq, comCh)
 
 	}
@@ -200,6 +209,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 
 		//fmt.Println("parham log: ses mod recieved by down : upseid = ", smreqMsg.upSeid)
 		upfIndex := node.pfcpMsgLBer(smreqMsg.upSeid)
+		fmt.Println("ses est received by down, up seid = ", smreqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", smreqMsg.reforward)
 		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
 		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
@@ -247,6 +257,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		if !smreqMsg.reforward {
 			pConn.upf.seidToRespCh[smreqMsg.upSeid] = respCh
 		}
+		fmt.Println("sending ses mod to Real PFCP")
 		pConn.forwardToRealPFCP(smreq, comCh)
 
 	}
@@ -267,9 +278,11 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		var pConn *PFCPConn
 		if sdreqMsg.reforward {
 			upfIndex = sdreqMsg.upfIndex
+			fmt.Println("ses est received by down, up seid = ", sdreqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", sdreqMsg.reforward)
 			pConn = sdreqMsg.pConn
 		} else {
 			upfIndex = node.pfcpMsgLBer(sdreqMsg.upSeid)
+			fmt.Println("ses est received by down, up seid = ", sdreqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", sdreqMsg.reforward)
 			rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
 			v, ok := node.pConns.Load(rAddr)
 			if !ok {
@@ -291,6 +304,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		if !sdreqMsg.reforward {
 			pConn.upf.seidToRespCh[sdreqMsg.upSeid] = respCh
 		}
+		fmt.Println("sending ses del to Real PFCP")
 		pConn.forwardToRealPFCP(sdreq, comCh)
 
 	}
@@ -299,6 +313,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 	for {
 		<-comCh.ResetSessions
+		fmt.Println("ses rst signal received by down")
 		//fmt.Println("start reseting all upfs' sessions")
 		for k, v := range node.upf.lbmap {
 			node.sendDeletionReq(k, v, comCh)
