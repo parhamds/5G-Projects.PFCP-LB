@@ -116,8 +116,8 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 	node.upf.lbmap[seid] = lightestUpf
 	node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], seid)
 	fmt.Println("pfcpMsgLBer called, node.upf.upfsSessions = ", node.upf.upfsSessions)
-	for i := 0; i < len(node.upf.upfsSessions[lightestUpf]); i++ {
-		fmt.Printf("len(node.upf.upfsSessions[%v]) = %v", i, len(node.upf.upfsSessions[i]))
+	for i := 0; i < len(node.upf.upfsSessions); i++ {
+		fmt.Printf("len(node.upf.upfsSessions[%v]) = %v \n", i, len(node.upf.upfsSessions[i]))
 	}
 
 	//fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
