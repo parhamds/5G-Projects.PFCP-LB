@@ -264,7 +264,7 @@ func (pConn *PFCPConn) handleSessionModificationRequest(msg message.Message, com
 		log.Traceln("fseid = ", fseid)
 		if err == nil {
 			log.Traceln("old session.remoteSEID = ", session.remoteSEID)
-			//session.remoteSEID = fseid.SEID
+			session.remoteSEID = fseid.SEID
 			log.Traceln("updated session.remoteSEID = ", session.remoteSEID)
 		} else {
 			log.Traceln("error while getting fseid ", fseid)
