@@ -141,6 +141,11 @@ RUN CGO_ENABLED=0 go build $GOFLAGS -o /bin/pfcpiface ./cmd/pfcpiface
 
 # Stage pfcpiface: runtime image of pfcpiface toward SMF/SPGW-C
 FROM alpine AS pfcpiface
+RUN apk add curl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/
+COPY upfs/ /upfs/
 COPY conf /opt/bess/bessctl/conf
 COPY --from=pfcpiface-build /bin/pfcpiface /bin
 ENTRYPOINT [ "/bin/pfcpiface" ]
