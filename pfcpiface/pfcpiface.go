@@ -126,8 +126,8 @@ func listenForUpf(comCh CommunicationChannel, upf *Upf) {
 			}
 		}
 		if !exist {
+			newPfcpInfo.Upf.peersIP = newPfcpInfo.Ip
 			upf.peersUPF = append(upf.peersUPF, newPfcpInfo.Upf)
-			upf.peersIP = append(upf.peersIP, newPfcpInfo.Ip)
 		}
 	}
 }

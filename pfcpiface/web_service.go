@@ -5,6 +5,7 @@ package pfcpiface
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -216,7 +217,7 @@ func handleSliceConfig(nwSlice *NetworkSlice, upf *Upf) {
 
 func handlePFCPConfig(pfcpInfo *PfcpInfo, upf *Upf) {
 	//log.infoln("handle register pfcp agent : ", pfcpInfo.Ip)
-
+	fmt.Println("new PFCP Peer config Received, Peer's IP = ", pfcpInfo.Ip, ", Peer's Hostname", pfcpInfo.Upf.Hostname)
 	err := upf.addPFCPPeer(pfcpInfo)
 	if err != nil {
 		log.Errorln("adding pfcp info to pfcplb failed : ", err)

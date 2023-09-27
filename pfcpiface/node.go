@@ -105,21 +105,22 @@ func (node *PFCPNode) pfcpMsgLBer(seid uint64) int {
 		return upfIndex
 	}
 
-	minSessions := len(node.upf.upfsSessions[0])
+	minSessions := len(node.upf.peersUPF[0].upfsSessions)
 	lightestUpf := 0
-	if len(node.upf.upfsSessions) > 1 {
-		for i := 1; i < len(node.upf.upfsSessions); i++ {
-			if minSessions > len(node.upf.upfsSessions[i]) {
-				minSessions = len(node.upf.upfsSessions[i])
+	if len(node.upf.peersUPF) > 1 {
+		for i := 1; i < len(node.upf.peersUPF); i++ {
+			if minSessions > len(node.upf.peersUPF[i].upfsSessions) {
+				minSessions = len(node.upf.peersUPF[i].upfsSessions)
 				lightestUpf = i
 			}
 		}
 	}
 	node.upf.lbmap[seid] = lightestUpf
-	node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], seid)
-	fmt.Println("pfcpMsgLBer called, node.upf.upfsSessions = ", node.upf.upfsSessions)
-	for i := 0; i < len(node.upf.upfsSessions); i++ {
-		fmt.Printf("len(node.upf.upfsSessions[%v]) = %v \n", i, len(node.upf.upfsSessions[i]))
+	node.upf.peersUPF[lightestUpf].upfsSessions = append(node.upf.peersUPF[lightestUpf].upfsSessions, seid)
+	fmt.Println("pfcpMsgLBer has been called")
+	for i := 0; i < len(node.upf.peersUPF); i++ {
+		fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
+		fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
 	}
 
 	//fmt.Println("parham log : node.upf.lbmap = ", node.upf.lbmap)
@@ -143,7 +144,7 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 		upfIndex := node.pfcpMsgLBer(sereqMsg.upSeid)
 		fmt.Println("ses est received by down, up seid = ", sereqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", sereqMsg.reforward)
 		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
-		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
+		rAddr := node.upf.peersUPF[upfIndex].peersIP + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
 			//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
@@ -213,7 +214,7 @@ func (node *PFCPNode) listenForSesModReq(comCh CommunicationChannel) {
 		upfIndex := node.pfcpMsgLBer(smreqMsg.upSeid)
 		fmt.Println("ses est received by down, up seid = ", smreqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", smreqMsg.reforward)
 		//fmt.Println("parham log: selected upfIndex = ", upfIndex)
-		rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
+		rAddr := node.upf.peersUPF[upfIndex].peersIP + ":" + DownPFCPPort
 		v, ok := node.pConns.Load(rAddr)
 		if !ok {
 			//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
@@ -285,7 +286,7 @@ func (node *PFCPNode) listenForSesDelReq(comCh CommunicationChannel) {
 		} else {
 			upfIndex = node.pfcpMsgLBer(sdreqMsg.upSeid)
 			fmt.Println("ses est received by down, up seid = ", sdreqMsg.upSeid, ", upfIndex = ", upfIndex, ", reforward= ", sdreqMsg.reforward)
-			rAddr := node.upf.peersIP[upfIndex] + ":" + DownPFCPPort
+			rAddr := node.upf.peersUPF[upfIndex].peersIP + ":" + DownPFCPPort
 			v, ok := node.pConns.Load(rAddr)
 			if !ok {
 				//log.infoln("Can't find pConn to received peer IP = ", node.upf.peersIP[upfIndex])
@@ -321,8 +322,8 @@ func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 			node.sendDeletionReq(k, v, comCh)
 		}
 
-		for i := range node.upf.peersIP {
-			node.upf.upfsSessions[i] = node.upf.upfsSessions[i][:0]
+		for i := range node.upf.peersUPF {
+			node.upf.peersUPF[i].upfsSessions = node.upf.peersUPF[i].upfsSessions[:0]
 		}
 
 		for key := range node.upf.lbmap {
@@ -339,10 +340,10 @@ func (node *PFCPNode) reconciliation() {
 		var ScaleOutUPF string
 		var ScaleInUPF string
 
-		if node.upf.AutoScaleOut && len(node.upf.peersIP) < int(node.upf.MaxUPFs) {
+		if node.upf.AutoScaleOut && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) {
 			maxSession := node.upf.MaxSessionsThreshold + uint32(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))
-			for i := range node.upf.peersIP {
-				if len(node.upf.upfsSessions[i]) > int(maxSession) {
+			for i := range node.upf.peersUPF {
+				if len(node.upf.peersUPF[i].upfsSessions) > int(maxSession) {
 					scaleOutNeeded = true
 					break
 				}
@@ -378,10 +379,10 @@ func (node *PFCPNode) reconciliation() {
 			continue
 		}
 
-		if node.upf.AutoScaleIn && node.upf.MinSessionsThreshold != 0 && node.upf.MinSessionstolerance != 0 && len(node.upf.peersIP) > int(node.upf.MinUPFs) {
+		if node.upf.AutoScaleIn && node.upf.MinSessionsThreshold != 0 && node.upf.MinSessionstolerance != 0 && len(node.upf.peersUPF) > int(node.upf.MinUPFs) {
 			minSession := node.upf.MinSessionsThreshold - uint32(node.upf.MinSessionstolerance*float32(node.upf.MinSessionsThreshold))
-			for i := range node.upf.peersIP {
-				if len(node.upf.upfsSessions[i]) < int(minSession) {
+			for i := range node.upf.peersUPF {
+				if len(node.upf.peersUPF[i].upfsSessions) < int(minSession) {
 					scaleInNeeded = true
 					ScaleInUPF = node.upf.peersUPF[i].NodeID
 					break
@@ -406,7 +407,7 @@ func (node *PFCPNode) reconciliation() {
 }
 
 func (node *PFCPNode) sendDeletionReq(sessId uint64, upfId int, comCh CommunicationChannel) {
-	upfAddr := node.upf.peersIP[upfId] + ":" + DownPFCPPort
+	upfAddr := node.upf.peersUPF[upfId].peersIP + ":" + DownPFCPPort
 	upfpconn, ok := node.pConns.Load(upfAddr)
 	if !ok {
 		//fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")

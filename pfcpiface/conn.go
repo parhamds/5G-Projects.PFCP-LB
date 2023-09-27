@@ -290,14 +290,12 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 	//fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
 	//fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
 	if len(node.upf.peersUPF) > 1 {
-		for i := 0; i < len(node.upf.upfsSessions)-1; i++ {
-			sessions := node.upf.upfsSessions[upfIndex]
+		for i := 0; i < len(node.upf.peersUPF)-1; i++ {
+			sessions := node.upf.peersUPF[upfIndex].upfsSessions
 			node.reloadbalance(sessions, upfIndex)
 		}
 	}
 
-	node.upf.upfsSessions = append(node.upf.upfsSessions[:upfIndex], node.upf.upfsSessions[upfIndex+1:]...)
-	node.upf.peersIP = append(node.upf.peersIP[:upfIndex], node.upf.peersIP[upfIndex+1:]...)
 	node.upf.peersUPF = append(node.upf.peersUPF[:upfIndex], node.upf.peersUPF[upfIndex+1:]...)
 	for k, v := range node.upf.lbmap {
 		if v > upfIndex {
@@ -317,26 +315,26 @@ func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
 	for _, v := range sessions {
 
 		curUpf := initupf
-		minSessions := len(node.upf.upfsSessions[curUpf])
+		minSessions := len(node.upf.peersUPF[curUpf].upfsSessions)
 		lightestUpf := curUpf
-		if len(node.upf.upfsSessions) > 1 {
-			for i := 0; i < len(node.upf.upfsSessions); i++ {
+		if len(node.upf.peersUPF) > 1 {
+			for i := 0; i < len(node.upf.peersUPF); i++ {
 				if i == deadUpf {
 					continue
 				}
-				if minSessions > len(node.upf.upfsSessions[i]) {
-					minSessions = len(node.upf.upfsSessions[i])
+				if minSessions > len(node.upf.peersUPF[i].upfsSessions) {
+					minSessions = len(node.upf.peersUPF[i].upfsSessions)
 					lightestUpf = i
 				}
 			}
 		}
 		node.upf.lbmap[v] = lightestUpf
-		node.upf.upfsSessions[lightestUpf] = append(node.upf.upfsSessions[lightestUpf], v)
+		node.upf.peersUPF[lightestUpf].upfsSessions = append(node.upf.peersUPF[lightestUpf].upfsSessions, v)
 
 		sourceUpfIndex := deadUpf
 		destUpfIndex := lightestUpf
-		sourceAddr := node.upf.peersIP[sourceUpfIndex] + ":" + DownPFCPPort
-		destAddr := node.upf.peersIP[destUpfIndex] + ":" + DownPFCPPort
+		sourceAddr := node.upf.peersUPF[sourceUpfIndex].peersIP + ":" + DownPFCPPort
+		destAddr := node.upf.peersUPF[destUpfIndex].peersIP + ":" + DownPFCPPort
 		//fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
 		sourcePconn, ok := node.pConns.Load(sourceAddr)
 		if !ok {

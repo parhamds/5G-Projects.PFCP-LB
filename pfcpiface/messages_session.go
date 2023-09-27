@@ -452,7 +452,7 @@ func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
 	}
 	found = false
 	var sessionIndex int
-	for i, s := range node.upf.upfsSessions[upfIndex] {
+	for i, s := range node.upf.peersUPF[upfIndex].upfsSessions {
 		if s == seid {
 			sessionIndex = i
 			found = true
@@ -462,7 +462,7 @@ func (pConn *PFCPConn) pruneSession(node *PFCPNode, seid uint64) error {
 	if !found {
 		return errors.New("can not find sessionIndex in node.upf.upfsSessions")
 	}
-	node.upf.upfsSessions[upfIndex] = append(node.upf.upfsSessions[upfIndex][:sessionIndex], node.upf.upfsSessions[upfIndex][sessionIndex+1:]...)
+	node.upf.peersUPF[upfIndex].upfsSessions = append(node.upf.peersUPF[upfIndex].upfsSessions[:sessionIndex], node.upf.peersUPF[upfIndex].upfsSessions[sessionIndex+1:]...)
 	delete(node.upf.sesEstMsgStore, seid)
 	delete(node.upf.sesModMsgStore, seid)
 	//fmt.Println("parham log : done deleting session from everywhere")

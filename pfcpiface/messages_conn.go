@@ -336,22 +336,22 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 			break
 		}
 	}
-	for len(pConn.upf.upfsSessions[destUpfIndex]) < int(pConn.upf.MaxSessionsThreshold) {
+	for len(pConn.upf.peersUPF[destUpfIndex].upfsSessions) < int(pConn.upf.MaxSessionsThreshold) {
 		heaviestUpf := 0
 		if destUpfIndex == 0 {
 			heaviestUpf = 1
 		}
 		for i := range pConn.upf.peersUPF {
-			if i != destUpfIndex && len(pConn.upf.upfsSessions[i]) > len(pConn.upf.upfsSessions[heaviestUpf]) {
+			if i != destUpfIndex && len(pConn.upf.peersUPF[i].upfsSessions) > len(pConn.upf.peersUPF[heaviestUpf].upfsSessions) {
 				heaviestUpf = i
 			}
 		}
-		if len(pConn.upf.upfsSessions[heaviestUpf]) <= int(pConn.upf.MaxSessionsThreshold) {
+		if len(pConn.upf.peersUPF[heaviestUpf].upfsSessions) <= int(pConn.upf.MaxSessionsThreshold) {
 			//	fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
 			return
 		}
 
-		totalSourceSessions := pConn.upf.upfsSessions[heaviestUpf]
+		totalSourceSessions := pConn.upf.peersUPF[heaviestUpf].upfsSessions
 		//fmt.Println("parham log : list of all excessed sessions : ", totalSourceSessions)
 		excessedSessions := totalSourceSessions[pConn.upf.MaxSessionsThreshold:]
 		if len(excessedSessions) > int(pConn.upf.MaxSessionsThreshold) {
@@ -371,12 +371,12 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 	}
 	//fmt.Println("parham log : start transferSessions")
 	for _, v := range sessions {
-		if len(pConn.upf.upfsSessions[dUPFid]) > int(pConn.upf.MaxSessionsThreshold) {
+		if len(pConn.upf.peersUPF[dUPFid].upfsSessions) > int(pConn.upf.MaxSessionsThreshold) {
 			//		fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
 			return
 		}
-		sourceAddr := pConn.upf.peersIP[sUPFid] + ":" + DownPFCPPort
-		destAddr := pConn.upf.peersIP[dUPFid] + ":" + DownPFCPPort
+		sourceAddr := pConn.upf.peersUPF[sUPFid].peersIP + ":" + DownPFCPPort
+		destAddr := pConn.upf.peersUPF[dUPFid].peersIP + ":" + DownPFCPPort
 		//	fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
 		sourcePconn, ok := node.pConns.Load(sourceAddr)
 		if !ok {
@@ -424,16 +424,16 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 		sPconn.RemoveSession(sess)
 
 		pConn.upf.lbmap[v] = dUPFid
-		pConn.upf.upfsSessions[dUPFid] = append(pConn.upf.upfsSessions[dUPFid], v)
+		pConn.upf.peersUPF[dUPFid].upfsSessions = append(pConn.upf.peersUPF[dUPFid].upfsSessions, v)
 		var sessId int
 
-		for i := len(pConn.upf.upfsSessions[sUPFid]) - 1; i >= 0; i-- {
-			if pConn.upf.upfsSessions[sUPFid][i] == v {
+		for i := len(pConn.upf.peersUPF[sUPFid].upfsSessions) - 1; i >= 0; i-- {
+			if pConn.upf.peersUPF[sUPFid].upfsSessions[i] == v {
 				sessId = i
 				break
 			}
 		}
-		pConn.upf.upfsSessions[sUPFid] = append(pConn.upf.upfsSessions[sUPFid][:sessId], pConn.upf.upfsSessions[sUPFid][sessId+1:]...)
+		pConn.upf.peersUPF[sUPFid].upfsSessions = append(pConn.upf.peersUPF[sUPFid].upfsSessions[:sessId], pConn.upf.peersUPF[sUPFid].upfsSessions[sessId+1:]...)
 		//	fmt.Println("parham log : Sessions with seid = ", sess.localSEID, " has beed transfered")
 
 	}

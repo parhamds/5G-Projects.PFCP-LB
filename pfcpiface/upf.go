@@ -47,9 +47,9 @@ type Upf struct {
 	CoreIP                 net.IP `json:"coreip"`
 	NodeID                 string `json:"nodeid"`
 	ippool                 *IPPool
-	peersIP                []string
+	peersIP                string
 	peersUPF               []*Upf
-	upfsSessions           [][]uint64     // each upf handles which sessions
+	upfsSessions           []uint64       // each upf handles which sessions
 	lbmap                  map[uint64]int // each session is handled by which upf
 	sesEstMsgStore         map[uint64]*message.SessionEstablishmentRequest
 	sesModMsgStore         map[uint64]*message.SessionModificationRequest
@@ -117,10 +117,9 @@ func (u *Upf) addPFCPPeer(pfcpInfo *PfcpInfo) error {
 	//fmt.Println("accessIP = ", pfcpInfo.Upf.AccessIP)
 	//fmt.Println("coreIP = ", pfcpInfo.Upf.CoreIP)
 	//fmt.Println("nodeID = ", pfcpInfo.Upf.NodeID)
+	pfcpInfo.Upf.peersIP = pfcpInfo.Ip
+	pfcpInfo.Upf.upfsSessions = make([]uint64, 0)
 	u.peersUPF = append(u.peersUPF, pfcpInfo.Upf)
-	u.peersIP = append(u.peersIP, pfcpInfo.Ip)
-	upfs := make([]uint64, 0)
-	u.upfsSessions = append(u.upfsSessions, upfs)
 
 	//u.peersSessions = append(u.peersSessions, SessionMap{})
 	//fmt.Println("peer added to Down PFCP. list of peers : ", u.peersIP)
@@ -170,9 +169,8 @@ func NewUPF(conf *Conf, pos Position,
 		NodeID: nodeID,
 		//datapath:          fp,
 		Dnn:            conf.CPIface.Dnn,
-		peersIP:        make([]string, 0),
 		peersUPF:       make([]*Upf, 0),
-		upfsSessions:   make([][]uint64, 0),
+		upfsSessions:   make([]uint64, 0),
 		lbmap:          make(map[uint64]int, 0),
 		sesEstMsgStore: make(map[uint64]*message.SessionEstablishmentRequest, 0),
 		sesModMsgStore: make(map[uint64]*message.SessionModificationRequest, 0),
