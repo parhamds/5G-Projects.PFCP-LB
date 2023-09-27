@@ -187,6 +187,9 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		go p.node.listenForSesModReq(comch)
 		go p.node.listenForSesDelReq(comch)
 		go p.node.listenForResetSes(comch)
+		if p.node.upf.AutoScaleIn || p.node.upf.AutoScaleOut {
+			go p.node.reconciliation()
+		}
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch, pos)
 		})

@@ -37,24 +37,33 @@ type UeResource struct {
 	dnn  string
 }
 type Upf struct {
-	EnableUeIPAlloc   bool `json:"enableueipalloc"`
-	EnableEndMarker   bool `json:"enableendmarker"`
-	enableFlowMeasure bool
-	accessIface       string
-	coreIface         string
-	ippoolCidr        string
-	AccessIP          net.IP `json:"accessip"`
-	CoreIP            net.IP `json:"coreip"`
-	NodeID            string `json:"nodeid"`
-	ippool            *IPPool
-	peersIP           []string
-	peersUPF          []*Upf
-	upfsSessions      [][]uint64     // each upf handles which sessions
-	lbmap             map[uint64]int // each session is handled by which upf
-	sesEstMsgStore    map[uint64]*message.SessionEstablishmentRequest
-	sesModMsgStore    map[uint64]*message.SessionModificationRequest
-	seidToRespCh      map[uint64]chan *ie.IE
-	sessionsThreshold uint32
+	EnableUeIPAlloc        bool `json:"enableueipalloc"`
+	EnableEndMarker        bool `json:"enableendmarker"`
+	enableFlowMeasure      bool
+	accessIface            string
+	coreIface              string
+	ippoolCidr             string
+	AccessIP               net.IP `json:"accessip"`
+	CoreIP                 net.IP `json:"coreip"`
+	NodeID                 string `json:"nodeid"`
+	ippool                 *IPPool
+	peersIP                []string
+	peersUPF               []*Upf
+	upfsSessions           [][]uint64     // each upf handles which sessions
+	lbmap                  map[uint64]int // each session is handled by which upf
+	sesEstMsgStore         map[uint64]*message.SessionEstablishmentRequest
+	sesModMsgStore         map[uint64]*message.SessionModificationRequest
+	seidToRespCh           map[uint64]chan *ie.IE
+	MaxSessionsThreshold   uint32
+	MinSessionsThreshold   uint32
+	MaxSessionstolerance   float32
+	MinSessionstolerance   float32
+	ReconciliationInterval uint32
+	AutoScaleOut           bool
+	AutoScaleIn            bool
+	MaxUPFs                uint32
+	MinUPFs                uint32
+	Hostname               string `json:"hostname"`
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -170,11 +179,19 @@ func NewUPF(conf *Conf, pos Position,
 		seidToRespCh:   make(map[uint64]chan *ie.IE),
 		//peersSessions: make([]SessionMap, 0),
 		//reportNotifyChan:  make(chan uint64, 1024),
-		maxReqRetries:     conf.MaxReqRetries,
-		enableHBTimer:     conf.EnableHBTimer,
-		readTimeout:       time.Second * time.Duration(conf.ReadTimeout),
-		respTimeout:       time.Second * resptime,
-		sessionsThreshold: conf.SessionsThreshold,
+		maxReqRetries:          conf.MaxReqRetries,
+		enableHBTimer:          conf.EnableHBTimer,
+		readTimeout:            time.Second * time.Duration(conf.ReadTimeout),
+		respTimeout:            time.Second * resptime,
+		MaxSessionsThreshold:   conf.MaxSessionsThreshold,
+		MinSessionsThreshold:   conf.MinSessionsThreshold,
+		MaxSessionstolerance:   conf.MaxSessionstolerance,
+		MinSessionstolerance:   conf.MinSessionstolerance,
+		ReconciliationInterval: conf.ReconciliationInterval,
+		AutoScaleOut:           conf.AutoScaleOut,
+		AutoScaleIn:            conf.AutoScaleIn,
+		MaxUPFs:                conf.MaxUPFs,
+		MinUPFs:                conf.MinUPFs,
 		//readTimeout: 15 * time.Second,
 	}
 

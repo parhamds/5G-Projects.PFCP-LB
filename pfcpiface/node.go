@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os/exec"
 	"sync"
+	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
 	"github.com/omec-project/upf-epc/pfcpiface/metrics"
@@ -326,6 +328,80 @@ func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 		for key := range node.upf.lbmap {
 			delete(node.upf.lbmap, key)
 		}
+	}
+}
+
+func (node *PFCPNode) reconciliation() {
+	for {
+		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+		var scaleOutNeeded bool
+		var scaleInNeeded bool
+		var ScaleOutUPF string
+		var ScaleInUPF string
+
+		if node.upf.AutoScaleOut && len(node.upf.peersIP) < int(node.upf.MaxUPFs) {
+			maxSession := node.upf.MaxSessionsThreshold + uint32(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))
+			for i := range node.upf.peersIP {
+				if len(node.upf.upfsSessions[i]) > int(maxSession) {
+					scaleOutNeeded = true
+					break
+				}
+			}
+		}
+		if scaleOutNeeded {
+			var upfExisted bool
+			var foundUPF bool
+			for i := 1; i <= int(node.upf.MaxUPFs); i++ {
+				upfName := fmt.Sprint("upf", i)
+				for u := range node.upf.peersUPF {
+					if upfName == node.upf.peersUPF[u].Hostname {
+						upfExisted = true
+						break
+					}
+				}
+				if !upfExisted {
+					ScaleOutUPF = upfName
+					foundUPF = true
+				}
+			}
+			if foundUPF {
+				upfFile := fmt.Sprint("/upfs/", ScaleOutUPF, ".yaml")
+				cmd := exec.Command("kubectl", "apply", "-n", "omec", "-f", upfFile)
+				log.Traceln("executing command : ", cmd.String())
+				combinedOutput, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+					continue
+				}
+				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+			}
+			continue
+		}
+
+		if node.upf.AutoScaleIn && node.upf.MinSessionsThreshold != 0 && node.upf.MinSessionstolerance != 0 && len(node.upf.peersIP) > int(node.upf.MinUPFs) {
+			minSession := node.upf.MinSessionsThreshold - uint32(node.upf.MinSessionstolerance*float32(node.upf.MinSessionsThreshold))
+			for i := range node.upf.peersIP {
+				if len(node.upf.upfsSessions[i]) < int(minSession) {
+					scaleInNeeded = true
+					ScaleInUPF = node.upf.peersUPF[i].NodeID
+					break
+				}
+			}
+		}
+
+		if scaleInNeeded {
+			upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
+			cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
+			log.Traceln("executing command : ", cmd.String())
+			combinedOutput, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+				continue
+			}
+			time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+			continue
+		}
+
 	}
 }
 

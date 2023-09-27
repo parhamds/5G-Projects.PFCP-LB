@@ -326,7 +326,7 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
 	//fmt.Println("parham log : start makeUPFsLighter")
 	var destUpfIndex int
-	if len(pConn.upf.peersUPF) < 2 {
+	if len(pConn.upf.peersUPF) <= int(pConn.upf.MaxUPFs) {
 		//fmt.Println("parham log : not enough upfs to make and upf lighter")
 		return
 	}
@@ -336,7 +336,7 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 			break
 		}
 	}
-	for len(pConn.upf.upfsSessions[destUpfIndex]) < int(pConn.upf.sessionsThreshold) {
+	for len(pConn.upf.upfsSessions[destUpfIndex]) < int(pConn.upf.MaxSessionsThreshold) {
 		heaviestUpf := 0
 		if destUpfIndex == 0 {
 			heaviestUpf = 1
@@ -346,16 +346,16 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 				heaviestUpf = i
 			}
 		}
-		if len(pConn.upf.upfsSessions[heaviestUpf]) <= int(pConn.upf.sessionsThreshold) {
+		if len(pConn.upf.upfsSessions[heaviestUpf]) <= int(pConn.upf.MaxSessionsThreshold) {
 			//	fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
 			return
 		}
 
 		totalSourceSessions := pConn.upf.upfsSessions[heaviestUpf]
 		//fmt.Println("parham log : list of all excessed sessions : ", totalSourceSessions)
-		excessedSessions := totalSourceSessions[pConn.upf.sessionsThreshold:]
-		if len(excessedSessions) > int(pConn.upf.sessionsThreshold) {
-			excessedSessions = excessedSessions[len(excessedSessions)-int(pConn.upf.sessionsThreshold):]
+		excessedSessions := totalSourceSessions[pConn.upf.MaxSessionsThreshold:]
+		if len(excessedSessions) > int(pConn.upf.MaxSessionsThreshold) {
+			excessedSessions = excessedSessions[len(excessedSessions)-int(pConn.upf.MaxSessionsThreshold):]
 		}
 		//fmt.Println("parham log : list of excessed sessions that we want to transfer : ", excessedSessions)
 		pConn.transferSessions(heaviestUpf, destUpfIndex, excessedSessions, node, comCh)
@@ -371,7 +371,7 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 	}
 	//fmt.Println("parham log : start transferSessions")
 	for _, v := range sessions {
-		if len(pConn.upf.upfsSessions[dUPFid]) > int(pConn.upf.sessionsThreshold) {
+		if len(pConn.upf.upfsSessions[dUPFid]) > int(pConn.upf.MaxSessionsThreshold) {
 			//		fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
 			return
 		}

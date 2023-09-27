@@ -25,28 +25,36 @@ const (
 
 // Conf : Json conf struct.
 type Conf struct {
-	Mode              string           `json:"mode"`
-	AccessIface       IfaceType        `json:"access"`
-	CoreIface         IfaceType        `json:"core"`
-	CPIface           CPIfaceInfo      `json:"cpiface"`
-	P4rtcIface        P4rtcInfo        `json:"p4rtciface"`
-	EnableP4rt        bool             `json:"enable_p4rt"`
-	EnableFlowMeasure bool             `json:"measure_flow"`
-	SimInfo           SimModeInfo      `json:"sim"`
-	ConnTimeout       uint32           `json:"conn_timeout"` // TODO(max): unused, remove
-	ReadTimeout       uint32           `json:"read_timeout"` // TODO(max): convert to duration string
-	EnableNotifyBess  bool             `json:"enable_notify_bess"`
-	EnableEndMarker   bool             `json:"enable_end_marker"`
-	NotifySockAddr    string           `json:"notify_sockaddr"`
-	EndMarkerSockAddr string           `json:"endmarker_sockaddr"`
-	LogLevel          log.Level        `json:"log_level"`
-	QciQosConfig      []QciQosConfig   `json:"qci_qos_config"`
-	SliceMeterConfig  SliceMeterConfig `json:"slice_rate_limit_config"`
-	MaxReqRetries     uint8            `json:"max_req_retries"`
-	RespTimeout       string           `json:"resp_timeout"`
-	EnableHBTimer     bool             `json:"enable_hbTimer"`
-	HeartBeatInterval string           `json:"heart_beat_interval"`
-	SessionsThreshold uint32           `json:"sessions_threshold"`
+	Mode                   string           `json:"mode"`
+	AccessIface            IfaceType        `json:"access"`
+	CoreIface              IfaceType        `json:"core"`
+	CPIface                CPIfaceInfo      `json:"cpiface"`
+	P4rtcIface             P4rtcInfo        `json:"p4rtciface"`
+	EnableP4rt             bool             `json:"enable_p4rt"`
+	EnableFlowMeasure      bool             `json:"measure_flow"`
+	SimInfo                SimModeInfo      `json:"sim"`
+	ConnTimeout            uint32           `json:"conn_timeout"` // TODO(max): unused, remove
+	ReadTimeout            uint32           `json:"read_timeout"` // TODO(max): convert to duration string
+	EnableNotifyBess       bool             `json:"enable_notify_bess"`
+	EnableEndMarker        bool             `json:"enable_end_marker"`
+	NotifySockAddr         string           `json:"notify_sockaddr"`
+	EndMarkerSockAddr      string           `json:"endmarker_sockaddr"`
+	LogLevel               log.Level        `json:"log_level"`
+	QciQosConfig           []QciQosConfig   `json:"qci_qos_config"`
+	SliceMeterConfig       SliceMeterConfig `json:"slice_rate_limit_config"`
+	MaxReqRetries          uint8            `json:"max_req_retries"`
+	RespTimeout            string           `json:"resp_timeout"`
+	EnableHBTimer          bool             `json:"enable_hbTimer"`
+	HeartBeatInterval      string           `json:"heart_beat_interval"`
+	MaxSessionsThreshold   uint32           `json:"max_sessions_threshold"`
+	MinSessionsThreshold   uint32           `json:"min_sessions_threshold"`
+	MaxSessionstolerance   float32          `json:"max_sessions_tolerance"`
+	MinSessionstolerance   float32          `json:"min_sessions_tolerance"`
+	ReconciliationInterval uint32           `json:"reconciliation_interval"`
+	AutoScaleOut           bool             `json:"auto_scale_out"`
+	AutoScaleIn            bool             `json:"auto_scale_down"`
+	MinUPFs                uint32           `json:"min_upfs"`
+	MaxUPFs                uint32           `json:"max_upfs"`
 }
 
 // QciQosConfig : Qos configured attributes.
@@ -203,8 +211,24 @@ func LoadConfigFile(filepath string) (Conf, error) {
 		conf.ReadTimeout = uint32(readTimeoutDefault.Seconds())
 	}
 
-	if conf.SessionsThreshold == 0 {
-		conf.SessionsThreshold = uint32(100000)
+	if conf.MaxSessionsThreshold == 0 {
+		conf.MaxSessionsThreshold = uint32(100000)
+	}
+
+	if conf.MaxSessionstolerance == 0 {
+		conf.MaxSessionstolerance = float32(0.5)
+	}
+
+	if conf.ReconciliationInterval == 0 {
+		conf.ReconciliationInterval = uint32(10)
+	}
+
+	if conf.MaxUPFs == 0 {
+		conf.MaxUPFs = uint32(10)
+	}
+
+	if conf.MinUPFs == 0 {
+		conf.MinUPFs = uint32(2)
 	}
 
 	if conf.MaxReqRetries == 0 {
