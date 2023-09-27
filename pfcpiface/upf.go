@@ -64,6 +64,7 @@ type Upf struct {
 	MaxUPFs                uint32
 	MinUPFs                uint32
 	Hostname               string `json:"hostname"`
+	GwIp                   string `json:"gwip"`
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64

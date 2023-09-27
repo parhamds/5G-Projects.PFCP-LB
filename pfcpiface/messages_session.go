@@ -4,10 +4,13 @@
 package pfcpiface
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -23,7 +26,7 @@ var (
 	ErrAllocateSession = errors.New("unable to allocate new PFCP session")
 )
 
-func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, comCh CommunicationChannel) (message.Message, error) {
+func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, comCh CommunicationChannel, node *PFCPNode) (message.Message, error) {
 	//upf := pConn.upf
 
 	sereq, ok := msg.(*message.SessionEstablishmentRequest)
@@ -85,6 +88,11 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 		return errProcessReply(ErrAllocateSession,
 			ie.CauseNoResourcesAvailable)
 	}
+
+	//try to send ue ip to enter and exit lb by pfcplb
+	pConn.sendUeIpToLb(*sereq, node)
+
+	//until here
 	respch := make(chan *ie.IE, 10)
 	sereqMsg := SesEstU2dMsg{
 		msg:    sereq,
@@ -138,6 +146,128 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 		//fmt.Println("timed out waiting for response from Down.")
 		return errProcessReply(ErrAllocateSession,
 			ie.CauseNoResourcesAvailable)
+	}
+
+}
+
+func (pConn *PFCPConn) sendUeIpToLb(sereq message.SessionEstablishmentRequest, node *PFCPNode) {
+	uEAddresses := make([]uint32, 0)
+	for _, cPDR := range sereq.CreatePDR {
+		pdiIEs, err := cPDR.PDI()
+		if err != nil {
+			log.Println("Could not read PDI!")
+			return
+		}
+		for _, pdiIE := range pdiIEs {
+			if pdiIE.Type == ie.UEIPAddress {
+				ueIPaddr, err := pdiIE.UEIPAddress()
+				if err != nil {
+					log.Println("Could not read PDI!")
+					return
+				}
+				ueIP4 := ueIPaddr.IPv4Address
+				uEAddresses = append(uEAddresses, ip2int(ueIP4))
+			}
+		}
+	}
+	removeDuplicates(uEAddresses)
+	pConn.PushPDRInfo(uEAddresses, enterlb, node)
+	pConn.PushPDRInfo(uEAddresses, exitlb, node)
+}
+
+func removeDuplicates(slice []uint32) []uint32 {
+	// Create a map to keep track of seen elements
+	seen := make(map[uint32]bool)
+	result := []uint32{}
+
+	// Iterate through the original slice
+	for _, item := range slice {
+		// If the element has not been seen before, add it to the result slice
+		if !seen[item] {
+			result = append(result, item)
+			seen[item] = true
+		}
+	}
+
+	return result
+}
+
+type lbtype int
+type RuleReq struct {
+	GwIP string `json:"gwip"`
+	//Teid []string `json:"teid"`
+	Ip []string `json:"ip"`
+}
+
+const (
+	enterlb lbtype = 0
+	exitlb  lbtype = 1
+)
+
+func (pConn *PFCPConn) PushPDRInfo(addresses []uint32, lb lbtype, node *PFCPNode) {
+	if len(addresses) == 0 {
+		return
+	}
+	var destUpfIndex int
+	for i, u := range node.upf.peersUPF {
+		if u.NodeID == pConn.nodeID.remote {
+			destUpfIndex = i
+			break
+		}
+	}
+	gatewayIP := pConn.upf.peersUPF[destUpfIndex].GwIp
+	addrStr := make([]string, 0)
+	//teidStr := make([]string, 0)
+	for _, i := range addresses {
+		ipStr := int2ip(i)
+		addrStr = append(addrStr, ipStr.String())
+	}
+	//for _, t := range teids {
+	//	teidStr = append(teidStr, fmt.Sprint(t))
+	//}
+	rulereq := RuleReq{
+		GwIP: gatewayIP,
+		Ip:   addrStr,
+		//Teid: teidStr,
+	}
+	ruleReqJson, _ := json.Marshal(rulereq)
+
+	fmt.Printf("parham log : json encoded pfcpInfo [%s] ", ruleReqJson)
+
+	// change the IP here
+	var requestURL string
+	switch lb {
+	case enterlb:
+		requestURL = "http://enterlb:8080/addrule"
+	case exitlb:
+		requestURL = "http://exitlb:8080/addrule"
+	}
+
+	jsonBody := []byte(ruleReqJson)
+
+	bodyReader := bytes.NewReader(jsonBody)
+	req, err := http.NewRequest(http.MethodPost, requestURL, bodyReader)
+	if err != nil {
+		log.Errorf("client: could not create request: %s\n", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{
+		Timeout: 10 * time.Second,
+	}
+	done := false
+	for !done {
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Errorf("client: error making http request: %s\n", err)
+		} else if resp.StatusCode == http.StatusCreated {
+			done = true
+			fmt.Println("parham log : resp header = ", resp.Header)
+			fmt.Println("parham log : resp status = ", resp.Status)
+			return
+		}
+		time.Sleep(1 * time.Second)
 	}
 
 }

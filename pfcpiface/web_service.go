@@ -21,8 +21,9 @@ type NetworkSlice struct {
 }
 
 type PfcpInfo struct {
-	Ip  string `json:"ip"`
-	Upf *Upf   `json:"upf"`
+	Ip   string `json:"ip"`
+	Upf  *Upf   `json:"upf"`
+	GwIP string `json:"gwip"`
 }
 
 // SliceQos ... Slice level QOS rates.

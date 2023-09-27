@@ -154,6 +154,9 @@ func (node *PFCPNode) listenForSesEstReq(comCh CommunicationChannel) {
 			continue
 		}
 		pConn := v.(*PFCPConn)
+
+		pConn.sendUeIpToLb(*sereq, node)
+
 		sereq.NodeID = pConn.nodeID.localIE
 		//fseid, err := sereq.CPFSEID.FSEID()
 		//remoteSEID := fseid.SEID
