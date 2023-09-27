@@ -132,6 +132,7 @@ func (pConn *PFCPConn) handleSessionEstablishmentRequest(msg message.Message, co
 			ie.NewCause(ie.CauseRequestAccepted), /* accept it blindly for the time being */
 			localFSEID,
 		)
+		time.Sleep(5 * time.Second)
 		return seres, nil
 	case <-ctx.Done():
 		//fmt.Println("timed out waiting for response from Down.")
