@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/wmnsk/go-pfcp/ie"
@@ -409,17 +410,22 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 			}
 			comCh.SesEstU2d <- &sesEstMsg
 		}
-		delMsg := message.NewSessionDeletionRequest(0, 0, sess.localSEID, pConn.getSeqNum(), 123,
-			nil,
-		)
-		sesDelMsg := SesDelU2dMsg{
-			msg:       delMsg,
-			upSeid:    sess.localSEID,
-			reforward: true,
-			upfIndex:  sUPFid,
-			pConn:     sPconn,
-		}
-		comCh.SesDelU2d <- &sesDelMsg
+		go func(comCh CommunicationChannel) {
+			fmt.Println("session deletion dalay started")
+			time.Sleep(10 * time.Second)
+			delMsg := message.NewSessionDeletionRequest(0, 0, sess.localSEID, pConn.getSeqNum(), 123,
+				nil,
+			)
+			sesDelMsg := SesDelU2dMsg{
+				msg:       delMsg,
+				upSeid:    sess.localSEID,
+				reforward: true,
+				upfIndex:  sUPFid,
+				pConn:     sPconn,
+			}
+			comCh.SesDelU2d <- &sesDelMsg
+			fmt.Println("sending ses del msg")
+		}(comCh)
 
 		sPconn.RemoveSession(sess)
 
