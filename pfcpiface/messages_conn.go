@@ -324,12 +324,12 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 }
 
 func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
-	//fmt.Println("parham log : start makeUPFsLighter")
+	fmt.Println("parham log : start makeUPFsLighter")
 	var destUpfIndex int
-	//if len(pConn.upf.peersUPF) <= int(pConn.upf.MaxUPFs) {
-	//fmt.Println("parham log : not enough upfs to make and upf lighter")
-	//	return
-	//}
+	if len(pConn.upf.peersUPF) <= 1 {
+		fmt.Println("parham log : there is no other upf")
+		return
+	}
 	for i, u := range pConn.upf.peersUPF {
 		if u.NodeID == pConn.nodeID.remote {
 			destUpfIndex = i
@@ -347,7 +347,7 @@ func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChanne
 			}
 		}
 		if len(pConn.upf.peersUPF[heaviestUpf].upfsSessions) <= int(pConn.upf.MaxSessionsThreshold) {
-			//	fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
+			fmt.Println("parham log : all upfs are light enough, no need to transfer any session")
 			return
 		}
 
@@ -369,10 +369,10 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 	if len(sessions) == 0 {
 		return
 	}
-	//fmt.Println("parham log : start transferSessions")
+	fmt.Println("parham log : start transferSessions")
 	for _, v := range sessions {
 		if len(pConn.upf.peersUPF[dUPFid].upfsSessions) > int(pConn.upf.MaxSessionsThreshold) {
-			//		fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
+			fmt.Println("parham log : new upf is at its max threshold")
 			return
 		}
 		sourceAddr := pConn.upf.peersUPF[sUPFid].peersIP + ":" + DownPFCPPort
@@ -438,6 +438,10 @@ func (pConn *PFCPConn) transferSessions(sUPFid, dUPFid int, sessions []uint64, n
 
 	}
 	//fmt.Println("parham log : new pConn.upf.upfsSessions = ", pConn.upf.upfsSessions)
+	for i := 0; i < len(node.upf.peersUPF); i++ {
+		fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
+		fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
+	}
 }
 
 func (pConn *PFCPConn) handleAssociationReleaseRequest(msg message.Message) (message.Message, error) {
