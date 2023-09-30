@@ -326,10 +326,10 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
 	//fmt.Println("parham log : start makeUPFsLighter")
 	var destUpfIndex int
-	if len(pConn.upf.peersUPF) <= int(pConn.upf.MaxUPFs) {
-		//fmt.Println("parham log : not enough upfs to make and upf lighter")
-		return
-	}
+	//if len(pConn.upf.peersUPF) <= int(pConn.upf.MaxUPFs) {
+	//fmt.Println("parham log : not enough upfs to make and upf lighter")
+	//	return
+	//}
 	for i, u := range pConn.upf.peersUPF {
 		if u.NodeID == pConn.nodeID.remote {
 			destUpfIndex = i
