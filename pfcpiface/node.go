@@ -358,7 +358,6 @@ func (node *PFCPNode) reconciliation() {
 			for i := 1; i <= int(node.upf.MaxUPFs); i++ {
 				upfExisted = false
 				foundUPF = false
-				fmt.Println(i)
 				var upfName string
 				if i < 10 {
 					upfName = fmt.Sprint("upf10", i)
@@ -367,10 +366,8 @@ func (node *PFCPNode) reconciliation() {
 				} else if i >= 100 {
 					upfName = fmt.Sprint("upf", i)
 				}
-				fmt.Println(upfName)
 				for _, u := range node.upf.peersUPF {
 					if upfName == u.Hostname {
-						fmt.Println("upfExisted = true")
 						upfExisted = true
 						break
 					}
