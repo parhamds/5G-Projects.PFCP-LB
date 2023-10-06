@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net"
 	"sync"
@@ -366,6 +367,10 @@ func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode, comCh CommunicationChanne
 			node.handleDeadUpf(i)
 			break
 		}
+	}
+	for i := 0; i < len(node.upf.peersUPF); i++ {
+		fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
+		fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
 	}
 	close(pConn.shutdown)
 

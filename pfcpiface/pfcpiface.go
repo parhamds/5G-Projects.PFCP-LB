@@ -6,8 +6,10 @@ package pfcpiface
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net"
 	"net/http"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -86,6 +88,28 @@ type PFCPIface struct {
 	nc *PfcpNodeCollector
 
 	mu sync.Mutex
+}
+
+func RunUPFs(conf Conf) error {
+	var upfName string
+	for i := 1; i <= int(conf.MinUPFs); i++ {
+		if i < 10 {
+			upfName = fmt.Sprint("upf10", i)
+		} else if i < 100 {
+			upfName = fmt.Sprint("upf1", i)
+		} else if i >= 100 {
+			upfName = fmt.Sprint("upf", i)
+		}
+		upfFile := fmt.Sprint("/upfs/", upfName, ".yaml")
+		cmd := exec.Command("kubectl", "apply", "-n", "omec", "-f", upfFile)
+		log.Traceln("executing command : ", cmd.String())
+		combinedOutput, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+			return err
+		}
+	}
+	return nil
 }
 
 func NewPFCPIface(conf Conf, pos Position) *PFCPIface {
