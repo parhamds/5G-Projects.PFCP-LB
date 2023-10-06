@@ -352,7 +352,7 @@ func (node *PFCPNode) reconciliation() {
 			}
 		}
 		if scaleOutNeeded {
-			fmt.Println("scaleOutNeeded = true")
+			fmt.Println("scaleOutNeeded = true, node.upf.MaxUPFs = ", node.upf.MaxUPFs)
 			var upfExisted bool
 			var foundUPF bool
 			for i := 1; i <= int(node.upf.MaxUPFs); i++ {
