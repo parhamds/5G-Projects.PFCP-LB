@@ -335,10 +335,12 @@ func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 func (node *PFCPNode) reconciliation() {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+		fmt.Println("start reconciliation")
 		var scaleOutNeeded bool
 		var scaleInNeeded bool
 		var ScaleOutUPF string
 		var ScaleInUPF string
+		var ScaleInUPFIndex int
 
 		if node.upf.AutoScaleOut && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) {
 			maxSession := node.upf.MaxSessionsThreshold + uint32(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))
@@ -350,19 +352,29 @@ func (node *PFCPNode) reconciliation() {
 			}
 		}
 		if scaleOutNeeded {
+			fmt.Println("scaleOutNeeded = true")
 			var upfExisted bool
 			var foundUPF bool
 			for i := 1; i <= int(node.upf.MaxUPFs); i++ {
-				upfName := fmt.Sprint("upf", i)
-				for u := range node.upf.peersUPF {
-					if upfName == node.upf.peersUPF[u].Hostname {
+				var upfName string
+				if i < 10 {
+					upfName = fmt.Sprint("upf10", i)
+				} else if i < 100 {
+					upfName = fmt.Sprint("upf1", i)
+				} else if i >= 100 {
+					upfName = fmt.Sprint("upf", i)
+				}
+				for _, u := range node.upf.peersUPF {
+					if upfName == u.Hostname {
 						upfExisted = true
 						break
 					}
 				}
 				if !upfExisted {
 					ScaleOutUPF = upfName
+					fmt.Println("upf to scale out = ", upfName)
 					foundUPF = true
+					break
 				}
 			}
 			if foundUPF {
@@ -374,7 +386,7 @@ func (node *PFCPNode) reconciliation() {
 					fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
 					continue
 				}
-				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+				time.Sleep(20 * time.Second)
 			}
 			continue
 		}
@@ -384,13 +396,15 @@ func (node *PFCPNode) reconciliation() {
 			for i := range node.upf.peersUPF {
 				if len(node.upf.peersUPF[i].upfsSessions) < int(minSession) {
 					scaleInNeeded = true
-					ScaleInUPF = node.upf.peersUPF[i].NodeID
+					ScaleInUPF = node.upf.peersUPF[i].Hostname
+					ScaleInUPFIndex = i
 					break
 				}
 			}
 		}
 
 		if scaleInNeeded {
+			node.handleDeadUpf(ScaleInUPFIndex)
 			upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
 			cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
 			log.Traceln("executing command : ", cmd.String())
