@@ -293,10 +293,10 @@ func (node *PFCPNode) handleDeadUpf(upfIndex int) {
 	//fmt.Println("parham log : node.upf.lbmap before reloadbalance = ", node.upf.lbmap)
 	//fmt.Println("parham log : node.upf.upfsSessions before reloadbalance = ", node.upf.upfsSessions)
 	if len(node.upf.peersUPF) > 1 {
-		for i := 0; i < len(node.upf.peersUPF)-1; i++ {
-			sessions := node.upf.peersUPF[upfIndex].upfsSessions
-			node.reloadbalance(sessions, upfIndex)
-		}
+		//for i := 0; i < len(node.upf.peersUPF)-1; i++ {
+		sessions := node.upf.peersUPF[upfIndex].upfsSessions
+		node.reloadbalance(sessions, upfIndex)
+		//}
 	}
 
 	node.upf.peersUPF = append(node.upf.peersUPF[:upfIndex], node.upf.peersUPF[upfIndex+1:]...)
@@ -366,6 +366,7 @@ func (node *PFCPNode) reloadbalance(sessions []uint64, deadUpf int) {
 func (pConn *PFCPConn) ShutdownForDown(node *PFCPNode, comCh CommunicationChannel) {
 	for i, u := range node.upf.peersUPF {
 		if u.NodeID == pConn.nodeID.remote {
+
 			node.handleDeadUpf(i)
 			break
 		}
