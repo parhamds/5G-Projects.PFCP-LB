@@ -237,6 +237,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 		case <-connTimeout:
 			//fmt.Println("parham log : Shutdown called from connTimeout channel")
 			if pos == Down {
+				fmt.Println("calling shutdown from <-connTimeout")
 				pConn.ShutdownForDown(node, comCh)
 				return
 			}
@@ -245,6 +246,7 @@ func (pConn *PFCPConn) Serve(comCh CommunicationChannel, node *PFCPNode, pos Pos
 		case <-pConn.ctx.Done():
 			//fmt.Println("parham log : Shutdown called from ctx.Done channel")
 			if pos == Down {
+				fmt.Println("calling shutdown from <-pConn.ctx.Done()")
 				pConn.ShutdownForDown(node, comCh)
 				return
 			}
