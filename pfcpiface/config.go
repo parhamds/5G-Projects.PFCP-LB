@@ -52,7 +52,7 @@ type Conf struct {
 	MinSessionstolerance   float32          `json:"min_sessions_tolerance"`
 	ReconciliationInterval uint32           `json:"reconciliation_interval"`
 	AutoScaleOut           bool             `json:"auto_scale_out"`
-	AutoScaleIn            bool             `json:"auto_scale_down"`
+	AutoScaleIn            bool             `json:"auto_scale_in"`
 	MinUPFs                uint32           `json:"min_upfs"`
 	MaxUPFs                uint32           `json:"max_upfs"`
 }
