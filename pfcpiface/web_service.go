@@ -25,6 +25,10 @@ type PfcpInfo struct {
 	Upf *Upf   `json:"upf"`
 }
 
+type SesDelReq struct {
+	SessId uint64 `json:"sesid"`
+}
+
 // SliceQos ... Slice level QOS rates.
 type SliceQos struct {
 	UplinkMbr    uint64 `json:"uplinkMbr"`
@@ -51,17 +55,6 @@ func setupConfigHandler(mux *http.ServeMux, upf *Upf) {
 }
 
 func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
-	//fmt.Println("parham log : an http req recieved, ")
-	//_, err := r.Body.Read(body)
-	//body, err := io.ReadAll(r.Body)
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//	fmt.Fprintf(w, "Error reading request body: %v", err)
-	//	return
-	//}
-	//fmt.Println("recieved body = ", string(body))
-	//w.WriteHeader(http.StatusOK)
-	//fmt.Println("Registration successful!")
 
 	switch r.Method {
 	case "PUT":
@@ -93,6 +86,48 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 		//fmt.Println("parham log : try creating PFCPConn for new PFCP")
 		lAddrStr := node.LocalAddr().String()
 		go node.tryConnectToN4Peer(lAddrStr, comCh, pfcpInfo, pos)
+
+		sendHTTPResp(http.StatusCreated, w)
+	default:
+		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
+		sendHTTPResp(http.StatusMethodNotAllowed, w)
+	}
+}
+
+func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
+
+	switch r.Method {
+	case "PUT":
+		fallthrough
+	case "POST":
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Errorln("http req read body failed.")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		//log.traceln(string(body))
+
+		//var nwSlice NetworkSlice
+		var SesDelReq SesDelReq
+		//fmt.Println("parham log : http body = ", body)
+		err = json.Unmarshal(body, &SesDelReq)
+		if err != nil {
+			log.Errorln("Json unmarshal failed for http request")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		//handleSliceConfig(&nwSlice, c.upf)
+		upfIndex := node.upf.lbmap[SesDelReq.SessId]
+		pconn, ok := node.pConns.Load(fmt.Sprint(node.upf.peersUPF[upfIndex].NodeID, ":", DownPFCPPort))
+		if !ok {
+			fmt.Println("node.upf.peersUPF[upfIndex].NodeID = ", node.upf.peersUPF[upfIndex].NodeID)
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+		pConn := pconn.(*PFCPConn)
+		session, _ := pConn.sessionStore.GetSession(SesDelReq.SessId)
+		pConn.RemoveSession(session)
+		err = pConn.pruneSession(node, SesDelReq.SessId)
 
 		sendHTTPResp(http.StatusCreated, w)
 	default:

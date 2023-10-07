@@ -217,6 +217,9 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch, pos)
 		})
+		http.HandleFunc("/ses-del", func(w http.ResponseWriter, r *http.Request) {
+			sesDelHandler(w, r, p.node, comch, pos)
+		})
 		server := http.Server{Addr: ":8081"}
 		go func() {
 			//fmt.Println("parham log : http server is serving")
