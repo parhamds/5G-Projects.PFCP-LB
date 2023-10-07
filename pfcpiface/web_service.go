@@ -119,15 +119,15 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 
 		//handleSliceConfig(&nwSlice, c.upf)
 		upfIndex := node.upf.lbmap[SesDelReq.SessId]
-		pconn, ok := node.pConns.Load(fmt.Sprint(node.upf.peersUPF[upfIndex].NodeID, ":", DownPFCPPort))
-		if !ok {
-			fmt.Println("node.upf.peersUPF[upfIndex].NodeID = ", node.upf.peersUPF[upfIndex].NodeID)
-			sendHTTPResp(http.StatusBadRequest, w)
+
+		var sessionIndex int
+		for i, s := range node.upf.peersUPF[upfIndex].upfsSessions {
+			if s == SesDelReq.SessId {
+				sessionIndex = i
+				break
+			}
 		}
-		pConn := pconn.(*PFCPConn)
-		session, _ := pConn.sessionStore.GetSession(SesDelReq.SessId)
-		pConn.RemoveSession(session)
-		err = pConn.pruneSession(node, SesDelReq.SessId)
+		node.upf.peersUPF[upfIndex].upfsSessions = append(node.upf.peersUPF[upfIndex].upfsSessions[:sessionIndex], node.upf.peersUPF[upfIndex].upfsSessions[sessionIndex+1:]...)
 
 		sendHTTPResp(http.StatusCreated, w)
 	default:
