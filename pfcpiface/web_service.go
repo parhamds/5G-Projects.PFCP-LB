@@ -118,7 +118,8 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 		}
 
 		//handleSliceConfig(&nwSlice, c.upf)
-		upfIndex := node.upf.lbmap[SesDelReq.SessId]
+		upfIndex, ok := node.upf.lbmap[SesDelReq.SessId]
+		fmt.Println("upfIndex = ", upfIndex, ", ok = ", ok, ", for SesDelReq.SessId = ", SesDelReq.SessId)
 
 		var sessionIndex int
 		for i, s := range node.upf.peersUPF[upfIndex].upfsSessions {
