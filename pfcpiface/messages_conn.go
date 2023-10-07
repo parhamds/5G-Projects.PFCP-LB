@@ -381,22 +381,6 @@ func makeUPFEmpty(node *PFCPNode, sUPFIndex int, comCh CommunicationChannel) {
 			}
 			comCh.SesEstU2d <- &sesEstMsg
 		}
-		go func(comCh CommunicationChannel) {
-			fmt.Println("session deletion delay started")
-			time.Sleep(10 * time.Second)
-			delMsg := message.NewSessionDeletionRequest(0, 0, SEID, dPconn.getSeqNum(), 123,
-				nil,
-			)
-			sesDelMsg := SesDelU2dMsg{
-				msg:       delMsg,
-				upSeid:    SEID,
-				reforward: true,
-				upfIndex:  sUPFIndex,
-				pConn:     sPconn,
-			}
-			comCh.SesDelU2d <- &sesDelMsg
-			fmt.Println("sending ses del msg")
-		}(comCh)
 
 		sPconn.RemoveSession(sess)
 
