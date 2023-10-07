@@ -406,7 +406,8 @@ func (node *PFCPNode) reconciliation() {
 		}
 
 		if scaleInNeeded {
-			node.handleDeadUpf(ScaleInUPFIndex)
+			sessions := node.upf.peersUPF[ScaleInUPFIndex].upfsSessions
+			node.reloadbalance(sessions, ScaleInUPFIndex)
 			upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
 			cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
 			log.Traceln("executing command : ", cmd.String())
