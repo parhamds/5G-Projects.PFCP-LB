@@ -123,7 +123,7 @@ func sesTransHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, com
 		var sess []uint64
 		sess = append(sess, sesTransReq.SessId)
 
-		transferSessions(sesTransReq.Supf, sesTransReq.Dupf, sess, node, comCh)
+		transferSessions(sesTransReq.Supf, sesTransReq.Dupf, sess, node, comCh, true)
 
 		sendHTTPResp(http.StatusCreated, w)
 	default:
