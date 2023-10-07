@@ -53,10 +53,13 @@ func main() {
 	upaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Up)
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
-	err = pfcpiface.RunUPFs(conf)
-	if err != nil {
-		log.Fatalln("Error creating UPFs:", err)
-	}
+	go func(conf *pfcpiface.Conf) {
+		time.Sleep(10 * time.Second)
+		err = pfcpiface.RunUPFs(conf)
+		if err != nil {
+			log.Fatalln("Error creating UPFs:", err)
+		}
+	}(&conf)
 
 	// blocking
 	//fmt.Println("parham log: calling upaPfcpi.Run for up")

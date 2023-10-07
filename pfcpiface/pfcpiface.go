@@ -90,7 +90,7 @@ type PFCPIface struct {
 	mu sync.Mutex
 }
 
-func RunUPFs(conf Conf) error {
+func RunUPFs(conf *Conf) error {
 	var upfName string
 	for i := 1; i <= int(conf.MinUPFs); i++ {
 		if i < 10 {
