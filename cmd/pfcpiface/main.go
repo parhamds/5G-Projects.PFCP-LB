@@ -54,7 +54,7 @@ func main() {
 	dpaPfcpi := pfcpiface.NewPFCPIface(conf, pfcpiface.Down)
 
 	go func(conf *pfcpiface.Conf) {
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 		err = pfcpiface.RunUPFs(conf)
 		if err != nil {
 			log.Fatalln("Error creating UPFs:", err)
