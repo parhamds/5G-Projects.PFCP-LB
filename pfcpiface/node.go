@@ -332,7 +332,7 @@ func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 	}
 }
 
-func (node *PFCPNode) reconciliation() {
+func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 		fmt.Println("start reconciliation")
@@ -406,8 +406,7 @@ func (node *PFCPNode) reconciliation() {
 		}
 
 		if scaleInNeeded {
-			sessions := node.upf.peersUPF[ScaleInUPFIndex].upfsSessions
-			node.reloadbalance(sessions, ScaleInUPFIndex)
+			makeUPFEmpty(node, ScaleInUPFIndex, comCh)
 			upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
 			cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
 			log.Traceln("executing command : ", cmd.String())

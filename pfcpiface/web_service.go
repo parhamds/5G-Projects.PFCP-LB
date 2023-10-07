@@ -9,6 +9,8 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"os/exec"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -27,6 +29,9 @@ type PfcpInfo struct {
 
 type SesDelReq struct {
 	SessId uint64 `json:"sesid"`
+}
+type upfDelReq struct {
+	UpfId int `json:"upfid"`
 }
 
 // SliceQos ... Slice level QOS rates.
@@ -132,6 +137,48 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 		for i := 0; i < len(node.upf.peersUPF); i++ {
 			fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
 			fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
+		}
+		sendHTTPResp(http.StatusCreated, w)
+	default:
+		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
+		sendHTTPResp(http.StatusMethodNotAllowed, w)
+	}
+}
+
+func upfDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
+
+	switch r.Method {
+	case "PUT":
+		fallthrough
+	case "POST":
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Errorln("http req read body failed.")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		//log.traceln(string(body))
+
+		//var nwSlice NetworkSlice
+		var upfDelReq upfDelReq
+		//fmt.Println("parham log : http body = ", body)
+		err = json.Unmarshal(body, &upfDelReq)
+		if err != nil {
+			log.Errorln("Json unmarshal failed for http request")
+			sendHTTPResp(http.StatusBadRequest, w)
+		}
+
+		//handleSliceConfig(&nwSlice, c.upf)
+		makeUPFEmpty(node, upfDelReq.UpfId, comCh)
+		time.Sleep(10 * time.Second)
+		upfName := node.upf.peersUPF[upfDelReq.UpfId].Hostname
+		upfFile := fmt.Sprint("/upfs/", upfName, ".yaml")
+		cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
+		log.Traceln("executing command : ", cmd.String())
+		combinedOutput, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+			sendHTTPResp(http.StatusBadRequest, w)
 		}
 		sendHTTPResp(http.StatusCreated, w)
 	default:

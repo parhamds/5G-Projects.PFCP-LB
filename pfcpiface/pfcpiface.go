@@ -212,13 +212,16 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		go p.node.listenForSesDelReq(comch)
 		go p.node.listenForResetSes(comch)
 		if p.node.upf.AutoScaleIn || p.node.upf.AutoScaleOut {
-			go p.node.reconciliation()
+			go p.node.reconciliation(comch)
 		}
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch, pos)
 		})
 		http.HandleFunc("/ses-del", func(w http.ResponseWriter, r *http.Request) {
 			sesDelHandler(w, r, p.node, comch, pos)
+		})
+		http.HandleFunc("/del-upf", func(w http.ResponseWriter, r *http.Request) {
+			upfDelHandler(w, r, p.node, comch, pos)
 		})
 		server := http.Server{Addr: ":8081"}
 		go func() {

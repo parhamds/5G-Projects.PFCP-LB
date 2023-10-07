@@ -324,6 +324,90 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 	return nil
 }
 
+func makeUPFEmpty(node *PFCPNode, sUPFIndex int, comCh CommunicationChannel) {
+	fmt.Println("parham log : start makeUPFEmpty")
+	if len(node.upf.peersUPF) <= 1 {
+		fmt.Println("parham log : there is no other upf")
+		return
+	}
+
+	for len(node.upf.peersUPF[sUPFIndex].upfsSessions) > 0 {
+		dUPFIndex := 0
+		if sUPFIndex == 0 {
+			dUPFIndex = 1
+		}
+		for i := range node.upf.peersUPF {
+			if i != sUPFIndex && len(node.upf.peersUPF[i].upfsSessions) < len(node.upf.peersUPF[dUPFIndex].upfsSessions) {
+				dUPFIndex = i
+			}
+		}
+
+		sourceAddr := node.upf.peersUPF[sUPFIndex].peersIP + ":" + DownPFCPPort
+		destAddr := node.upf.peersUPF[dUPFIndex].peersIP + ":" + DownPFCPPort
+		//	fmt.Println("parham log : source upf ip = ", sourceAddr, " dest upf ip = ", destAddr)
+		sourcePconn, ok := node.pConns.Load(sourceAddr)
+		if !ok {
+			//		fmt.Println("parham log : can not find source Pconn in node.pConns.Load(sourceAddr)")
+			continue
+		}
+		destPconn, ok := node.pConns.Load(destAddr)
+		if !ok {
+			//		fmt.Println("parham log : can not find dest Pconn in node.pConns.Load(destAddr)")
+			continue
+		}
+		sPconn := sourcePconn.(*PFCPConn)
+		dPconn := destPconn.(*PFCPConn)
+		//	fmt.Println("parham log : geting session from dead upf")
+		sessIndex := len(node.upf.peersUPF[sUPFIndex].upfsSessions) - 1
+		SEID := node.upf.peersUPF[sUPFIndex].upfsSessions[sessIndex]
+		sess, ok := sPconn.sessionStore.GetSession(SEID)
+		if !ok {
+			fmt.Println("parham log : can not find session = ", SEID, "in sPconn.sessionStore.GetSession(v)")
+			continue
+		}
+		//	fmt.Println("parham log : puting to lightest upf")
+		dPconn.sessionStore.PutSession(sess)
+
+		//pConn.upf.SendMsgToUPF(upfMsgTypeDel, sess.PacketForwardingRules, PacketForwardingRules{})
+		node.upf.lbmap[SEID] = dUPFIndex
+
+		estMsg, ok := node.upf.sesEstMsgStore[SEID]
+
+		if ok {
+			sesEstMsg := SesEstU2dMsg{
+				msg:       estMsg,
+				upSeid:    SEID,
+				reforward: true,
+			}
+			comCh.SesEstU2d <- &sesEstMsg
+		}
+		go func(comCh CommunicationChannel) {
+			fmt.Println("session deletion delay started")
+			time.Sleep(10 * time.Second)
+			delMsg := message.NewSessionDeletionRequest(0, 0, SEID, dPconn.getSeqNum(), 123,
+				nil,
+			)
+			sesDelMsg := SesDelU2dMsg{
+				msg:       delMsg,
+				upSeid:    SEID,
+				reforward: true,
+				upfIndex:  sUPFIndex,
+				pConn:     sPconn,
+			}
+			comCh.SesDelU2d <- &sesDelMsg
+			fmt.Println("sending ses del msg")
+		}(comCh)
+
+		sPconn.RemoveSession(sess)
+
+		node.upf.peersUPF[dUPFIndex].upfsSessions = append(node.upf.peersUPF[dUPFIndex].upfsSessions, SEID)
+
+		node.upf.peersUPF[sUPFIndex].upfsSessions = node.upf.peersUPF[sUPFIndex].upfsSessions[:sessIndex]
+
+	}
+
+}
+
 func (pConn *PFCPConn) makeUPFsLighter(node *PFCPNode, comCh CommunicationChannel) {
 	fmt.Println("parham log : start makeUPFsLighter")
 	var destUpfIndex int
