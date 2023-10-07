@@ -27,8 +27,10 @@ type PfcpInfo struct {
 	Upf *Upf   `json:"upf"`
 }
 
-type SesDelReq struct {
+type SesTransReq struct {
 	SessId uint64 `json:"sesid"`
+	Supf   int    `json:"supf"`
+	Dupf   int    `json:"dupf"`
 }
 type upfDelReq struct {
 	UpfId int `json:"upfid"`
@@ -99,7 +101,7 @@ func newPFCPHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comC
 	}
 }
 
-func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
+func sesTransHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh CommunicationChannel, pos Position) {
 
 	switch r.Method {
 	case "PUT":
@@ -111,33 +113,18 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 			sendHTTPResp(http.StatusBadRequest, w)
 		}
 
-		//log.traceln(string(body))
-
-		//var nwSlice NetworkSlice
-		var SesDelReq SesDelReq
+		var sesTransReq SesTransReq
 		//fmt.Println("parham log : http body = ", body)
-		err = json.Unmarshal(body, &SesDelReq)
+		err = json.Unmarshal(body, &sesTransReq)
 		if err != nil {
 			log.Errorln("Json unmarshal failed for http request")
 			sendHTTPResp(http.StatusBadRequest, w)
 		}
+		var sess []uint64
+		sess = append(sess, sesTransReq.SessId)
 
-		//handleSliceConfig(&nwSlice, c.upf)
-		upfIndex, ok := node.upf.lbmap[SesDelReq.SessId]
-		fmt.Println("upfIndex = ", upfIndex, ", ok = ", ok, ", for SesDelReq.SessId = ", SesDelReq.SessId)
+		transferSessions(sesTransReq.Supf, sesTransReq.Dupf, sess, node, comCh)
 
-		var sessionIndex int
-		for i, s := range node.upf.peersUPF[upfIndex].upfsSessions {
-			if s == SesDelReq.SessId {
-				sessionIndex = i
-				break
-			}
-		}
-		node.upf.peersUPF[upfIndex].upfsSessions = append(node.upf.peersUPF[upfIndex].upfsSessions[:sessionIndex], node.upf.peersUPF[upfIndex].upfsSessions[sessionIndex+1:]...)
-		for i := 0; i < len(node.upf.peersUPF); i++ {
-			fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
-			fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
-		}
 		sendHTTPResp(http.StatusCreated, w)
 	default:
 		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
@@ -170,7 +157,7 @@ func upfDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 
 		//handleSliceConfig(&nwSlice, c.upf)
 		makeUPFEmpty(node, upfDelReq.UpfId, comCh)
-		time.Sleep(10 * time.Second)
+		time.Sleep(2 * time.Second)
 		upfName := node.upf.peersUPF[upfDelReq.UpfId].Hostname
 		upfFile := fmt.Sprint("/upfs/", upfName, ".yaml")
 		cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)

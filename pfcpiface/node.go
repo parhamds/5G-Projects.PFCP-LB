@@ -407,6 +407,7 @@ func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
 
 		if scaleInNeeded {
 			makeUPFEmpty(node, ScaleInUPFIndex, comCh)
+			time.Sleep(2 * time.Second)
 			upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
 			cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
 			log.Traceln("executing command : ", cmd.String())

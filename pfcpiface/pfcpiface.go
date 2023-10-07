@@ -108,6 +108,7 @@ func RunUPFs(conf *Conf) error {
 			fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
 			return err
 		}
+		time.Sleep(2 * time.Second)
 	}
 	return nil
 }
@@ -217,8 +218,8 @@ func (p *PFCPIface) Run(comch CommunicationChannel, pos Position) {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			newPFCPHandler(w, r, p.node, comch, pos)
 		})
-		http.HandleFunc("/ses-del", func(w http.ResponseWriter, r *http.Request) {
-			sesDelHandler(w, r, p.node, comch, pos)
+		http.HandleFunc("/trans-ses", func(w http.ResponseWriter, r *http.Request) {
+			sesTransHandler(w, r, p.node, comch, pos)
 		})
 		http.HandleFunc("/del-upf", func(w http.ResponseWriter, r *http.Request) {
 			upfDelHandler(w, r, p.node, comch, pos)
