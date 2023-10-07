@@ -128,7 +128,10 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 			}
 		}
 		node.upf.peersUPF[upfIndex].upfsSessions = append(node.upf.peersUPF[upfIndex].upfsSessions[:sessionIndex], node.upf.peersUPF[upfIndex].upfsSessions[sessionIndex+1:]...)
-
+		for i := 0; i < len(node.upf.peersUPF); i++ {
+			fmt.Printf("len(node.upf.peersUPF[%v]) = %v \n", i, len(node.upf.peersUPF[i].upfsSessions))
+			fmt.Printf("node.upf.peersUPF[%v]) = %v \n", i, node.upf.peersUPF[i].upfsSessions)
+		}
 		sendHTTPResp(http.StatusCreated, w)
 	default:
 		//log.infoln(w, "Sorry, only PUT and POST methods are supported.")
