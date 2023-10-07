@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -26,7 +27,7 @@ type PfcpInfo struct {
 }
 
 type SesDelReq struct {
-	SessId uint64 `json:"sesid"`
+	SessId string `json:"sesid"`
 }
 
 // SliceQos ... Slice level QOS rates.
@@ -118,12 +119,14 @@ func sesDelHandler(w http.ResponseWriter, r *http.Request, node *PFCPNode, comCh
 		}
 
 		//handleSliceConfig(&nwSlice, c.upf)
-		upfIndex, ok := node.upf.lbmap[SesDelReq.SessId]
-		fmt.Println("upfIndex = ", upfIndex, ", ok = ", ok, ", for SesDelReq.SessId = ", SesDelReq.SessId)
+
+		sessid, err := strconv.ParseUint(SesDelReq.SessId, 10, 64)
+		upfIndex, ok := node.upf.lbmap[sessid]
+		fmt.Println("upfIndex = ", upfIndex, ", ok = ", ok, ", for sessid = ", sessid, ", SesDelReq.SessId = ", SesDelReq.SessId)
 
 		var sessionIndex int
 		for i, s := range node.upf.peersUPF[upfIndex].upfsSessions {
-			if s == SesDelReq.SessId {
+			if s == sessid {
 				sessionIndex = i
 				break
 			}
