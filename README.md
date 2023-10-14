@@ -1,63 +1,63 @@
 <!--
 SPDX-License-Identifier: Apache-2.0
-Copyright 2019 Intel Corporation
 -->
 
-# UPF
+# PFCP-LB
+This project is based on [OMEC UPF](https://github.com/omec-project/upf),
+One of the most important elements of Virtual-UPF is PFCP-LB which contains some Kubernetes resources like Service, Pod, ConfigMap, ServiceAccount and RoleBinding. Its Pod contains a container that runs an application implemented in Golang.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/omec-project/upf)](https://goreportcard.com/report/github.com/omec-project/upf)
+This intermediate Pod is introduced to SMF as a single UPF and also is introduced to UPFs of Virtual-UPF as the SMF. LB-PFCP has 2 PFCP-Agents (upPFCP-Agent and downPFCP-Agent) which are handled by different CPU cores to increase the performance. Each PFCP-Agent contains a PFCP-Node which handles the PFCP-Connections toward UPFs for downPFCP-Agent and toward SMF for upPFCP-Agent. So, the downPFCP-Agent is for connecting the PFCP-LB to UPFs, and upPFCP-Agent is used to connect PFCP-LB to SMF. In other words, downPFCP-Agent is SMF of UPFs and upPFCP-Agent is the entity that SMF sees as its UPF.
 
-[![Build Status](https://jenkins.onosproject.org/buildStatus/icon?job=bess-upf-linerate-tests&subject=Linerate+Tests)](https://jenkins.onosproject.org/job/bess-upf-linerate-tests/)
+These two PFCP-Agents, which are run in two different Go routines, communicate with each other through a set of Go channels. These channels are used to pass PFCP messages that upPFCP-Agents received from SMF and want to forward it to UPFs. So downPFCP-Agent is always listening to these channels and once it receives any message from each channel, does the required process and forward it toward the appropriate UPF through an already created PFCP-Connection. When the UPF sends the response to downPFCP-Agent, downPFCP-Agent does the required process and sends the result to upPFCP-Agent and upPFCP-Agent creates a new response based on received response and send it to SMF.
 
-This project implements a 4G/5G User Plane Function (UPF) compliant with 3GPP
-TS23.501. It follows the 3GPP Control and User Plane Separation (CUPS)
-architecture, making use of the PFCP protocol for the communication between
-SMF (5G) / SPGW-C (4G) and UPF.
+DownPFCP-Agent also contains an HTTP server which is used to register UPFs. UPFs on startup sends some data to the downPFCP-Agent which is used to create a PFCP-Connection between PFCP-LB and UPFs.
 
-This UPF implementation is actively used as part of the
-[Aether platform](https://opennetworking.org/aether/) in conjunction with the
-SD-Core mobile core control plane.
+### How does it work ?
+The main work flow of Virtual-UPF can be divided into two main phases. INIT phase and action phase. The purpose of the INIT phase is to run the Virtual-UPF and all of its components, do the initial configuration and make everything ready for the action phase. In the Action Phase the Virtual-UPF is totally ready. So, it starts to handle the data plane traffic of user equipments. Below I break down these two phases and explained everything with sufficient details.
 
-### Table Of Contents
-  * [Overview](#overview)
-  * [Feature List](#feature-list)
-  * [Getting Started](#getting-started)
-  * [Contributing](#contributing)
-  * [Support](#support)
-  * [License](#license)
+### Supported PFCP messages
+* PFCP-Session Establishment Request/Responce
+* PFCP-Session Modification Request/Responce
+* PFCP-Session Deletion Request/Responce
+
+## Features
+### Auto Scale-out
+If the Auto Scale-out feature is enabled, the PFCP-LB continuously checks the state of UPFs. if the number of sessions of each UPFs reaches to a certain number, and the current number of active UPFs are less than configured MaxUPFs, the Auto Scale-out procedure will be triggered. This number of sessions is calculated like:
+* MaxThreshold + (MaxThreshold*MaxTolerance)
+
+The PFCP-LB has the permission to deploy a UPF because of its RBAC, so find the first UPF which is not deployed yet, and add it to the virtual UPF. When a new UPF starts up, as we explained before, it registers itself in Access-LB, Core-LB, and PFCP-LB. So, Access-LB and Core-LB do the regular thing that they normally do with a new UPF. When PFCP-LB receives the registration request, creates a PFCP-Connection with it and adds it to the list of its registered UPFs. Now there is a new UPF in the Virtual-UPF which does not handle any session. 
+
+So PFCP-LB who knows each UPF currently is handling how many sessions, calls the MakeUPFsLighter function. 
+### Auto Scale-in
+Like Auto Scale-out, if Auto Scale-in feature is enabled, the PFCP-LB continuously checks the state of UPFs. If the number of sessions of each UPFs becomes below a certain number, and the current number of active UPFs are more than configured MinUPFs, the Auto Scale-in procedure will be triggered. This number of sessions is calculated like:
+
+* MinThreshold - (MinThreshold*MinTolerance)
+
+When this procedure is triggered, the lightest UPF is selected to be eliminated. But this UPF is still handling some sessions which should be transferred to another UPF before eliminating the lightest UPF. So, the MakeUPFEmpty function will be called for the UPF that causes the Scale-in process to be triggered. 
+
+### Live Session Migration
+One of the most important features of Virtual-UPF that makes the Scale-in and Scale-out procedure seamless, is its Live Session Migration that is done by the TransferSessions function.
+
+## Configuration Variables
+
+### MinUPFs
+The initial number of UPFs that is deployed when the Virtual-UPF starts, and also it is the minimum number of UPFs that after the Scale-in process we can have inside the Virtual-UPF. Its value will be equal to 2 in case of leaving it blank in configuration to archive the redundancy.
+###	MaxUPFs
+Maximum number of UPFs that we are allowed to have after Scale-out procedure.
+###	MaxThreshold
+The maximum number of sessions that if a UPF handles, we consider that UPF as a normal UPF. Each UPF is allowed to handle sessions more than this threshold, but the sessions after the threshold is known as excess sessions that should be transferred to a lighter UPF.
+###	MaxTolerance
+It is a percentage on MaxThreshold that indicates when the Auto Scale-out should be triggered and is useful to make the Auto Scale-out tolerate against the small changes in the numbers of sessions. 
+
+Let’s make it more clear with an example. Assume the MaxThreshold is equal to 10.000 and MaxTolerance is equal to %10. If the number of sessions handled by any UPF reaches to 11.000, the auto scale of procedure will be triggered and another UPF will be added to the Virtual-UPF and its excess session will be transferred to the new UPF.
+###	AutoScaleOut
+It is a Boolean variable which turns the Auto Scale-out process on or off. If this feature is turned off, the deployment of the new UPF should be done manually.
+###	Other Variables
+AutoScaleIn, MinThreshold and MinTolerance have similar concepts to previous features, except they are used for the Auto Scale-in procedure.
+
+## Create docker image
 
 
-## Overview
-
-The UPF implementation consists of two layers:
-
-- **PFCP Agent (_pfcpiface_)**: a Go-based implementation of the PFCP northbound API used to interact with the mobile core control plane.
-- **Datapath:** responsible for the actual data plane packet processing.
-
-The PFCP Agent implements datapath plugins that translate
-  PFCP messages to datapath-specific configurations. We currently support two
-  datapath implementations:
-  - [BESS](https://github.com/omec-project/bess): a software-based datapath
-    built on top of the Berkeley Extensible Software Switch (BESS) framework.
-    For more details, please see the ONFConnect 2019 [talk](https://www.youtube.com/watch?v=fqJGWcwcOxE)
-    and demo videos [here](https://www.youtube.com/watch?v=KxK64jalKHw) and
-    [here](https://youtu.be/rWnZuJeUWi4).
-    > Note: The source code for the BESS-based datapath is in https://github.com/omec-project/bess
-  - [UP4](https://github.com/omec-project/up4): an implementation leveraging
-    ONOS and P4-programmable switches to realize a hardware-based datapath.
-
-The combination of PFCP Agent and UP4 is usually referred to as P4-UPF. While
-BESS-UPF denotes the combination of PFCP Agent and the BESS datapath.
-
-PFCP Agent internally abstracts different datapaths using a common API, while
-the different plug-ins can use specific southbound protocols to communicate with
-the different datapath instances. Support for new datapaths can be provided by
-implementing new plugins.
-
-![UPF overview](./docs/images/upf-overview.jpg)
-
-This repository provides code to build two Docker images: `pfcpiface` (the PFCP
-Agent) and `bess` (the BESS-based datapath).
 
 To build all Docker images run:
 
@@ -70,137 +70,3 @@ To build a selected image use `DOCKER_TARGETS`:
 ```
 DOCKER_TARGETS=pfcpiface make docker-build
 ```
-
-The latest Docker images are also published in the OMEC project's DockerHub
-registry: [upf-epc-bess](https://hub.docker.com/r/omecproject/upf-epc-bess),
-[upf-epc-pfcpiface](https://hub.docker.com/r/omecproject/upf-epc-pfcpiface).
-
-### BESS-UPF Components
-
-![upf](docs/images/upf.svg)
-
-### Zoom-in
-
-![bess-programming](docs/images/bess-programming.svg)
-
-## Feature List
-
-### PFCP Agent
-* PFCP Association Setup/Release and Heartbeats
-* Session Establishment/Modification with support for PFCP entities such as
-  Packet Detection Rules (PDRs), Forwarding Action Rules (FARs), QoS Enforcement
-  Rules (QERs).
-* UPF-initiated PFCP association
-* UPF-based UE IP address assignment
-* Application filtering using SDF filters
-* Generation of End Marker Packets
-* Downlink Data Notification (DDN) using PFCP Session Report
-* Integration with Prometheus for exporting PFCP and data plane-level metrics.
-* Application filtering using application PFDs (_**experimental**_).
-
-### BESS-UPF
-* IPv4 support
-* N3, N4, N6, N9 interfacing
-* Single & Multi-port support
-* Monitoring/Debugging capabilities using
-  - tcpdump on individual BESS modules
-  - visualization web interface
-  - command line shell interface for displaying statistics
-* Static IP routing
-* Dynamic IP routing
-* Support for IPv4 datagrams reassembly
-* Support for IPv4 packets fragmentation
-* Support for UE IP NAT
-* Service Data Flow (SDF) configuration via N4/PFCP
-* I-UPF/A-UPF ULCL/Branching i.e., simultaneous N6/N9 support within PFCP session
-* Downlink Data Notification (DDN) - notification only (no buffering)
-* Basic QoS support, with per-slice and per-session rate limiting
-* Per-flow latency and throughput metrics
-* DSCP marking of GTPu packets by copying the DSCP value from the inner IP packet
-* Network Token Functions (_**experimental**_)
-* Support for DPDK, CNDP
-
-### P4-UPF
-P4-UPF implements a core set of features capable of supporting requirements for
-a broad range of enterprise use cases.
-
-See the [ONF's blog post](https://opennetworking.org/news-and-events/blog/using-p4-and-programmable-switches-to-implement-a-4g-5g-upf-in-aether/)
-for an overview of P4-UPF. Additionally, refer to the [SD-Fabric documentation](https://docs.sd-fabric.org/master/advanced/p4-upf.html)
-for the detailed feature set.
-
-## Getting started
-
-### Installation
-
-Please see installation document [here](docs/INSTALL.md) for details on how to
-set up the PFCP Agent with BESS-UPF.
-
-To install the PFCP Agent with UP4 please follow the [SD-Fabric documentation](https://docs.sd-fabric.org/master/index.html).
-
-### Configuration
-
-Please see the configuration guide [here](docs/configuration-guide.md) to learn
-more about the different configurations.
-
-### Testing
-
-The UPF project currently implements three types of tests:
-  - Unit tests
-  - E2E integration tests
-  - PTF tests for BESS-UPF
-
-**Unit tests** for the PFCP Agent's code. To run unit tests use:
-
-```
-make test
-```
-
-**E2E integration tests** that verify the inter-working between the PFCP Agent
-and a datapath.
-
-We provide two modes of E2E integration tests: `native` and `docker`.
-
-The `native` mode invokes Go objects directly from the `go test` framework, thus
-it makes the test cases easier to debug. To run E2E integration tests for
-BESS-UPF in the `native` mode use:
-
-```
-make test-bess-integration-native
-```
-
-The `docker` mode uses fully containerized environment and runs all components
-(the PFCP Agent and a datapath mock) as Docker containers. It ensures the
-correct behavior of the package produced by the UPF project. To run E2E
-integration tests for UP4 in the `docker` mode use:
-
-```
-make test-up4-integration-docker
-```
-
-> NOTE: The `docker` mode for BESS-UPF and the `native` mode for UP4 are not implemented yet.
-
-**PTF tests for BESS-UPF** verify the BESS-based implementation of the UPF
-datapath (data plane). Details to run PTF tests for BESS-UPF can be found [here](./ptf/README.md).
-
-## Contributing
-
-The UPF project welcomes new contributors. Feel free to propose a new feature,
-integrate a new UPF datapath or fix bugs!
-
-Before contributing, please follow these guidelines:
-
-* Check out [open issues](https://github.com/omec-project/upf/issues).
-* Check out [the developer guide](./docs/developer-guide.md).
-* We follow the best practices described in https://google.github.io/eng-practices/review/developer/.
-  Get familiar with them before submitting a PR.
-* Both unit and E2E integration tests must pass on CI. Please make sure that
-  tests are passing with your change (see [Testing](#testing) section).
-
-## Support
-
-To report any other kind of problem, feel free to open a GitHub Issue or reach
-out to the project maintainers on the ONF Community Slack ([aether-dev](https://app.slack.com/client/T095Z193Q/C01E4HMLBNV)).
-
-## License
-
-The project is licensed under the [Apache License, version 2.0](./LICENSES/Apache-2.0.txt).
