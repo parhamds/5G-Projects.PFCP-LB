@@ -335,7 +335,7 @@ func (node *PFCPNode) listenForResetSes(comCh CommunicationChannel) {
 func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
-		fmt.Println("start reconciliation")
+		//fmt.Println("start reconciliation")
 		var scaleOutNeeded bool
 		var scaleInNeeded bool
 		var ScaleOutUPF string

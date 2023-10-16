@@ -67,13 +67,13 @@ func main() {
 
 	go func() {
 		for {
-			time.Sleep(10)
+			time.Sleep(10 * time.Second)
 			podName := "upf101-0"
 			namespace := "omec"
 
 			// Run the kubectl top pod command
 			cmd := exec.Command("kubectl", "top", "pod", "-n", namespace, podName)
-
+			fmt.Println("executing command : ", cmd.String())
 			// Capture the command output
 			output, err := cmd.CombinedOutput()
 			if err != nil {
