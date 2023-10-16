@@ -67,7 +67,7 @@ func main() {
 
 	go func() {
 		for {
-			time.Sleep(10 * time.Second)
+			time.Sleep(1 * time.Second)
 			podName := "upf101-0"
 			namespace := "omec"
 
