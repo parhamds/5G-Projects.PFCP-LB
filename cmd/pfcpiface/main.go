@@ -78,7 +78,7 @@ func main() {
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println("Error running kubectl:", err)
-				return
+				continue
 			}
 
 			// Extract the CPU load from the output
@@ -87,7 +87,7 @@ func main() {
 				cpuLoad, err := strconv.Atoi(cpuLoadStr)
 				if err != nil {
 					fmt.Println("Error converting CPU load to integer:", err)
-					return
+					continue
 				}
 				fmt.Printf("CPU load as an integer: %d\n", cpuLoad)
 			}
