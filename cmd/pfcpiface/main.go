@@ -7,9 +7,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/omec-project/upf-epc/pfcpiface"
@@ -26,22 +23,6 @@ func init() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
-}
-
-func extractCPULoad(output string) string {
-	lines := strings.Split(output, "\n")
-	if len(lines) < 2 {
-		return ""
-	}
-
-	// Extract the second line, which contains CPU load
-	// Example: "mongodb-55bbb8c4c4-dg5v5   20m          149Mi"
-	fields := strings.Fields(lines[1])
-	if len(fields) >= 2 {
-		return fields[1]
-	}
-
-	return ""
 }
 
 func main() {
@@ -64,36 +45,6 @@ func main() {
 	if err != nil {
 		log.Fatalln("Error reading conf file:", err)
 	}
-
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-			podName := "upf101-0"
-			namespace := "omec"
-
-			// Run the kubectl top pod command
-			cmd := exec.Command("kubectl", "top", "pod", "-n", namespace, podName)
-			fmt.Println("executing command : ", cmd.String())
-			// Capture the command output
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				fmt.Println("Error running kubectl:", err)
-				continue
-			}
-
-			// Extract the CPU load from the output
-			cpuLoadStr := extractCPULoad(string(output))
-			if cpuLoadStr != "" {
-				cpuLoadTrimmed := strings.TrimRight(cpuLoadStr, "m")
-				cpuLoad, err := strconv.Atoi(cpuLoadTrimmed)
-				if err != nil {
-					fmt.Println("Error converting CPU load to integer:", err)
-					continue
-				}
-				fmt.Printf("CPU load as an integer: %d\n", cpuLoad)
-			}
-		}
-	}()
 
 	log.SetLevel(conf.LogLevel)
 

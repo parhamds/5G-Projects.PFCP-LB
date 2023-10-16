@@ -50,9 +50,12 @@ type Conf struct {
 	MinSessionsThreshold   uint32           `json:"min_sessions_threshold"`
 	MaxSessionstolerance   float32          `json:"max_sessions_tolerance"`
 	MinSessionstolerance   float32          `json:"min_sessions_tolerance"`
+	MaxCPUThreshold        uint32           `json:"max_cpu_threshold"`
+	MinCPUThreshold        uint32           `json:"min_cpu_threshold"`
 	ReconciliationInterval uint32           `json:"reconciliation_interval"`
 	AutoScaleOut           bool             `json:"auto_scale_out"`
 	AutoScaleIn            bool             `json:"auto_scale_in"`
+	ScaleByCPU             bool             `json:"scalebycpu"`
 	MinUPFs                uint32           `json:"min_upfs"`
 	MaxUPFs                uint32           `json:"max_upfs"`
 }
@@ -213,6 +216,10 @@ func LoadConfigFile(filepath string) (Conf, error) {
 
 	if conf.MaxSessionsThreshold == 0 {
 		conf.MaxSessionsThreshold = uint32(100000)
+	}
+
+	if conf.MaxCPUThreshold == 0 {
+		conf.MaxCPUThreshold = uint32(2000)
 	}
 
 	if conf.MaxSessionstolerance == 0 {

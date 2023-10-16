@@ -56,11 +56,14 @@ type Upf struct {
 	seidToRespCh           map[uint64]chan *ie.IE
 	MaxSessionsThreshold   uint32
 	MinSessionsThreshold   uint32
+	MaxCPUThreshold        uint32
+	MinCPUThreshold        uint32
 	MaxSessionstolerance   float32
 	MinSessionstolerance   float32
 	ReconciliationInterval uint32
 	AutoScaleOut           bool
 	AutoScaleIn            bool
+	ScaleByCPU             bool
 	MaxUPFs                uint32
 	MinUPFs                uint32
 	Hostname               string `json:"hostname"`
@@ -183,11 +186,14 @@ func NewUPF(conf *Conf, pos Position,
 		respTimeout:            time.Second * resptime,
 		MaxSessionsThreshold:   conf.MaxSessionsThreshold,
 		MinSessionsThreshold:   conf.MinSessionsThreshold,
+		MaxCPUThreshold:        conf.MaxCPUThreshold,
+		MinCPUThreshold:        conf.MinCPUThreshold,
 		MaxSessionstolerance:   conf.MaxSessionstolerance,
 		MinSessionstolerance:   conf.MinSessionstolerance,
 		ReconciliationInterval: conf.ReconciliationInterval,
 		AutoScaleOut:           conf.AutoScaleOut,
 		AutoScaleIn:            conf.AutoScaleIn,
+		ScaleByCPU:             conf.ScaleByCPU,
 		MaxUPFs:                conf.MaxUPFs,
 		MinUPFs:                conf.MinUPFs,
 		//readTimeout: 15 * time.Second,
