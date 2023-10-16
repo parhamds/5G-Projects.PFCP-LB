@@ -84,7 +84,8 @@ func main() {
 			// Extract the CPU load from the output
 			cpuLoadStr := extractCPULoad(string(output))
 			if cpuLoadStr != "" {
-				cpuLoad, err := strconv.Atoi(cpuLoadStr)
+				cpuLoadTrimmed := strings.TrimRight(cpuLoadStr, "m")
+				cpuLoad, err := strconv.Atoi(cpuLoadTrimmed)
 				if err != nil {
 					fmt.Println("Error converting CPU load to integer:", err)
 					continue
