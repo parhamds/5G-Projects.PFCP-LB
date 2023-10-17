@@ -369,7 +369,7 @@ func getCPULoads(podName string) (int, error) {
 func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
-		for _, u := range node.upf.peersUPF {
+		for i, u := range node.upf.peersUPF {
 			podName := fmt.Sprint(u.Hostname, "-0")
 			load, err := getCPULoads(podName)
 			if err != nil {
@@ -385,19 +385,19 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 
 				newThreshold := node.upf.MaxSessionsThreshold + uint32(addThresh)
 				fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
-				//node.upf.MaxSessionsThreshold += uint32(addThresh)
-				////kill upf
-				//makeUPFEmpty(node, i, comCh)
-				//time.Sleep(2 * time.Second)
-				//ScaleInUPF := node.upf.peersUPF[i].Hostname
-				//upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
-				//cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
-				//log.Traceln("executing command : ", cmd.String())
-				//combinedOutput, err := cmd.CombinedOutput()
-				//if err != nil {
-				//	fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
-				//	continue
-				//}
+				node.upf.MaxSessionsThreshold += uint32(addThresh)
+				//kill upf
+				makeUPFEmpty(node, i, comCh)
+				time.Sleep(2 * time.Second)
+				ScaleInUPF := node.upf.peersUPF[i].Hostname
+				upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
+				cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
+				log.Traceln("executing command : ", cmd.String())
+				combinedOutput, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+					continue
+				}
 				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 			}
 			if load > int(node.upf.MaxCPUThreshold) && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) {
