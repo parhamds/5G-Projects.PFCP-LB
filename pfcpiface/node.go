@@ -366,7 +366,34 @@ func getCPULoads(podName string) (int, error) {
 	return cpuLoad, nil
 }
 
-func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
+func getUPFBytes(podName string) (uint64, error) {
+	cmd := exec.Command("kubectl", "exec", "-n", "omec", "-it", podName, "--", "cat", "/proc/net/dev")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	lines := strings.Split(string(output), "\n")
+	var receivedBytes uint64
+	for _, line := range lines {
+		if strings.Contains(line, "access:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				receivedBytesStr := fields[1]
+				receivedBytes, err = strconv.ParseUint(receivedBytesStr, 10, 64)
+				if err != nil {
+					fmt.Println("Error parsing received bytes:", err)
+					return 0, err
+				}
+			}
+			break
+		}
+	}
+	//fmt.Printf("Received Bytes on 'access' interface: %d\n", receivedBytes)
+	return receivedBytes, nil
+}
+
+func (node *PFCPNode) ScaleByCPU(comCh CommunicationChannel) {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 		for i, u := range node.upf.peersUPF {
@@ -375,7 +402,7 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 			if err != nil {
 				continue
 			}
-			if load < int(node.upf.MinCPUThreshold) && len(node.upf.peersUPF) > int(node.upf.MinUPFs) {
+			if load < int(node.upf.MinCPUThreshold) && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && node.upf.AutoScaleIn {
 				var addThresh int
 				if len(u.upfsSessions) == 0 {
 					addThresh = 10 // just for test
@@ -400,7 +427,8 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 				}
 				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 			}
-			if load > int(node.upf.MaxCPUThreshold) && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) {
+			if load > int(node.upf.MaxCPUThreshold) && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
+				var ScaleOutUPF string
 				var upfSes int
 				if len(u.upfsSessions) == 0 {
 					upfSes = 10 // just for test
@@ -410,6 +438,45 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))) // minus a constant if want to be sure that the scaleout will be triggered
 				fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
 				node.upf.MaxSessionsThreshold = newThreshold
+				fmt.Println("scaleOutNeeded = true, node.upf.MaxUPFs = ", node.upf.MaxUPFs)
+
+				var upfExisted bool
+				var foundUPF bool
+				for i := 1; i <= int(node.upf.MaxUPFs); i++ {
+					upfExisted = false
+					foundUPF = false
+					var upfName string
+					if i < 10 {
+						upfName = fmt.Sprint("upf10", i)
+					} else if i < 100 {
+						upfName = fmt.Sprint("upf1", i)
+					} else if i >= 100 {
+						upfName = fmt.Sprint("upf", i)
+					}
+					for _, u := range node.upf.peersUPF {
+						if upfName == u.Hostname {
+							upfExisted = true
+							break
+						}
+					}
+					if !upfExisted {
+						ScaleOutUPF = upfName
+						fmt.Println("upf to scale out = ", upfName)
+						foundUPF = true
+						break
+					}
+				}
+				if foundUPF {
+					upfFile := fmt.Sprint("/upfs/", ScaleOutUPF, ".yaml")
+					cmd := exec.Command("kubectl", "apply", "-n", "omec", "-f", upfFile)
+					log.Traceln("executing command : ", cmd.String())
+					combinedOutput, err := cmd.CombinedOutput()
+					if err != nil {
+						fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+						continue
+					}
+					time.Sleep(20 * time.Second)
+				}
 				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 			}
 		}
@@ -417,10 +484,7 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 	}
 }
 
-func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
-	if node.upf.ScaleByCPU {
-		go node.adaptiveThreshold(comCh)
-	}
+func (node *PFCPNode) ScaleBySession(comCh CommunicationChannel) {
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 		//fmt.Println("start reconciliation")
@@ -508,6 +572,112 @@ func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
 			continue
 		}
 
+	}
+}
+
+func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
+	for {
+		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+		for i, u := range node.upf.peersUPF {
+			podName := fmt.Sprint(u.Hostname, "-0")
+			currentBytes, err := getUPFBytes(podName)
+			if err != nil {
+				continue
+			}
+			currentBitRate := (currentBytes - u.LastBytes) / uint64(node.upf.ReconciliationInterval)
+			u.LastBytes = currentBytes
+			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 1000 && node.upf.AutoScaleOut {
+				fmt.Println("scale in needed")
+				var addThresh int
+				if len(u.upfsSessions) == 0 {
+					addThresh = 10 // just for test
+				} else {
+					addThresh = len(u.upfsSessions) / (len(node.upf.peersUPF) - 1)
+				}
+
+				node.upf.MaxSessionsThreshold += uint32(addThresh)
+				//kill upf
+				makeUPFEmpty(node, i, comCh)
+				time.Sleep(2 * time.Second)
+				ScaleInUPF := node.upf.peersUPF[i].Hostname
+				upfFile := fmt.Sprint("/upfs/", ScaleInUPF, ".yaml")
+				cmd := exec.Command("kubectl", "delete", "-n", "omec", "-f", upfFile)
+				log.Traceln("executing command : ", cmd.String())
+				combinedOutput, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+					continue
+				}
+				time.Sleep(20 * time.Second)
+				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+			}
+			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleIn {
+				fmt.Println("scale out needed")
+				var ScaleOutUPF string
+				var upfSes int
+				if len(u.upfsSessions) == 0 {
+					upfSes = 10 // just for test
+				} else {
+					upfSes = len(u.upfsSessions)
+				}
+				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))) // minus a constant if want to be sure that the scaleout will be triggered
+				//fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
+				node.upf.MaxSessionsThreshold = newThreshold
+				//fmt.Println("scaleOutNeeded = true, node.upf.MaxUPFs = ", node.upf.MaxUPFs)
+
+				var upfExisted bool
+				var foundUPF bool
+				for i := 1; i <= int(node.upf.MaxUPFs); i++ {
+					upfExisted = false
+					foundUPF = false
+					var upfName string
+					if i < 10 {
+						upfName = fmt.Sprint("upf10", i)
+					} else if i < 100 {
+						upfName = fmt.Sprint("upf1", i)
+					} else if i >= 100 {
+						upfName = fmt.Sprint("upf", i)
+					}
+					for _, u := range node.upf.peersUPF {
+						if upfName == u.Hostname {
+							upfExisted = true
+							break
+						}
+					}
+					if !upfExisted {
+						ScaleOutUPF = upfName
+						fmt.Println("upf to scale out = ", upfName)
+						foundUPF = true
+						break
+					}
+				}
+				if foundUPF {
+					upfFile := fmt.Sprint("/upfs/", ScaleOutUPF, ".yaml")
+					cmd := exec.Command("kubectl", "apply", "-n", "omec", "-f", upfFile)
+					log.Traceln("executing command : ", cmd.String())
+					combinedOutput, err := cmd.CombinedOutput()
+					if err != nil {
+						fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+						continue
+					}
+					time.Sleep(20 * time.Second)
+				}
+				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+			}
+		}
+
+	}
+}
+
+func (node *PFCPNode) reconciliation(comCh CommunicationChannel) {
+	if node.upf.ScaleByCPU {
+		go node.ScaleByCPU(comCh)
+	}
+	if node.upf.ScaleBySession {
+		go node.ScaleBySession(comCh)
+	}
+	if node.upf.ScaleByBitRate {
+		go node.ScaleByBitRate(comCh)
 	}
 }
 

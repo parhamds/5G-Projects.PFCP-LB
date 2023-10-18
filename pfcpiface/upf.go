@@ -58,15 +58,20 @@ type Upf struct {
 	MinSessionsThreshold   uint32
 	MaxCPUThreshold        uint32
 	MinCPUThreshold        uint32
+	MaxBitRateThreshold    uint64
+	MinBitRateThreshold    uint64
 	MaxSessionstolerance   float32
 	MinSessionstolerance   float32
 	ReconciliationInterval uint32
 	AutoScaleOut           bool
 	AutoScaleIn            bool
 	ScaleByCPU             bool
+	ScaleBySession         bool
+	ScaleByBitRate         bool
 	MaxUPFs                uint32
 	MinUPFs                uint32
 	Hostname               string `json:"hostname"`
+	LastBytes              uint64
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64
@@ -188,12 +193,16 @@ func NewUPF(conf *Conf, pos Position,
 		MinSessionsThreshold:   conf.MinSessionsThreshold,
 		MaxCPUThreshold:        conf.MaxCPUThreshold,
 		MinCPUThreshold:        conf.MinCPUThreshold,
+		MaxBitRateThreshold:    conf.MaxBitRateThreshold,
+		MinBitRateThreshold:    conf.MinBitRateThreshold,
 		MaxSessionstolerance:   conf.MaxSessionstolerance,
 		MinSessionstolerance:   conf.MinSessionstolerance,
 		ReconciliationInterval: conf.ReconciliationInterval,
 		AutoScaleOut:           conf.AutoScaleOut,
 		AutoScaleIn:            conf.AutoScaleIn,
 		ScaleByCPU:             conf.ScaleByCPU,
+		ScaleBySession:         conf.ScaleBySession,
+		ScaleByBitRate:         conf.ScaleByBitRate,
 		MaxUPFs:                conf.MaxUPFs,
 		MinUPFs:                conf.MinUPFs,
 		//readTimeout: 15 * time.Second,
