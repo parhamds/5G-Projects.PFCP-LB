@@ -407,7 +407,7 @@ func (node *PFCPNode) adaptiveThreshold(comCh CommunicationChannel) {
 				} else {
 					upfSes = len(u.upfsSessions)
 				}
-				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold)))
+				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))) // minus a constant if want to be sure that the scaleout will be triggered
 				fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
 				node.upf.MaxSessionsThreshold = newThreshold
 				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)

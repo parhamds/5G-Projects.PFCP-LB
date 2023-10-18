@@ -105,7 +105,7 @@ spec:
         command: ["sh", "-xec"]
         args:
         - ip route replace 192.168.251.0/24 via 192.168.252.103;
-          ip route replace default via 192.168.250.103 metric 110;
+          ip route replace default via 192.168.250.103;
           ip route replace 192.168.254.0/24 via 192.168.250.103;
           ip route replace 10.0.2.15 via 169.254.1.1;
           iptables -I OUTPUT -p icmp --icmp-type port-unreachable -j DROP;
