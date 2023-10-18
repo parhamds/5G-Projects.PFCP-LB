@@ -59,7 +59,8 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(1 * time.Second)
-			cmd := exec.Command("kubectl", "exec", "-n", "omec", "-it", "upf101-0", "--", "cat", "/proc/net/dev", "|", "grep", "access")
+			//cmd := exec.Command("kubectl", "exec", "-n", "omec", "-it", "upf101-0", "--", "cat", "/proc/net/dev", "|", "grep", "access")
+			cmd := exec.Command("sh", "-c", "kubectl exec -n omec -it upf101-0 -- cat /proc/net/dev | grep access")
 			fmt.Println("running command : ", cmd.String())
 			output, err := cmd.CombinedOutput()
 			if err != nil {
