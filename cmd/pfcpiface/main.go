@@ -59,31 +59,24 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(1 * time.Second)
-			cmd := exec.Command("kubectl", "exec", "-n", "omec", "-it", "upf101-0", "--", "cat", "/proc/net/dev")
+			cmd := exec.Command("kubectl", "exec", "-n", "omec", "-it", "upf101-0", "--", "cat", "/proc/net/dev", "|", "grep", "access")
 			fmt.Println("running command : ", cmd.String())
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
-			lines := strings.Split(string(output), "\n")
 			var receivedBytes int
-			for _, line := range lines {
-				if strings.Contains(line, "access:") {
-					fields := strings.Fields(line)
-					if len(fields) >= 2 {
-						receivedBytesStr := fields[1]
-						receivedBytes, err = strconv.Atoi(receivedBytesStr)
-						if err != nil {
-							fmt.Println("Error parsing received bytes:", err)
-							return
-						}
-					}
-					break
+			fields := strings.Fields(string(output))
+			if len(fields) >= 2 {
+				receivedBytesStr := fields[1]
+				receivedBytes, err = strconv.Atoi(receivedBytesStr)
+				if err != nil {
+					fmt.Println("Error parsing received bytes:", err)
+					return
 				}
 			}
 			fmt.Printf("Received Bytes on 'access' interface: %d\n", receivedBytes)
-
 		}
 	}()
 
