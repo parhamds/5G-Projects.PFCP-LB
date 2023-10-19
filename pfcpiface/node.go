@@ -634,7 +634,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 				} else {
 					upfSes = len(u.upfsSessions)
 				}
-				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))) // minus a constant if want to be sure that the scaleout will be triggered
+				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(upfSes))) // minus a constant if want to be sure that the scaleout will be triggered
 				//fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
 				node.upf.MaxSessionsThreshold = newThreshold
 				fmt.Println("newThreshold = ", newThreshold)
