@@ -586,7 +586,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 			}
 			currentBitRate := (currentBytes - u.LastBytes) / uint64(node.upf.ReconciliationInterval)
 			u.LastBytes = currentBytes
-			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 1000 && node.upf.AutoScaleOut {
+			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 1000 && node.upf.AutoScaleIn {
 				fmt.Println("scale in needed")
 				var addThresh int
 				if len(u.upfsSessions) == 0 {
@@ -611,7 +611,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 				time.Sleep(20 * time.Second)
 				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 			}
-			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleIn {
+			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
 				fmt.Println("scale out needed")
 				var ScaleOutUPF string
 				var upfSes int
@@ -623,6 +623,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 				newThreshold := uint32(upfSes - int(node.upf.MaxSessionstolerance*float32(node.upf.MaxSessionsThreshold))) // minus a constant if want to be sure that the scaleout will be triggered
 				//fmt.Println("MaxSessionsThreshold has changed from : ", node.upf.MaxSessionsThreshold, " to ", newThreshold)
 				node.upf.MaxSessionsThreshold = newThreshold
+				fmt.Println("newThreshold = ", newThreshold)
 				//fmt.Println("scaleOutNeeded = true, node.upf.MaxUPFs = ", node.upf.MaxUPFs)
 
 				var upfExisted bool
