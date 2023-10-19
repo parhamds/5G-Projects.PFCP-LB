@@ -576,8 +576,21 @@ func (node *PFCPNode) ScaleBySession(comCh CommunicationChannel) {
 }
 
 func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
+	var waited bool
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+		if waited { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
+			for _, u := range node.upf.peersUPF {
+				podName := fmt.Sprint(u.Hostname, "-0")
+				currentBytes, err := getUPFBytes(podName)
+				if err != nil {
+					continue
+				}
+				u.LastBytes = currentBytes
+			}
+			waited = false
+			continue
+		}
 		for i, u := range node.upf.peersUPF {
 			podName := fmt.Sprint(u.Hostname, "-0")
 			currentBytes, err := getUPFBytes(podName)
@@ -609,7 +622,8 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 					continue
 				}
 				time.Sleep(20 * time.Second)
-				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+				waited = true
+
 			}
 			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
 				fmt.Println("scale out needed")
@@ -662,8 +676,9 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 						continue
 					}
 					time.Sleep(20 * time.Second)
+					waited = true
 				}
-				time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
+
 			}
 		}
 
