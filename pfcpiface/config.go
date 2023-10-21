@@ -60,6 +60,7 @@ type Conf struct {
 	ScaleByCPU             bool             `json:"scalebycpu"`
 	ScaleBySession         bool             `json:"scalebysession"`
 	ScaleByBitRate         bool             `json:"scalebybitrate"`
+	InitUPFs               uint32           `json:"init_upfs"`
 	MinUPFs                uint32           `json:"min_upfs"`
 	MaxUPFs                uint32           `json:"max_upfs"`
 }
@@ -244,6 +245,10 @@ func LoadConfigFile(filepath string) (Conf, error) {
 
 	if conf.MinUPFs == 0 {
 		conf.MinUPFs = uint32(2)
+	}
+
+	if conf.InitUPFs == 0 {
+		conf.InitUPFs = uint32(2)
 	}
 
 	if conf.MaxReqRetries == 0 {

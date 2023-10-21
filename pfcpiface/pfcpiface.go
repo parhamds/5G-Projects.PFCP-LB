@@ -92,7 +92,7 @@ type PFCPIface struct {
 
 func RunUPFs(conf *Conf) error {
 	var upfName string
-	for i := 1; i <= int(conf.MinUPFs); i++ {
+	for i := 1; i <= int(conf.InitUPFs); i++ {
 		if i < 10 {
 			upfName = fmt.Sprint("upf10", i)
 		} else if i < 100 {
