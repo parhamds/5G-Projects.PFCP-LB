@@ -72,6 +72,7 @@ type Upf struct {
 	MinUPFs                uint32
 	Hostname               string `json:"hostname"`
 	LastBytes              uint64
+	ScaleInDecision        bool
 	//peersSessions     []SessionMap
 	Dnn              string `json:"dnn"`
 	reportNotifyChan chan uint64

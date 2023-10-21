@@ -578,6 +578,7 @@ func (node *PFCPNode) ScaleBySession(comCh CommunicationChannel) {
 func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 	var waited bool
 	firstLoop := true
+outerLoop:
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 		if waited || firstLoop { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
@@ -602,8 +603,16 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 			currentBitRate := (currentBytes - u.LastBytes) / uint64(node.upf.ReconciliationInterval)
 			u.LastBytes = currentBytes
 			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 10000 && node.upf.AutoScaleIn {
+				if i >= len(node.upf.peersUPF) {
+					continue
+				}
+				if !node.upf.peersUPF[i].ScaleInDecision {
+					node.upf.peersUPF[i].ScaleInDecision = true
+					continue outerLoop
+				}
+				node.upf.peersUPF[i].ScaleInDecision = false
 				fmt.Println("scale in needed")
-				fmt.Println("current bit rate = ", currentBitRate, " for ", node.upf.peersUPF[i].Hostname)
+				fmt.Println("current bit rate = ", currentBitRate, " for ")
 				var addThresh int
 				if len(u.upfsSessions) == 0 {
 					addThresh = 10 // just for test
@@ -627,6 +636,8 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 				time.Sleep(20 * time.Second)
 				waited = true
 
+			} else if currentBitRate >= node.upf.MinBitRateThreshold && node.upf.peersUPF[i].ScaleInDecision {
+				node.upf.peersUPF[i].ScaleInDecision = false
 			}
 			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
 				fmt.Println("scale out needed")
