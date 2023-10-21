@@ -577,9 +577,10 @@ func (node *PFCPNode) ScaleBySession(comCh CommunicationChannel) {
 
 func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 	var waited bool
+	firstLoop := true
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
-		if waited { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
+		if waited || firstLoop { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
 			for _, u := range node.upf.peersUPF {
 				podName := fmt.Sprint(u.Hostname, "-0")
 				currentBytes, err := getUPFBytes(podName)
@@ -589,6 +590,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 				u.LastBytes = currentBytes
 			}
 			waited = false
+			firstLoop = false
 			continue
 		}
 		for i, u := range node.upf.peersUPF {
