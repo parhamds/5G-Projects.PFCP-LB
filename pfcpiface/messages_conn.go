@@ -326,8 +326,13 @@ func (pConn *PFCPConn) handleAssociationSetupResponse(msg message.Message, pfcpI
 
 func makeUPFEmpty(node *PFCPNode, sUPFIndex int, comCh CommunicationChannel) {
 	fmt.Println("parham log : start makeUPFEmpty")
-	if len(node.upf.peersUPF) <= 1 {
+	if len(node.upf.peersUPF) <= 1 || sUPFIndex >= len(node.upf.peersUPF) {
 		fmt.Println("parham log : there is no other upf")
+		return
+	}
+
+	if sUPFIndex >= len(node.upf.peersUPF) {
+		fmt.Println("parham log : upf has been already made empty")
 		return
 	}
 

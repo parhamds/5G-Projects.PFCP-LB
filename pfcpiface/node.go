@@ -603,6 +603,7 @@ func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 			u.LastBytes = currentBytes
 			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 10000 && node.upf.AutoScaleIn {
 				fmt.Println("scale in needed")
+				fmt.Println("current bit rate = ", currentBitRate, " for ", node.upf.peersUPF[i].Hostname)
 				var addThresh int
 				if len(u.upfsSessions) == 0 {
 					addThresh = 10 // just for test
