@@ -636,8 +636,10 @@ outerLoop:
 				time.Sleep(20 * time.Second)
 				waited = true
 
-			} else if currentBitRate >= node.upf.MinBitRateThreshold && node.upf.peersUPF[i].ScaleInDecision {
-				node.upf.peersUPF[i].ScaleInDecision = false
+			} else if i < len(node.upf.peersUPF) {
+				if currentBitRate >= node.upf.MinBitRateThreshold && node.upf.peersUPF[i].ScaleInDecision {
+					node.upf.peersUPF[i].ScaleInDecision = false
+				}
 			}
 			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
 				fmt.Println("scale out needed")
