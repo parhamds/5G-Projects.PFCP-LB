@@ -577,16 +577,18 @@ func (node *PFCPNode) ScaleBySession(comCh CommunicationChannel) {
 
 func (node *PFCPNode) ScaleByBitRate(comCh CommunicationChannel) {
 	var waited bool
+	var continued bool
 	firstLoop := true
 outerLoop:
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
-		if waited || firstLoop { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
+		if waited || firstLoop || continued { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
 			for i, u := range node.upf.peersUPF {
 				podName := fmt.Sprint(u.Hostname, "-0")
 				currentBytes, err := getUPFBytes(podName)
 				if err != nil {
 					continue
+
 				}
 				u.LastBytes = currentBytes
 				node.upf.peersUPF[i].ScaleInDecision = false
@@ -594,23 +596,27 @@ outerLoop:
 			}
 			waited = false
 			firstLoop = false
+			continued = false
 			continue
 		}
 		for i, u := range node.upf.peersUPF {
 			podName := fmt.Sprint(u.Hostname, "-0")
 			currentBytes, err := getUPFBytes(podName)
 			if err != nil {
+				continued = true
 				continue
 			}
 			currentBitRate := (currentBytes - u.LastBytes) / uint64(node.upf.ReconciliationInterval)
 			u.LastBytes = currentBytes
 			if currentBitRate < node.upf.MinBitRateThreshold && len(node.upf.peersUPF) > int(node.upf.MinUPFs) && currentBitRate > 10000 && node.upf.AutoScaleIn {
 				if i >= len(node.upf.peersUPF) {
+					continued = true
 					continue
 				}
 				if !node.upf.peersUPF[i].ScaleInDecision {
 					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = true for ", node.upf.peersUPF[i].Hostname, " due to first scaling decision")
 					node.upf.peersUPF[i].ScaleInDecision = true
+					continued = true
 					continue outerLoop
 				}
 				node.upf.peersUPF[i].ScaleInDecision = false
@@ -635,6 +641,7 @@ outerLoop:
 				combinedOutput, err := cmd.CombinedOutput()
 				if err != nil {
 					fmt.Printf("Error executing command: %v\nCombined Output: %s", cmd.String(), combinedOutput)
+					continued = true
 					continue
 				}
 				time.Sleep(20 * time.Second)
