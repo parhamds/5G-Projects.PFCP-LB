@@ -582,13 +582,15 @@ outerLoop:
 	for {
 		time.Sleep(time.Duration(node.upf.ReconciliationInterval) * time.Second)
 		if waited || firstLoop { // if this func slept for more than ReconciliationInterval, in first loop after sleep, just update the bytes and do not compute bitrate
-			for _, u := range node.upf.peersUPF {
+			for i, u := range node.upf.peersUPF {
 				podName := fmt.Sprint(u.Hostname, "-0")
 				currentBytes, err := getUPFBytes(podName)
 				if err != nil {
 					continue
 				}
 				u.LastBytes = currentBytes
+				node.upf.peersUPF[i].ScaleInDecision = false
+				fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to waited or firstLoop")
 			}
 			waited = false
 			firstLoop = false
@@ -607,10 +609,12 @@ outerLoop:
 					continue
 				}
 				if !node.upf.peersUPF[i].ScaleInDecision {
+					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = true for ", node.upf.peersUPF[i].Hostname, " due to first scaling decision")
 					node.upf.peersUPF[i].ScaleInDecision = true
 					continue outerLoop
 				}
 				node.upf.peersUPF[i].ScaleInDecision = false
+				fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to executing scaling")
 				fmt.Println("scale in needed")
 				fmt.Println("current bit rate = ", currentBitRate, " for ")
 				var addThresh int
@@ -639,6 +643,7 @@ outerLoop:
 			} else if i < len(node.upf.peersUPF) {
 				if currentBitRate >= node.upf.MinBitRateThreshold && node.upf.peersUPF[i].ScaleInDecision {
 					node.upf.peersUPF[i].ScaleInDecision = false
+					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to cancelling scaling")
 				}
 			}
 			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
