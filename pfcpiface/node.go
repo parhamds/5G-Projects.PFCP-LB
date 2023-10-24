@@ -619,7 +619,6 @@ outerLoop:
 					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = true for ", node.upf.peersUPF[i].Hostname, " due to first scaling decision")
 					fmt.Println("currentBitRate = ", currentBitRate)
 					node.upf.peersUPF[i].ScaleInDecision = true
-					continued = true
 					continue outerLoop
 				}
 				node.upf.peersUPF[i].ScaleInDecision = false
