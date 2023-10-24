@@ -591,8 +591,10 @@ outerLoop:
 
 				}
 				u.LastBytes = currentBytes
-				node.upf.peersUPF[i].ScaleInDecision = false
-				fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to waited or firstLoop")
+				if node.upf.peersUPF[i].ScaleInDecision {
+					node.upf.peersUPF[i].ScaleInDecision = false
+					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to waited or firstLoop")
+				}
 			}
 			waited = false
 			firstLoop = false
@@ -615,12 +617,14 @@ outerLoop:
 				}
 				if !node.upf.peersUPF[i].ScaleInDecision {
 					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = true for ", node.upf.peersUPF[i].Hostname, " due to first scaling decision")
+					fmt.Println("currentBitRate = ", currentBitRate)
 					node.upf.peersUPF[i].ScaleInDecision = true
 					continued = true
 					continue outerLoop
 				}
 				node.upf.peersUPF[i].ScaleInDecision = false
 				fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to executing scaling")
+				fmt.Println("currentBitRate = ", currentBitRate)
 				fmt.Println("scale in needed")
 				fmt.Println("current bit rate = ", currentBitRate, " for ")
 				var addThresh int
@@ -652,6 +656,7 @@ outerLoop:
 				if node.upf.peersUPF[i].ScaleInDecision {
 					node.upf.peersUPF[i].ScaleInDecision = false
 					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to cancelling scaling")
+					fmt.Println("currentBitRate = ", currentBitRate)
 				}
 			}
 			if currentBitRate > node.upf.MaxBitRateThreshold && len(node.upf.peersUPF) < int(node.upf.MaxUPFs) && node.upf.AutoScaleOut {
