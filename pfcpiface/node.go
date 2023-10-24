@@ -640,8 +640,9 @@ outerLoop:
 				time.Sleep(20 * time.Second)
 				waited = true
 
-			} else if i < len(node.upf.peersUPF) {
-				if currentBitRate >= node.upf.MinBitRateThreshold && node.upf.peersUPF[i].ScaleInDecision {
+			}
+			if i < len(node.upf.peersUPF) {
+				if node.upf.peersUPF[i].ScaleInDecision {
 					node.upf.peersUPF[i].ScaleInDecision = false
 					fmt.Println("set node.upf.peersUPF[i].ScaleInDecision = false for ", node.upf.peersUPF[i].Hostname, " due to cancelling scaling")
 				}
