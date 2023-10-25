@@ -280,10 +280,10 @@ func changeUPFResources(conf Conf) {
 	N3RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N3RateBps), 10)
 	N6BurstBytesStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6BurstBytes), 10)
 	N6RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6RateBps), 10)
-	N3BurstBytesPH := `$(n3_bps)`
-	N3RateBpsPH := `$(n3_burst_bytes)`
-	N6BurstBytesPH := `$(n6_bps)`
-	N6RateBpsHP := `$(n6_burst_bytes)`
+	N3RateBpsPH := `$(n3_bps)`
+	N3BurstBytesPH := `$(n3_burst_bytes)`
+	N6RateBpsHP := `$(n6_bps)`
+	N6BurstBytesPH := `$(n6_burst_bytes)`
 
 	var upfName string
 
