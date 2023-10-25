@@ -6,6 +6,7 @@ package pfcpiface
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/omec-project/upf-epc/internal/p4constants"
 	log "github.com/sirupsen/logrus"
@@ -269,16 +270,48 @@ func LoadConfigFile(filepath string) (Conf, error) {
 	if err != nil {
 		return Conf{}, err
 	}
+
+	changeUPFResources(conf)
+	return conf, nil
+}
+
+func changeUPFResources(conf Conf) {
 	N3BurstBytesStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N3BurstBytes), 10)
 	N3RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N3RateBps), 10)
 	N6BurstBytesStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6BurstBytes), 10)
 	N6RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6RateBps), 10)
+	N3BurstBytesPH := `$(n3_bps)`
+	N3RateBpsPH := `$(n3_burst_bytes)`
+	N6BurstBytesPH := `$(n6_bps)`
+	N6RateBpsHP := `$(n6_burst_bytes)`
 
-	os.Setenv("N3BurstBytes", N3BurstBytesStr)
-	os.Setenv("N3RateBps", N3RateBpsStr)
-	os.Setenv("N6BurstBytes", N6BurstBytesStr)
-	os.Setenv("N6RateBps", N6RateBpsStr)
+	var upfName string
 
-	fmt.Printf("en vars : N3BurstBytes = %v, N3RateBps = %v, N6BurstBytes = %v, N6RateBps = %v,", N3BurstBytesStr, N3RateBpsStr, N6BurstBytesStr, N6RateBpsStr)
-	return conf, nil
+	for i := 1; i <= int(conf.MaxUPFs); i++ {
+		if i < 10 {
+			upfName = fmt.Sprint("upf10", i)
+		} else if i < 100 {
+			upfName = fmt.Sprint("upf1", i)
+		} else if i >= 100 {
+			upfName = fmt.Sprint("upf", i)
+		}
+		upfFile := fmt.Sprint("/upfs/", upfName, ".yaml")
+
+		content, err := os.ReadFile(upfFile)
+		if err != nil {
+			panic(err)
+		}
+
+		fileContent := string(content)
+
+		updatedContent := strings.Replace(fileContent, N3BurstBytesPH, N3BurstBytesStr, -1)
+		updatedContent = strings.Replace(fileContent, N3RateBpsPH, N3RateBpsStr, -1)
+		updatedContent = strings.Replace(fileContent, N6BurstBytesPH, N6BurstBytesStr, -1)
+		updatedContent = strings.Replace(fileContent, N6RateBpsHP, N6RateBpsStr, -1)
+
+		err = os.WriteFile(upfFile, []byte(updatedContent), 0644)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
