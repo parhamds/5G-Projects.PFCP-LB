@@ -305,9 +305,9 @@ func changeUPFResources(conf Conf) {
 		fileContent := string(content)
 
 		updatedContent := strings.Replace(fileContent, N3BurstBytesPH, N3BurstBytesStr, -1)
-		updatedContent = strings.Replace(fileContent, N3RateBpsPH, N3RateBpsStr, -1)
-		updatedContent = strings.Replace(fileContent, N6BurstBytesPH, N6BurstBytesStr, -1)
-		updatedContent = strings.Replace(fileContent, N6RateBpsHP, N6RateBpsStr, -1)
+		updatedContent = strings.Replace(updatedContent, N3RateBpsPH, N3RateBpsStr, -1)
+		updatedContent = strings.Replace(updatedContent, N6BurstBytesPH, N6BurstBytesStr, -1)
+		updatedContent = strings.Replace(updatedContent, N6RateBpsHP, N6RateBpsStr, -1)
 
 		err = os.WriteFile(upfFile, []byte(updatedContent), 0644)
 		if err != nil {
