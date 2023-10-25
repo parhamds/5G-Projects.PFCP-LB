@@ -4,6 +4,9 @@
 package pfcpiface
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/omec-project/upf-epc/internal/p4constants"
 	log "github.com/sirupsen/logrus"
 
@@ -266,6 +269,16 @@ func LoadConfigFile(filepath string) (Conf, error) {
 	if err != nil {
 		return Conf{}, err
 	}
+	N3BurstBytesStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N3BurstBytes), 10)
+	N3RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N3RateBps), 10)
+	N6BurstBytesStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6BurstBytes), 10)
+	N6RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6RateBps), 10)
 
+	os.Setenv("N3BurstBytes", N3BurstBytesStr)
+	os.Setenv("N3RateBps", N3RateBpsStr)
+	os.Setenv("N6BurstBytes", N6BurstBytesStr)
+	os.Setenv("N6RateBps", N6RateBpsStr)
+
+	fmt.Printf("en vars : N3BurstBytes = %v, N3RateBps = %v, N6BurstBytes = %v, N6RateBps = %v,", N3BurstBytesStr, N3RateBpsStr, N6BurstBytesStr, N6RateBpsStr)
 	return conf, nil
 }
