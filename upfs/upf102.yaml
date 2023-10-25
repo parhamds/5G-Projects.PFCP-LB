@@ -187,27 +187,6 @@ spec:
             mountPath: /pod-share
           - name: configs
             mountPath: /tmp/conf
-      - name: arping
-        image: "registry.aetherproject.org/tools/busybox:stable"
-        imagePullPolicy: "IfNotPresent"
-        command: ["sh", "-xc"]
-        args:
-          - |
-            while true; do
-              # arping does not work - BESS graph is still disconnected
-              #arping -c 2 -I access 192.168.252.102
-              #arping -c 2 -I core 192.168.250.102
-              ping -c 2 192.168.252.102
-              ping -c 2 192.168.250.102
-              sleep 10
-            done
-        resources:
-          limits:
-            cpu: 128m
-            memory: 64Mi
-          requests:
-            cpu: 128m
-            memory: 64Mi
       volumes:
       - name: configs
         configMap:
