@@ -67,6 +67,7 @@ type Conf struct {
 	InitUPFs               uint32           `json:"init_upfs"`
 	MinUPFs                uint32           `json:"min_upfs"`
 	MaxUPFs                uint32           `json:"max_upfs"`
+	Ueransim               bool             `json:"ueransim"`
 }
 
 // QciQosConfig : Qos configured attributes.
@@ -282,8 +283,9 @@ func changeUPFResources(conf Conf) {
 	N6RateBpsStr := strconv.FormatUint(uint64(conf.SliceMeterConfig.N6RateBps), 10)
 	N3RateBpsPH := `$(n3_bps)`
 	N3BurstBytesPH := `$(n3_burst_bytes)`
-	N6RateBpsHP := `$(n6_bps)`
+	N6RateBpsPH := `$(n6_bps)`
 	N6BurstBytesPH := `$(n6_burst_bytes)`
+	ueransimPH := `$(ueransim)`
 
 	var upfName string
 
@@ -307,7 +309,12 @@ func changeUPFResources(conf Conf) {
 		updatedContent := strings.Replace(fileContent, N3BurstBytesPH, N3BurstBytesStr, -1)
 		updatedContent = strings.Replace(updatedContent, N3RateBpsPH, N3RateBpsStr, -1)
 		updatedContent = strings.Replace(updatedContent, N6BurstBytesPH, N6BurstBytesStr, -1)
-		updatedContent = strings.Replace(updatedContent, N6RateBpsHP, N6RateBpsStr, -1)
+		updatedContent = strings.Replace(updatedContent, N6RateBpsPH, N6RateBpsStr, -1)
+		if conf.Ueransim {
+			updatedContent = strings.Replace(updatedContent, ueransimPH, "true", -1)
+		} else {
+			updatedContent = strings.Replace(updatedContent, ueransimPH, "false", -1)
+		}
 
 		err = os.WriteFile(upfFile, []byte(updatedContent), 0644)
 		if err != nil {
