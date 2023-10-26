@@ -173,7 +173,7 @@ spec:
         imagePullPolicy: "IfNotPresent"
         command: ["/bin/bash", "-xc", "bessctl http 0.0.0.0 8000"]
       - name: pfcp-agent
-        image: "parhamds/upfs-pfcpiface:v0.0.97"
+        image: "parhamds/upfs-pfcpiface:v0.0.98"
         imagePullPolicy: "IfNotPresent"
         securityContext:
           privileged: true
