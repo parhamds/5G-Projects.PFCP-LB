@@ -25,7 +25,7 @@ The main work flow of Virtual-UPF can be divided into two main phases. INIT phas
 If the Auto Scale-out feature is enabled, the PFCP-LB continuously checks the state of UPFs. if the number of sessions of each UPFs reaches to a certain number, and the current number of active UPFs are less than configured MaxUPFs, the Auto Scale-out procedure will be triggered. This number of sessions is calculated like:
 * MaxThreshold + (MaxThreshold*MaxTolerance)
 
-The PFCP-LB has the permission to deploy a UPF because of its RBAC, so find the first UPF which is not deployed yet, and add it to the virtual UPF. When a new UPF starts up, as we explained before, it registers itself in Access-LB, Core-LB, and PFCP-LB. So, Access-LB and Core-LB do the regular thing that they normally do with a new UPF. When PFCP-LB receives the registration request, creates a PFCP-Connection with it and adds it to the list of its registered UPFs. Now there is a new UPF in the Virtual-UPF which does not handle any session. 
+The PFCP-LB has the permission to deploy a UPF because of its RBAC, so find the first UPF which is not deployed yet, and add it to the virtual UPF. When a new UPF starts up, as we explained before, it registers itself in West-LB, East-LB, and PFCP-LB. So, West-LB and East-LB do the regular thing that they normally do with a new UPF. When PFCP-LB receives the registration request, creates a PFCP-Connection with it and adds it to the list of its registered UPFs. Now there is a new UPF in the Virtual-UPF which does not handle any session. 
 
 So PFCP-LB who knows each UPF currently is handling how many sessions, calls the MakeUPFsLighter function. 
 ### Auto Scale-in
